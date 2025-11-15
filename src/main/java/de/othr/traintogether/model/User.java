@@ -1,29 +1,68 @@
 package de.othr.traintogether.model;
 import jakarta.persistence.*;
+
 import java.time.Instant;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "users")
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable=false, unique=true, length=50)
-    private String username;
-
-    @Column(nullable=false, length=100)
+    @Column(nullable = false, length = 50, unique = true)
     private String email;
 
-    @Column(name="created_at", nullable=false, updatable=false)
+    @Column(nullable = false, length = 500)
+    private String password;
+
+    @Column(length = 20)
+    private String username;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
-    // constructors, getters, setters
-    public User() {}
-    public User(String username, String email) {
-        this.username = username;
-        this.email = email;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Authority> authorities;
+
+    public User() {
     }
-    // getters/setters...
+    public User(String email, String encodedPassword) {
+        this.email = Objects.requireNonNull(email, "Email cannot be null");
+        this.password = Objects.requireNonNull(encodedPassword, "Password cannot be null");
+    }
+
+    // getters + setters
+    public String getEmail() {
+        return email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Set<String> getAuthorities() {
+        if (authorities == null) {
+            return Collections.emptySet();
+        }
+        return authorities.stream()
+                .map(Authority::getAuthority)
+                .collect(Collectors.toSet());
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
 }
 
