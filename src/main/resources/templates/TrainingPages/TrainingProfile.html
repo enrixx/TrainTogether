@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout :: layout(~{::content})}">
+<head>
+  <meta charset="UTF-8">
+  <title>My Profile</title>
+</head>
+<body>
+<div th:fragment="content">
+  <h1>My Gym Profile</h1>
+    <form th:action="@{/trainingprofile}" th:object="${trainingprofile}" method="post">
+
+      <h2>Körperumfänge</h2>
+
+      <label for="arm">Arm (cm):</label>
+      <input id="arm" type="number" step="0.1" th:field="*{measurements.arm.value}" /><br>
+
+      <label for="brust">Brust (cm):</label>
+      <input id="brust" type="number" step="0.1" th:field="*{measurements.brust.value}" /><br>
+
+      <label for="bein">Bein (cm):</label>
+      <input id="bein" type="number" step="0.1" th:field="*{measurements.bein.value}" /><br>
+
+      <label for="schulter">Schulter (cm):</label>
+      <input id="schulter" type="number" step="0.1" th:field="*{measurements.schulter.value}" /><br>
+
+      <label for="ruecken">Rücken (cm):</label>
+      <input id="ruecken" type="number" step="0.1" th:field="*{measurements.ruecken.value}" /><br>
+
+      <h2>Trainingssplit</h2>
+
+      <label for="splitName">Name:</label>
+      <input id="splitName" type="text" th:field="*{trainingSplit.name}" /><br>
+
+      <label for="splitDescription">Beschreibung:</label>
+      <input id="splitDescription" type="text" th:field="*{trainingSplit.description}" /><br>
+
+      <br>
+      <button type="submit">Speichern</button>
+    </form>
+
+  <div th:if="${saved}">
+    <p style="color: green;">Profil gespeichert!</p>
+  </div>
+
+  <a href="/workout/days">→ Trainingstage auswählen</a>
+</div>
+</body>
+</html>
