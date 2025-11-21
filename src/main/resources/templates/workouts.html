@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title} ?: 'Workouts'">Workouts</title>
+</head>
+<body>
+<div th:replace="layout :: mybody">
+    <div class="container">
+        <h2>Workouts</h2>
+        <p>Liste der Workouts kommt hier.</p>
+    </div>
+</div>
+</body>
+</html>
+
