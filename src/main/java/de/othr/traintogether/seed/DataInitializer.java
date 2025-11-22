@@ -1,35 +1,28 @@
 package de.othr.traintogether.seed;
-
-import de.othr.traintogether.model.Authority;
-import de.othr.traintogether.model.User;
-import de.othr.traintogether.repository.AuthorityRepository;
 import de.othr.traintogether.repository.UserRepository;
+import de.othr.traintogether.service.UserService;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
-    private final AuthorityRepository authorityRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final UserService userService;
 
-    public DataInitializer(UserRepository repo, AuthorityRepository authorityRepository, PasswordEncoder passwordEncoder) {
+    public DataInitializer(UserRepository repo, UserService userService) {
         this.userRepository = repo;
-        this.authorityRepository = authorityRepository;
-        this.passwordEncoder = passwordEncoder;
+        this.userService = userService;
     }
 
     @Override
     public void run(String... args) {
         if (userRepository.count() == 0) {
-            User normalUser = userRepository.save(new User("user", passwordEncoder.encode("user")));
-            User admin = userRepository.save(new User("admin", passwordEncoder.encode("admin")));
-
-            if (authorityRepository.count() == 0) {
-                authorityRepository.save(new Authority(normalUser,"ROLE_USER"));
-                authorityRepository.save(new Authority(admin,"ROLE_ADMIN"));
-            }
+            userService.registerUser("user", "user", "USER", "Normal User");
+            userService.registerUser("admin", "admin", "ADMIN", "Administrator");
+            userService.registerUser("owner", "owner", "GYM_OWNER", "Gym Owner");
+            userService.registerUser("worker", "worker", "GYM_WORKER", "Gym Worker");
+            userService.registerUser("Powner", "Powner", "PENDING_GYM_OWNER", "Pending Gym Owner");
+            userService.registerUser("Pworker", "Pworker", "PENDING_GYM_WORKER", "Pending Gym Worker");
         }
     }
 }
