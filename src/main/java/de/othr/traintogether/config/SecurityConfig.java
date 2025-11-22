@@ -40,7 +40,7 @@ public class SecurityConfig {
                 .csrf(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/","/login", "/register").permitAll()
-                        .requestMatchers("/css/**", "/webjars/**").permitAll()
+                        .requestMatchers("/js/**", "/images/**","/css/**", "/webjars/**","/favicon.ico").permitAll()
                         .anyRequest().authenticated())
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(form -> form
@@ -50,7 +50,7 @@ public class SecurityConfig {
                         .defaultSuccessUrl("/", true)
                         .failureUrl("/login?error=true")
                 )
-                .logout(LogoutConfigurer::permitAll);
+                .logout((logout) -> logout.logoutSuccessUrl("/"));
 
         return http.build();
     }

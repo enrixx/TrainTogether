@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org" th:fragment="layout(pageContent)" >
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:fragment="layout(pageContent)">
 <head>
     <meta charset="UTF-8">
     <title>TrainTogether</title>
@@ -15,7 +15,7 @@
 
     <!-- Hauptbereich darunter: Sidebar + Content -->
     <main class="d-flex flex-grow-1 overflow-hidden">
-        <aside th:replace="~{fragments/sidebar :: nav-sidebar}" class="flex-shrink-0"></aside>
+        <aside sec:authorize="isAuthenticated()" th:replace="~{fragments/sidebar :: nav-sidebar}" class="flex-shrink-0"></aside>
         <div class="flex-grow-1 overflow-auto">
             <section th:insert="${pageContent}"></section>
         </div>
