@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>App Bar</title>
 </head>
 <body>
 
@@ -14,6 +14,7 @@
                 <span class="fs-4">Train Together</span>
             </a>
         </div>
+
         <div class="dropdown d-flex align-items-center">
             <a href="#" data-bs-toggle="dropdown" aria-expanded="false" class="d-inline-block">
                 <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="black"
@@ -23,7 +24,7 @@
                           d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/>
                 </svg>
             </a>
-            <ul class="dropdown-menu text-small" style="">
+            <ul class="dropdown-menu dropdown-menu-end text-small">
                 <li><a class="dropdown-item" href="#">New project...</a></li>
                 <li><a class="dropdown-item" href="#">Settings</a></li>
                 <li><a class="dropdown-item" href="#">Profile</a></li>
@@ -32,9 +33,62 @@
                         Switch to: <span id="theme-label">Dark</span>
                     </button>
                 </li>
-                <li>
-                    <hr class="dropdown-divider">
+
+                <li><hr class="dropdown-divider"></li>
+
+                <!-- Animated Language Toggle -->
+                <li class="px-3 py-2">
+                    <a id="langToggle"
+                       class="btn border rounded-pill w-100 position-relative p-1 shadow-sm bg-body-tertiary"
+                       th:with="isGerman=${#locale.language == 'de'}"
+                       th:href="@{''(lang=${isGerman ? 'en' : 'de'})}"
+                       onclick="animateLangSwitch(event, this)"
+                       style="height: 42px; overflow: hidden;">
+
+                        <!-- Background Labels (Fixed Positions) -->
+                        <div class="d-flex justify-content-between align-items-center w-100 h-100 px-2 position-absolute top-0 start-0 text-secondary fw-bold small"
+                             style="z-index: 0;">
+                            <span style="padding-left: 6px;">DE</span>
+                            <span style="padding-right: 6px;">EN</span>
+                        </div>
+
+                        <!-- Sliding Flag Circle -->
+                        <div id="flagSlider"
+                             class="bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm position-absolute"
+                             th:style="${isGerman} ? 'width: 32px; height: 32px; top: 4px; left: calc(100% - 36px); transition: all 0.2s ease-in-out; z-index: 1;'
+                                                   : 'width: 32px; height: 32px; top: 4px; left: 4px; transition: all 0.2s ease-in-out; z-index: 1;'">
+                            <span th:text="${isGerman ? '🇩🇪' : '🇬🇧'}" class="fs-6" style="line-height: 1;"></span>
+                        </div>
+                    </a>
                 </li>
+
+                <!-- Inline Script to Handle Animation Before Reload -->
+                <script>
+                    function animateLangSwitch(e, element) {
+                        e.preventDefault();
+                        e.stopPropagation(); // 2. STOP BOOTSTRAP FROM CLOSING THE DROPDOWN
+
+                        const slider = element.querySelector('#flagSlider');
+                        const targetUrl = element.getAttribute('href');
+
+                        const currentLeft = slider.style.left;
+                        const isCurrentlyRight = currentLeft.includes('calc') || currentLeft.includes('%');
+
+                        // Animate to the opposite side
+                        if (isCurrentlyRight) {
+                            slider.style.left = '4px';
+                        } else {
+                            slider.style.left = 'calc(100% - 36px)';
+                        }
+
+                        // Wait 100ms for CSS transition, then reload
+                        setTimeout(() => {
+                            window.location.href = targetUrl;
+                        }, 200);
+                    }
+                </script>
+
+                <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="#">Sign out</a></li>
             </ul>
         </div>
