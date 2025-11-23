@@ -4,6 +4,7 @@ import de.othr.traintogether.model.Authority;
 import de.othr.traintogether.model.User;
 import de.othr.traintogether.repository.AuthorityRepository;
 import de.othr.traintogether.repository.UserRepository;
+import de.othr.traintogether.service.customExceptions.EmailAlreadyRegisteredException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +25,7 @@ public class UserService {
 
     public User registerUser(String email, String rawPassword,String role, String userName) {
         if(userRepository.findByEmail(email).isPresent()) {
-            throw new RuntimeException("Email already registered");
+            throw new EmailAlreadyRegisteredException("Email already registered");
         }
         String hashedPassword = passwordEncoder.encode(rawPassword);
         User user = new User(email, hashedPassword);

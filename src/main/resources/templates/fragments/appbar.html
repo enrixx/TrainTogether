@@ -17,7 +17,7 @@
 
         <div class="dropdown d-flex align-items-center">
             <a href="#" data-bs-toggle="dropdown" aria-expanded="false" class="d-inline-block">
-                <img sec:authorize="!isAuthenticated()" th:src="@{/images/svg/person-circle.svg}" alt="Profile" width="40" height="40" />
+                <img sec:authorize="isAnonymous()" th:src="@{/images/svg/person-circle.svg}" alt="Profile" width="40" height="40" />
                 <!-- TODO: add user image-->
                 <img sec:authorize="isAuthenticated()" th:src="@{/images/svg/person-check-fill.svg}" alt="Profile" width="40" height="40" />
             </a>
@@ -94,7 +94,7 @@
                         <button type="submit" class="dropdown-item" th:text="#{auth.sign.out}">Sign out</button>
                     </form>
                 </li>
-                <li sec:authorize="!isAuthenticated()"><a class="dropdown-item" href="/login" th:text="#{auth.sign.in}">Sign
+                <li sec:authorize="isAnonymous()"><a class="dropdown-item" href="/login" th:text="#{auth.sign.in}">Sign
                     in</a></li>
             </ul>
         </div>

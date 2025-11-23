@@ -17,12 +17,12 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
         if (userRepository.count() == 0) {
-            userService.registerUser("user", "user", "USER", "Normal User");
-            userService.registerUser("admin", "admin", "ADMIN", "Administrator");
-            userService.registerUser("owner", "owner", "GYM_OWNER", "Gym Owner");
-            userService.registerUser("worker", "worker", "GYM_WORKER", "Gym Worker");
-            userService.registerUser("Powner", "Powner", "PENDING_GYM_OWNER", "Pending Gym Owner");
-            userService.registerUser("Pworker", "Pworker", "PENDING_GYM_WORKER", "Pending Gym Worker");
+            userService.registerUser("user@u", "user", "USER", "Normal User");
+            userService.registerUser("admin@a", "admin", "ADMIN", "Administrator");
+            userService.registerUser("owner@o", "owner", "GYM_OWNER", "Gym Owner");
+            userService.registerUser("worker@w", "worker", "GYM_WORKER", "Gym Worker");
+            userService.registerUser("Powner@o", "Powner", "PENDING_GYM_OWNER", "Pending Gym Owner");
+            userService.registerUser("Pworker@o", "Pworker", "PENDING_GYM_WORKER", "Pending Gym Worker");
         }
     }
 }
