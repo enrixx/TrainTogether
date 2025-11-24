@@ -28,12 +28,27 @@
                 <li><a class="dropdown-item" href="#">New project...</a></li>
                 <li><a class="dropdown-item" href="#">Settings</a></li>
                 <li><a class="dropdown-item" href="#">Profile</a></li>
-                <li>
-                    <button id="theme-toggle" class="dropdown-item" type="button">
-                        Switch to: <span id="theme-label">Dark</span>
-                    </button>
-                </li>
+                <li class="px-3 py-2">
+                    <a id="themeToggle"
+                       class="btn border rounded-pill w-100 position-relative p-1 shadow-sm bg-body-tertiary"
+                       onclick="animateThemeSwitch(event)"
+                       style="height: 42px; overflow: hidden; cursor: pointer;">
 
+                        <!-- Background Labels -->
+                        <div class="d-flex justify-content-between align-items-center w-100 h-100 px-2 position-absolute top-0 start-0 text-secondary fw-bold small"
+                             style="z-index: 0;">
+                            <span style="padding-left: 6px;">☀️</span>
+                            <span style="padding-right: 6px;">🌙</span>
+                        </div>
+
+                        <!-- Sliding Icon Circle -->
+                        <div id="themeSlider"
+                             class="bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm position-absolute"
+                             style="width: 32px; height: 32px; top: 4px; left: 4px; transition: all 0.2s ease-in-out; z-index: 1;">
+                            <span id="themeIcon" class="fs-6" style="line-height: 1;">☀️</span>
+                        </div>
+                    </a>
+                </li>
                 <li><hr class="dropdown-divider"></li>
 
                 <!-- Animated Language Toggle -->
