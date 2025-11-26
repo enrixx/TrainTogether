@@ -8,28 +8,22 @@
     <link rel="stylesheet"
           th:href="@{/webjars/bootstrap/5.3.8/css/bootstrap.min.css}"/>
     <script th:src="@{/webjars/popper.js/2.11.7/umd/popper.min.js}" defer></script>
+    <script>
+        (function () {
+            try {
+                const theme = localStorage.getItem('theme') || 'light';
+                document.documentElement.setAttribute('data-bs-theme', theme);
+            } catch (e) {
+            }
+        })();
+    </script>
 </head>
 <body>
 
 
 <div class="d-flex justify-content-center py-4" style="margin-top: 20vh">
-    <div class="w-auto border rounded-4 shadow-sm p-4 bg-white" style="min-width: 20rem;">
-        <ul class="nav nav-tabs justify-content-center mb-3" role="tablist">
-            <li class="nav-item">
-                <a class="nav-link"
-                   th:href="@{/login}" th:text="#{auth.sign.in}">Sign in</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link"
-                   th:href="@{/register}" th:text="#{auth.register}">Register</a>
-            </li>
-        </ul>
-
-        <div class="tab-content">
-            <div class="tab-pane fade show active" role="tabpanel" aria-labelledby="tab-auth">
-                <section th:insert="${authContent}"></section>
-            </div>
-        </div>
+    <div class="w-auto border rounded-4 shadow-sm p-4 bg-body-tertiary" style="min-width: 20rem;">
+        <section th:insert="${authContent}"></section>
     </div>
 </div>
 </body>

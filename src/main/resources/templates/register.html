@@ -14,7 +14,7 @@
         <input type="email" name="email" id="registerEmail" class="form-control"
                placeholder="name@example.com"
                required>
-        <label for="registerEmail" th:text="#{auth.email}" >Email address</label>
+        <label for="registerEmail" th:text="#{auth.email}">Email address</label>
     </div>
     <div th:if="${registerError}" class="alert alert-danger" th:text="${registerError}"></div>
 
@@ -40,7 +40,12 @@
         </select>
     </div>
 
-    <button class="btn btn-primary w-100 py-2" type="submit" th:text="#{auth.register}">Register</button>
+    <button class="btn btn-primary w-100 py-2 mb-3" type="submit" th:text="#{auth.register}">Register</button>
+    <div class="d-flex justify-content-center align-items-center gap-2">
+        <span class="text-secondary" th:text="#{registration.have.account}">Already have an account? </span>
+        <a class="link-secondary" href="login"
+           th:text="#{auth.sign.in}">Login</a>
+    </div>
 </form>
 </body>
 </html>
