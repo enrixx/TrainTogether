@@ -25,7 +25,7 @@ public class UserService {
 
     public User registerUser(String email, String rawPassword,String role, String userName) {
         if(userRepository.findByEmail(email).isPresent()) {
-            throw new EmailAlreadyRegisteredException("Email already registered");
+            throw new EmailAlreadyRegisteredException("{error.email.exists}");
         }
         String hashedPassword = passwordEncoder.encode(rawPassword);
         User user = new User(email, hashedPassword);
@@ -38,5 +38,9 @@ public class UserService {
         authorityRepository.save(authorityRole);
 
         return user;
+    }
+
+    public boolean emailExists(String email) {
+        return userRepository.findByEmail(email).isPresent();
     }
 }
