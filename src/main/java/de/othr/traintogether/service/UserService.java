@@ -1,5 +1,6 @@
 package de.othr.traintogether.service;
 
+import de.othr.traintogether.dto.RegisterDto;
 import de.othr.traintogether.model.Authority;
 import de.othr.traintogether.model.User;
 import de.othr.traintogether.repository.AuthorityRepository;
@@ -7,6 +8,7 @@ import de.othr.traintogether.repository.UserRepository;
 import de.othr.traintogether.service.customExceptions.EmailAlreadyRegisteredException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserService {
@@ -23,7 +25,13 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public User registerUser(String email, String rawPassword,String role, String userName) {
+    @Transactional
+    public User registerUser(RegisterDto registerDto) {
+        String email = registerDto.getEmail();
+        String rawPassword = registerDto.getPassword();
+        String role = registerDto.getRole();
+        String userName = registerDto.getUsername();
+
         if(userRepository.findByEmail(email).isPresent()) {
             throw new EmailAlreadyRegisteredException("{error.email.exists}");
         }
@@ -40,7 +48,13 @@ public class UserService {
         return user;
     }
 
+    @Transactional(readOnly = true)
     public boolean emailExists(String email) {
         return userRepository.findByEmail(email).isPresent();
+    }
+
+    @Transactional(readOnly = true)
+    public User findUserByEmail(String email) {
+        return userRepository.findByEmail(email).orElse(null);
     }
 }

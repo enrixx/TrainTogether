@@ -51,7 +51,7 @@ public class AuthController {
             return "register";
         }
 
-        userService.registerUser(email, registerDto.getPassword(), registerDto.getRole(), registerDto.getUsername());
+        userService.registerUser(registerDto);
         return "redirect:/";
     }
 }
