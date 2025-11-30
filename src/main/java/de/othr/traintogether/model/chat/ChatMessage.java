@@ -25,8 +25,8 @@ public class ChatMessage {
     @Column(name = "content", nullable = false)
     private String content;
 
-    @Column(name = "sent_at", nullable = false)
-    private Instant sentAt = Instant.now();
+    @Column(name = "sent_at", nullable = false, updatable = false)
+    private final Instant sentAt = Instant.now();
 
     @Column(name = "edited", nullable = false)
     private boolean edited = false;
@@ -78,10 +78,6 @@ public class ChatMessage {
 
     public Instant getSentAt() {
         return sentAt;
-    }
-
-    public void setSentAt(Instant sentAt) {
-        this.sentAt = sentAt;
     }
 
     public boolean isEdited() {

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 
 import java.time.Instant;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
@@ -18,9 +19,11 @@ public class ChatRoom {
     @Column(name = "type", length = 10, nullable = false)
     private ChatRoomType type;
 
+    //This should be only set for group chats
     @Column(length = 50)
     private String name;
 
+    //This should be only set for group chats
     @Column(name = "picture_url", length = 512)
     private String pictureUrl;
 
@@ -29,6 +32,18 @@ public class ChatRoom {
 
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ChatRoomMember> members = new HashSet<>();
+
+    public ChatRoom() {}
+    public  ChatRoom(ChatRoomType type) {
+        this.type = Objects.requireNonNull(type, "type must not be null");
+    }
+    public ChatRoom(ChatRoomType type, String name, String pictureUrl) {
+        this(type);
+        this.name = name;
+        this.pictureUrl = pictureUrl;
+    }
+
+     // getters + setters
 
     public Long getId() {
         return id;
@@ -72,10 +87,6 @@ public class ChatRoom {
 
     public Set<ChatRoomMember> getMembers() {
         return members;
-    }
-
-    public void setMembers(Set<ChatRoomMember> members) {
-        this.members = members;
     }
 
     public void addMember(ChatRoomMember member) {

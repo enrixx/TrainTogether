@@ -20,6 +20,7 @@ public class ChatRoomMember {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    //This is optional and can be set to a nickname within the chat room
     @Column(length = 20)
     private String displayName;
 
@@ -28,7 +29,14 @@ public class ChatRoomMember {
     private ChatRole role;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt = Instant.now();
+    private final Instant createdAt = Instant.now();
+
+    public ChatRoomMember() {}
+    public ChatRoomMember(ChatRoom chatRoom, User user, ChatRole role) {
+        this.chatRoom = chatRoom;
+        this.user = user;
+        this.role = role;
+    }
 
     public Long getId() {
         return id;
