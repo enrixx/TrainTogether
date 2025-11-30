@@ -26,7 +26,7 @@ public class UserService {
     }
 
     @Transactional
-    public User registerUser(RegisterDto registerDto) {
+    public void registerUser(RegisterDto registerDto) {
         String email = registerDto.getEmail();
         String rawPassword = registerDto.getPassword();
         String role = registerDto.getRole();
@@ -44,17 +44,10 @@ public class UserService {
 
         Authority authorityRole = new Authority(user, role);
         authorityRepository.save(authorityRole);
-
-        return user;
     }
 
     @Transactional(readOnly = true)
     public boolean emailExists(String email) {
         return userRepository.findByEmail(email).isPresent();
-    }
-
-    @Transactional(readOnly = true)
-    public User findUserByEmail(String email) {
-        return userRepository.findByEmail(email).orElse(null);
     }
 }

@@ -1,4 +1,5 @@
 package de.othr.traintogether.model;
+
 import jakarta.persistence.*;
 
 import java.time.Instant;
@@ -30,12 +31,17 @@ public class User {
 
     public User() {
     }
+
     public User(String email, String encodedPassword) {
         this.email = Objects.requireNonNull(email, "Email cannot be null");
         this.password = Objects.requireNonNull(encodedPassword, "Password cannot be null");
     }
 
     // getters + setters
+    public Long getId() {
+        return id;
+    }
+
     public String getEmail() {
         return email;
     }
@@ -65,4 +71,3 @@ public class User {
         this.username = username;
     }
 }
-
