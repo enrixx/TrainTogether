@@ -23,8 +23,15 @@
                required>
         <label for="floatingPassword" th:text="#{auth.password}">Password</label>
     </div>
-    <div th:if="${param.error != null}" class="alert alert-danger" th:text="#{error.wrong.credentials}">Wrong email or password</div>
-    <button class="btn btn-primary w-100 py-2" type="submit" th:text="#{auth.sign.in}">Sign in</button>
+    <div th:if="${param.error != null}" class="alert alert-danger" th:text="#{error.wrong.credentials}">Wrong email or
+        password
+    </div>
+    <button class="btn btn-primary w-100 py-2 mb-3" type="submit" th:text="#{auth.sign.in}">Sign in</button>
+    <div class="d-flex justify-content-center align-items-center gap-2">
+        <span class="text-secondary" th:text="#{auth.no.account}">Don't have an account yet? </span>
+        <a class="link-secondary" href="register"
+           th:text="#{auth.register}">Register</a>
+    </div>
 </form>
 </body>
 </html>

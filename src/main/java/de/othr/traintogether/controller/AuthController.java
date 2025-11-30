@@ -1,11 +1,15 @@
 package de.othr.traintogether.controller;
 
+import de.othr.traintogether.dto.RegisterDto;
 import de.othr.traintogether.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class AuthController {
@@ -24,19 +28,30 @@ public class AuthController {
 
     @PreAuthorize("isAnonymous()")
     @GetMapping("/register")
-    public String registerPage() {
+    public String registerPage(Model model) {
+        model.addAttribute("registerDto", new RegisterDto());
         return "register";
     }
 
     @PreAuthorize("isAnonymous()")
     @PostMapping("/register")
-    public String registerSubmit(@RequestParam String email,
-                                 @RequestParam String password,
-                                 @RequestParam String username,
-                                 @RequestParam String role) {
+    public String registerSubmit(@Valid @ModelAttribute("registerDto") RegisterDto registerDto,
+                                 BindingResult bindingResult,
+                                 Model model) {
 
-        userService.registerUser(email, password, role, username);
+
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("registerDto", registerDto);
+            return "register";
+        }
+        var email = registerDto.getEmail();
+        if (userService.emailExists(email)) {
+            bindingResult.rejectValue("email", "error.email.exists");
+            model.addAttribute("registerDto", registerDto);
+            return "register";
+        }
+
+        userService.registerUser(email, registerDto.getPassword(), registerDto.getRole(), registerDto.getUsername());
         return "redirect:/";
     }
 }
-
