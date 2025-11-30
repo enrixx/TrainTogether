@@ -1,5 +1,6 @@
 package de.othr.traintogether.service;
 
+import de.othr.traintogether.dto.RegisterDto;
 import de.othr.traintogether.model.Authority;
 import de.othr.traintogether.model.User;
 import de.othr.traintogether.repository.AuthorityRepository;
@@ -23,7 +24,12 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public User registerUser(String email, String rawPassword,String role, String userName) {
+    public User registerUser(RegisterDto registerDto) {
+        String email = registerDto.getEmail();
+        String rawPassword = registerDto.getPassword();
+        String role = registerDto.getRole();
+        String userName = registerDto.getUsername();
+
         if(userRepository.findByEmail(email).isPresent()) {
             throw new EmailAlreadyRegisteredException("{error.email.exists}");
         }

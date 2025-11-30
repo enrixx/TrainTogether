@@ -21,6 +21,15 @@ public class RegisterDto {
     @NotBlank
     private String role;
 
+    public RegisterDto() {}
+
+    public RegisterDto(String email, String password, String username, String role) {
+        this.email = email;
+        this.password = password;
+        this.username = username;
+        this.role = role;
+    }
+
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
