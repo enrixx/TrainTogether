@@ -1,4 +1,5 @@
 package de.othr.traintogether.seed;
+import de.othr.traintogether.dto.RegisterDto;
 import de.othr.traintogether.repository.UserRepository;
 import de.othr.traintogether.service.UserService;
 import org.springframework.boot.CommandLineRunner;
@@ -17,12 +18,12 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
         if (userRepository.count() == 0) {
-            userService.registerUser("user@u", "user", "USER", "Normal User");
-            userService.registerUser("admin@a", "admin", "ADMIN", "Administrator");
-            userService.registerUser("owner@o", "owner", "GYM_OWNER", "Gym Owner");
-            userService.registerUser("worker@w", "worker", "GYM_WORKER", "Gym Worker");
-            userService.registerUser("Powner@o", "Powner", "PENDING_GYM_OWNER", "Pending Gym Owner");
-            userService.registerUser("Pworker@o", "Pworker", "PENDING_GYM_WORKER", "Pending Gym Worker");
+            userService.registerUser(new RegisterDto("user@u", "user", "Normal User", "USER"));
+            userService.registerUser(new RegisterDto("admin@a", "admin", "Administrator", "ADMIN"));
+            userService.registerUser(new RegisterDto("owner@o", "owner", "Gym Owner", "GYM_OWNER"));
+            userService.registerUser(new RegisterDto("worker@w", "worker", "Gym Worker", "GYM_WORKER"));
+            userService.registerUser(new RegisterDto("Powner@o", "Powner", "Pending Gym Owner", "PENDING_GYM_OWNER"));
+            userService.registerUser(new RegisterDto("Pworker@o", "Pworker", "Pending Gym Worker", "PENDING_GYM_WORKER"));
         }
     }
 }
