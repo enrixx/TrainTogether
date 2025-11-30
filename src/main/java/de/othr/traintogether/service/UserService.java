@@ -1,6 +1,8 @@
 package de.othr.traintogether.service;
 
 import de.othr.traintogether.dto.RegisterDto;
+import de.othr.traintogether.dto.UpdateProfileDto;
+import de.othr.traintogether.dto.UserDto;
 import de.othr.traintogether.model.Authority;
 import de.othr.traintogether.model.User;
 import de.othr.traintogether.repository.AuthorityRepository;
@@ -26,26 +28,29 @@ public class UserService {
     }
 
     @Transactional
-    public User registerUser(RegisterDto registerDto) {
+    public void registerUser(RegisterDto registerDto) {
         String email = registerDto.getEmail();
         String rawPassword = registerDto.getPassword();
         String role = registerDto.getRole();
         String userName = registerDto.getUsername();
+        String firstName = registerDto.getFirstName();
+        String lastName = registerDto.getLastName();
 
         if(userRepository.findByEmail(email).isPresent()) {
             throw new EmailAlreadyRegisteredException("{error.email.exists}");
         }
         String hashedPassword = passwordEncoder.encode(rawPassword);
         User user = new User(email, hashedPassword);
-        if(!userName.isBlank()){
+        if(userName != null && !userName.isBlank()){
             user.setUsername(userName);
         }
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+
         userRepository.save(user);
 
         Authority authorityRole = new Authority(user, role);
         authorityRepository.save(authorityRole);
-
-        return user;
     }
 
     @Transactional(readOnly = true)
@@ -54,7 +59,45 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public User findUserByEmail(String email) {
-        return userRepository.findByEmail(email).orElse(null);
+    public UserDto findUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .map(UserDto::new)
+                .orElse(null);
+    }
+
+    @Transactional
+    public void updateProfile(String currentEmail, UpdateProfileDto updateDto) {
+        User user = userRepository.findByEmail(currentEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (updateDto.getEmail() != null && !updateDto.getEmail().equals(currentEmail)) {
+            if (userRepository.findByEmail(updateDto.getEmail()).isPresent()) {
+                throw new EmailAlreadyRegisteredException("{error.email.exists}");
+            }
+            user.setEmail(updateDto.getEmail());
+        }
+
+        if (updateDto.getUsername() != null) {
+            user.setUsername(updateDto.getUsername());
+        }
+
+        user.setFirstName(updateDto.getFirstName());
+        user.setLastName(updateDto.getLastName());
+
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public boolean updatePassword(String email, String currentPassword, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            return false;
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        return true;
     }
 }
