@@ -12,10 +12,8 @@ import org.springframework.security.web.authentication.logout.SecurityContextLog
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
@@ -132,6 +130,35 @@ public class ProfileController {
             model.addAttribute("passwordError", "Current password is incorrect");
             return "profile";
         }
+    }
+
+    @PostMapping("/upload-picture")
+    public String uploadProfilePicture(@RequestParam("profilePicture") MultipartFile file,
+                                      Authentication authentication,
+                                      RedirectAttributes redirectAttributes) {
+        try {
+            String email = authentication.getName();
+            userService.uploadProfilePicture(email, file);
+            redirectAttributes.addFlashAttribute("successMessage", "Profile picture uploaded successfully!");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to upload profile picture: " + e.getMessage());
+        }
+        return "redirect:/profile";
+    }
+
+    @PostMapping("/delete-picture")
+    public String deleteProfilePicture(Authentication authentication,
+                                      RedirectAttributes redirectAttributes) {
+        try {
+            String email = authentication.getName();
+            userService.deleteProfilePicture(email);
+            redirectAttributes.addFlashAttribute("successMessage", "Profile picture deleted successfully!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to delete profile picture: " + e.getMessage());
+        }
+        return "redirect:/profile";
     }
 }
 

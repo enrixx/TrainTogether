@@ -28,6 +28,9 @@ public class User {
     @Column(length = 50)
     private String lastName;
 
+    @Column(name = "profile_picture_url", length = 500)
+    private String profilePictureUrl;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
@@ -65,6 +68,10 @@ public class User {
         return lastName;
     }
 
+    public String getProfilePictureUrl() {
+        return profilePictureUrl;
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }
@@ -88,6 +95,10 @@ public class User {
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
+    }
+
+    public void setProfilePictureUrl(String profilePictureUrl) {
+        this.profilePictureUrl = profilePictureUrl;
     }
 
     public void setEmail(String email) {
