@@ -11,6 +11,7 @@ import de.othr.traintogether.service.customExceptions.EmailAlreadyRegisteredExce
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class UserService {
@@ -18,13 +19,16 @@ public class UserService {
     private final UserRepository userRepository;
     private final AuthorityRepository authorityRepository;
     private final PasswordEncoder passwordEncoder;
+    private final MinioService minioService;
 
     public UserService(UserRepository userRepository,
                        AuthorityRepository authorityRepository,
-                       PasswordEncoder passwordEncoder) {
+                       PasswordEncoder passwordEncoder,
+                       MinioService minioService) {
         this.userRepository = userRepository;
         this.authorityRepository = authorityRepository;
         this.passwordEncoder = passwordEncoder;
+        this.minioService = minioService;
     }
 
     @Transactional
@@ -99,5 +103,35 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
         return true;
+    }
+
+    @Transactional
+    public String uploadProfilePicture(String email, MultipartFile file) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Delete old profile picture if exists
+        if (user.getProfilePictureUrl() != null && !user.getProfilePictureUrl().isEmpty()) {
+            minioService.deleteProfilePicture(user.getProfilePictureUrl());
+        }
+
+        // Upload new profile picture
+        String pictureUrl = minioService.uploadProfilePicture(file, user.getId());
+        user.setProfilePictureUrl(pictureUrl);
+        userRepository.save(user);
+
+        return pictureUrl;
+    }
+
+    @Transactional
+    public void deleteProfilePicture(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (user.getProfilePictureUrl() != null && !user.getProfilePictureUrl().isEmpty()) {
+            minioService.deleteProfilePicture(user.getProfilePictureUrl());
+            user.setProfilePictureUrl(null);
+            userRepository.save(user);
+        }
     }
 }
