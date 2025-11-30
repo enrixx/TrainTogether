@@ -18,7 +18,9 @@
                 </div>
                 <div sec:authorize="isAuthenticated()" class="mt-3">
                   <p class="mb-0">
-                    <span th:text="#{home.welcome}">Welcome back</span>, <strong th:text="${#authentication.name}">User</strong>!
+                    <span th:text="#{home.welcome}">Welcome back</span>,
+                    <strong th:if="${currentUser != null and currentUser.firstName != null and !#strings.isEmpty(currentUser.firstName)}"
+                            th:text="${currentUser.firstName + ' ' + (currentUser.lastName ?: '')}">User Name</strong>!
                   </p>
                 </div>
 
