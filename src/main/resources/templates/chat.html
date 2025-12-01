@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::content})}">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat</title>
+</head>
+
+<body>
+<div th:fragment="content" class="container-fluid h-100 d-flex flex-row">
+    <div th:replace="~{fragments/chat/chats-list :: chatList}"></div>
+
+    <div class="col-md-6 col-lg-7 col-xl-8 d-flex pb-3 flex-column h-100 border-start border-1 border-secondary ps-3">
+        <div th:replace="~{fragments/chat/chat-messages :: chatMessages}"></div>
+        <div th:replace="~{fragments/chat/message-input :: messageInput}"></div>
+    </div>
+</div>
+</body>
+</html>
