@@ -1,15 +1,12 @@
 package de.othr.traintogether.seed;
 
 import de.othr.traintogether.dto.RegisterDto;
-import de.othr.traintogether.model.User;
 import de.othr.traintogether.repository.UserRepository;
 import de.othr.traintogether.repository.chat.ChatRoomRepository;
 import de.othr.traintogether.service.ChatRoomService;
 import de.othr.traintogether.service.UserService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
-
-import java.util.HashSet;
 import java.util.Set;
 
 @Component
