@@ -85,15 +85,22 @@ public class MinioService {
         }
     }
 
-    public void deleteProfilePicture(String objectName) {
-        if (objectName == null || objectName.isEmpty()) {
+    public void deleteProfilePicture(String urlOrObjectName) {
+        if (urlOrObjectName == null || urlOrObjectName.isEmpty()) {
             return;
         }
 
         try {
-
-            if (objectName.contains(bucketName + "/")) {
-                objectName = objectName.substring(objectName.indexOf(bucketName + "/") + bucketName.length() + 1);
+            String objectName = urlOrObjectName;
+            if (urlOrObjectName.startsWith("http")) {
+                int bucketIndex = urlOrObjectName.indexOf("/" + bucketName + "/");
+                if (bucketIndex != -1) {
+                    objectName = urlOrObjectName.substring(bucketIndex + bucketName.length() + 2);
+                    int queryIndex = objectName.indexOf("?");
+                    if (queryIndex != -1) {
+                        objectName = objectName.substring(0, queryIndex);
+                    }
+                }
             }
 
             minioClient.removeObject(
