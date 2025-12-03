@@ -46,6 +46,7 @@ public class DataInitializer implements CommandLineRunner {
             return;
         }
         chatRoomService.createDm("user@u", "admin@a");
+        chatRoomService.createDm("user@u", "owner@o");
         java.util.HashSet<String> members = new java.util.HashSet<>(Set.of("user@u", "owner@o", "worker@w"));
         chatRoomService.createGroup("Test Group", null, members, "admin@a");
     }

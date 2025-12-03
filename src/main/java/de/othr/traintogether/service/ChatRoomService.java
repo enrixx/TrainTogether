@@ -50,7 +50,7 @@ public class ChatRoomService {
 
         User owner = userRepository.findByEmail(ownerEmail)
                 .orElseThrow(() -> new IllegalArgumentException("Owner not found: " + ownerEmail));
-        ChatRoom room = new ChatRoom(ChatRoomType.DM);
+        ChatRoom room = new ChatRoom(ChatRoomType.GROUP, name, pictureUrl);
         ChatRoomMember admin = new ChatRoomMember(room, owner, ChatRole.ADMIN);
         admin.setUser(owner);
         for (String userEmail : userEmails) {
@@ -59,6 +59,7 @@ public class ChatRoomService {
             ChatRoomMember member = new ChatRoomMember(room, user, ChatRole.MEMBER);
             room.addMember(member);
         }
+        chatRoomRepository.save(room);
     }
 
     @Transactional
@@ -97,7 +98,9 @@ public class ChatRoomService {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userEmail));
         List<ChatRoom> rooms = chatRoomRepository.findByUserAndType(user, ChatRoomType.DM);
-        return rooms.stream().map(chatRoomMapper::toDto).collect(Collectors.toList());
+        return rooms.stream()
+                .map(room -> chatRoomMapper.toDtoDm(room, user.getId()))
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -105,6 +108,6 @@ public class ChatRoomService {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userEmail));
         List<ChatRoom> rooms = chatRoomRepository.findByUserAndType(user, ChatRoomType.GROUP);
-        return rooms.stream().map(chatRoomMapper::toDto).collect(Collectors.toList());
+        return rooms.stream().map(chatRoomMapper::toDtoGroup).collect(Collectors.toList());
     }
 }

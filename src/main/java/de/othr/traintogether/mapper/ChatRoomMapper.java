@@ -14,19 +14,47 @@ import java.util.stream.Collectors;
 @Component
 public class ChatRoomMapper {
 
-    public ChatRoomDto toDto(ChatRoom room) {
+    public ChatRoomDto toDtoGroup(ChatRoom room) {
         if (room == null) return null;
         ChatRoomDto dto = new ChatRoomDto();
         dto.setId(room.getId());
         dto.setType(room.getType());
         dto.setName(room.getName());
-        dto.setPictureUrl(room.getPictureUrl());
         dto.setCreatedAt(room.getCreatedAt());
+
+        String pic = room.getPictureUrl();
+        if (pic == null || pic.isBlank()) {
+            dto.setPictureUrl("images/default-profile.png");
+        } else {
+            dto.setPictureUrl(pic);
+        }
 
         if (room.getMembers() == null || room.getMembers().isEmpty()) {
             dto.setMemberIds(Collections.emptySet());
         } else {
             dto.setMemberIds(membersToUserIds(room.getMembers()));
+        }
+        return dto;
+    }
+    public ChatRoomDto toDtoDm(ChatRoom room, Long currentUserId) {
+        ChatRoomDto dto = toDtoGroup(room);
+        if((long) room.getMembers().size() != 2) {
+            return dto; // fallback to normal group mapping
+        }
+        ChatRoomMember otherMember = room.getMembers().stream()
+                .filter(m -> m.getUser() != null && !m.getUser().getId().equals(currentUserId))
+                .findFirst()
+                .orElse(null);
+
+        if (otherMember != null) {
+
+            String pic = otherMember.getUser().getProfilePictureUrl();
+            if (pic == null || pic.isBlank()) {
+                dto.setPictureUrl("images/default-profile.png");
+            } else {
+                dto.setPictureUrl(pic);
+            }
+            dto.setName(otherMember.getUser().getUsername());
         }
         return dto;
     }

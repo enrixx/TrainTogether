@@ -19,7 +19,7 @@
     <aside sec:authorize="isAuthenticated()" th:replace="~{fragments/sidebar :: nav-sidebar}"
            class="flex-shrink-0"></aside>
     <div class="flex-grow-1 d-flex">
-        <section th:insert="${pageContent}" class="h-100"></section>
+        <section th:insert="${pageContent}" class="h-100 w-100"></section>
     </div>
 </main>
 </body>
