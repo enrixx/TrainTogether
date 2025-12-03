@@ -34,6 +34,8 @@
                 </a>
             </li>
         </ul>
+        <div th:replace="~{fragments/chat/chat-list-category :: chatListCategory(chats=${groups}, title='Groups')}"></div>
+        <div th:replace="~{fragments/chat/chat-list-category :: chatListCategory(chats=${dms}, title='Direct Messages')}"></div>
     </div>
 </div>
 </html>

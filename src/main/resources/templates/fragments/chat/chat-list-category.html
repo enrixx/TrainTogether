@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<div th:fragment="chatListCategory(chats, title)" th:if="${chats != null}" class="mb-2">
+    <h6 class="text-uppercase small text-muted mb-2" th:text="${title}">Section</h6>
+    <ul class="list-unstyled mb-2">
+        <li th:each="g : ${chats}" class="py-2 pe-0 border-bottom">
+            <a href="#!" class="d-flex justify-content-between text-decoration-none text-reset">
+                <div class="d-flex">
+                    <div>
+                        <img th:src="${g.pictureUrl}" alt="group avatar" class="rounded-circle me-3" style="width:48px; height:48px;"/>
+                    </div>
+                    <div class="pt-1">
+                        <p class="fw-bold mb-0" th:text="${g.name}">Group name</p>
+                    </div>
+                </div>
+                <div class="pt-1 text-end">
+                </div>
+            </a>
+        </li>
+    </ul>
+</div>
