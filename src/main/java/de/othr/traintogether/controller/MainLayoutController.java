@@ -1,28 +1,38 @@
 package de.othr.traintogether.controller;
 
+import de.othr.traintogether.dto.UserDto;
+import de.othr.traintogether.service.UserService;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 @Controller
 public class MainLayoutController {
 
+    private final UserService userService;
+
+    public MainLayoutController(UserService userService) {
+        this.userService = userService;
+    }
+
     @GetMapping({"/", "/home"})
-    public String home(Model model) {
+    public String home(Model model, Authentication authentication) {
         model.addAttribute("title", "Home");
+
+        if (authentication != null && authentication.isAuthenticated()) {
+            String email = authentication.getName();
+            UserDto user = userService.findUserByEmail(email);
+            if (user != null) {
+                model.addAttribute("currentUser", user);
+            }
+        }
+
         return "home";
     }
 
-    @PreAuthorize("isAuthenticated()")
-    @GetMapping("/profile")
-    public String profile(Model model) {
-        model.addAttribute("title", "Profile");
-        return "profile";
-    }
 
     //TODO: Move To separate Controller
     @PreAuthorize("hasAnyAuthority('ADMIN', 'GYM_OWNER', 'GYM_WORKER', 'PENDING_GYM_WORKER', 'PENDING_GYM_WORKER')")

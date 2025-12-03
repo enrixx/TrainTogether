@@ -1,5 +1,4 @@
 package de.othr.traintogether.model;
-
 import jakarta.persistence.*;
 
 import java.time.Instant;
@@ -23,6 +22,15 @@ public class User {
     @Column(length = 20)
     private String username;
 
+    @Column(length = 50)
+    private String firstName;
+
+    @Column(length = 50)
+    private String lastName;
+
+    @Column(name = "profile_picture_url", length = 500)
+    private String profilePictureUrl;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
@@ -31,13 +39,11 @@ public class User {
 
     public User() {
     }
-
     public User(String email, String encodedPassword) {
         this.email = Objects.requireNonNull(email, "Email cannot be null");
         this.password = Objects.requireNonNull(encodedPassword, "Password cannot be null");
     }
 
-    // getters + setters
     public Long getId() {
         return id;
     }
@@ -52,6 +58,18 @@ public class User {
 
     public String getUsername() {
         return username;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public String getProfilePictureUrl() {
+        return profilePictureUrl;
     }
 
     public Instant getCreatedAt() {
@@ -70,4 +88,25 @@ public class User {
     public void setUsername(String username) {
         this.username = username;
     }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public void setProfilePictureUrl(String profilePictureUrl) {
+        this.profilePictureUrl = profilePictureUrl;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
 }
+

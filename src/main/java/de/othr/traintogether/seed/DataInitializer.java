@@ -33,12 +33,12 @@ public class DataInitializer implements CommandLineRunner {
         if (userRepository.count() > 0) {
             return;
         }
-        userService.registerUser(new RegisterDto("user@u", "user", "Normal User", "USER"));
-        userService.registerUser(new RegisterDto("admin@a", "admin", "Administrator", "ADMIN"));
-        userService.registerUser(new RegisterDto("owner@o", "owner", "Gym Owner", "GYM_OWNER"));
-        userService.registerUser(new RegisterDto("worker@w", "worker", "Gym Worker", "GYM_WORKER"));
-        userService.registerUser(new RegisterDto("Powner@o", "Powner", "Pending Gym Owner", "PENDING_GYM_OWNER"));
-        userService.registerUser(new RegisterDto("Pworker@o", "Pworker", "Pending Gym Worker", "PENDING_GYM_WORKER"));
+        userService.registerUser(new RegisterDto("user@u", "user", "Normal User", "Deez", "Nuts", "USER"));
+        userService.registerUser(new RegisterDto("admin@a", "admin", "Administrator", "Nick", "Gurs", "ADMIN"));
+        userService.registerUser(new RegisterDto("owner@o", "owner", "Gym Owner", "Ben", "Dover", "GYM_OWNER"));
+        userService.registerUser(new RegisterDto("worker@w", "worker", "Gym Worker", "Mike", "Coxlong", "GYM_WORKER"));
+        userService.registerUser(new RegisterDto("Powner@o", "Powner", "Pending Gym Owner", "Mike", "Literus", "PENDING_GYM_OWNER"));
+        userService.registerUser(new RegisterDto("Pworker@o", "Pworker", "Pending Gym Worker", "Hue G.", "Rection", "PENDING_GYM_WORKER"));
     }
 
     private void seedExampleChats() {
@@ -50,4 +50,3 @@ public class DataInitializer implements CommandLineRunner {
         chatRoomService.createGroup("Test Group", null, members, "admin@a");
     }
 }
-

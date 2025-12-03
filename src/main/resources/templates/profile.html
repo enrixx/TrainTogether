@@ -6,9 +6,192 @@
 </head>
 <body>
 <div th:fragment="content">
-    <div class="container">
+    <div class="container mt-4">
         <h2>Profil</h2>
-        <p>Dies ist die Profilseite.</p>
+
+        <!-- Success Message -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Error Message -->
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div class="row">
+            <!-- Profile Picture Card -->
+            <div class="col-md-12 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Profile Picture</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <img th:if="${user.profilePictureUrl != null and !#strings.isEmpty(user.profilePictureUrl)}"
+                                 th:src="${user.profilePictureUrl}"
+                                 alt="Profile Picture"
+                                 class="rounded-circle"
+                                 style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #dee2e6;">
+                            <div th:unless="${user.profilePictureUrl != null and !#strings.isEmpty(user.profilePictureUrl)}"
+                                 class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center"
+                                 style="width: 150px; height: 150px; border: 3px solid #dee2e6;">
+                                <span class="text-white fs-1" th:text="${user.firstName != null ? #strings.substring(user.firstName, 0, 1) + #strings.substring(user.lastName, 0, 1) : '?'}">JD</span>
+                            </div>
+                        </div>
+
+                        <form th:action="@{/profile/upload-picture}" method="post" enctype="multipart/form-data" class="mb-2">
+                            <div class="mb-3">
+                                <input type="file"
+                                       class="form-control"
+                                       id="profilePicture"
+                                       name="profilePicture"
+                                       accept="image/*"
+                                       required>
+                                <small class="text-muted">Max size: 5MB. Allowed formats: JPG, PNG, GIF</small>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Upload Picture</button>
+                        </form>
+
+                        <form th:if="${user.profilePictureUrl != null and !#strings.isEmpty(user.profilePictureUrl)}"
+                              th:action="@{/profile/delete-picture}"
+                              method="post"
+                              onsubmit="return confirm('Are you sure you want to delete your profile picture?');">
+                            <button type="submit" class="btn btn-danger btn-sm">Delete Picture</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Profile Information Card -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Profile Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/profile/update}" th:object="${updateProfileDto}" method="post">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email"
+                                       class="form-control"
+                                       th:class="${#fields.hasErrors('email')} ? 'form-control is-invalid' : 'form-control'"
+                                       id="email"
+                                       th:field="*{email}"
+                                       placeholder="Enter your email">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">
+                                    Email error
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text"
+                                       class="form-control"
+                                       th:class="${#fields.hasErrors('username')} ? 'form-control is-invalid' : 'form-control'"
+                                       id="username"
+                                       th:field="*{username}"
+                                       placeholder="Enter your username">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('username')}" th:errors="*{username}">
+                                    Username error
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="firstName" class="form-label">First Name</label>
+                                <input type="text"
+                                       class="form-control"
+                                       th:class="${#fields.hasErrors('firstName')} ? 'form-control is-invalid' : 'form-control'"
+                                       id="firstName"
+                                       th:field="*{firstName}"
+                                       placeholder="Enter your first name"
+                                       required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}">
+                                    First name error
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="lastName" class="form-label">Last Name</label>
+                                <input type="text"
+                                       class="form-control"
+                                       th:class="${#fields.hasErrors('lastName')} ? 'form-control is-invalid' : 'form-control'"
+                                       id="lastName"
+                                       th:field="*{lastName}"
+                                       placeholder="Enter your last name"
+                                       required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}">
+                                    Last name error
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Member Since</label>
+                                <p class="form-control-plaintext" th:text="${#temporals.format(user.createdAt, 'dd.MM.yyyy HH:mm')}">01.01.2024</p>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100">Update Profile</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Change Password Card -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Change Password</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Password Error Message -->
+                        <div th:if="${passwordError}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <span th:text="${passwordError}"></span>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+
+                        <form th:action="@{/profile/update-password}" th:object="${updateProfileDto}" method="post">
+                            <div class="mb-3">
+                                <label for="currentPassword" class="form-label">Current Password</label>
+                                <input type="password"
+                                       class="form-control"
+                                       id="currentPassword"
+                                       th:field="*{currentPassword}"
+                                       placeholder="Enter current password"
+                                       required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="newPassword" class="form-label">New Password</label>
+                                <input type="password"
+                                       class="form-control"
+                                       id="newPassword"
+                                       th:field="*{newPassword}"
+                                       placeholder="Enter new password (min. 6 characters)"
+                                       minlength="6"
+                                       required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                                <input type="password"
+                                       class="form-control"
+                                       id="confirmPassword"
+                                       th:field="*{confirmPassword}"
+                                       placeholder="Confirm new password"
+                                       minlength="6"
+                                       required>
+                            </div>
+
+                            <button type="submit" class="btn btn-warning w-100">Change Password</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 </body>
