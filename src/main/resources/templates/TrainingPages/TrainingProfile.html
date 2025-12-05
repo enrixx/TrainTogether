@@ -1,49 +1,140 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
-  th:replace="~{layout :: layout(~{::content})}">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <title>My Profile</title>
+  <title>Training Profile</title>
+  <link href="/css/bootstrap.min.css" rel="stylesheet"/>
+
+  <style>
+    .bmi-under { background: #b3d9ff; padding: 6px; border-radius: 6px; }
+    .bmi-normal { background: #c6f6c6; padding: 6px; border-radius: 6px; }
+    .bmi-over { background: #ffe9b3; padding: 6px; border-radius: 6px; }
+    .bmi-obese { background: #ffb3b3; padding: 6px; border-radius: 6px; }
+  </style>
 </head>
-<body>
-<div th:fragment="content">
-  <h1>My Gym Profile</h1>
-    <form th:action="@{/trainingprofile}" th:object="${trainingprofile}" method="post">
 
-      <h2>Körperumfänge</h2>
+<body class="bg-light">
 
-      <label for="arm">Arm (cm):</label>
-      <input id="arm" type="number" step="0.1" th:field="*{measurements.arm.value}" /><br>
+<div class="container py-4">
 
-      <label for="brust">Brust (cm):</label>
-      <input id="brust" type="number" step="0.1" th:field="*{measurements.brust.value}" /><br>
+  <h1 class="mb-4">Training Profile</h1>
 
-      <label for="bein">Bein (cm):</label>
-      <input id="bein" type="number" step="0.1" th:field="*{measurements.bein.value}" /><br>
+  <!-- Aktuelles Measurement -->
+  <div class="card mb-4">
+    <div class="card-header">Aktuelle Körperwerte</div>
+    <div class="card-body" th:if="${latest != null}">
 
-      <label for="schulter">Schulter (cm):</label>
-      <input id="schulter" type="number" step="0.1" th:field="*{measurements.schulter.value}" /><br>
+      <!-- BMI -->
+      <h4 class="mt-3">BMI</h4>
+      <p th:with="bmi=${latest.bmi},
+                className=${bmi < 18.5 ? 'bmi-under' :
+                           (bmi < 25 ? 'bmi-normal' :
+                           (bmi < 30 ? 'bmi-over' : 'bmi-obese'))}">
+                <span th:classappend="${className}">
+                    <strong th:text="${#numbers.formatDecimal(bmi,1,1)}"></strong>
+                </span>
+      </p>
 
-      <label for="ruecken">Rücken (cm):</label>
-      <input id="ruecken" type="number" step="0.1" th:field="*{measurements.ruecken.value}" /><br>
+      <hr>
 
-      <h2>Trainingssplit</h2>
+      <!-- Measurements Section -->
+      <div class="row">
 
-      <label for="splitName">Name:</label>
-      <input id="splitName" type="text" th:field="*{trainingSplit.name}" /><br>
+        <!-- Arm -->
+        <div class="col-md-6">
+          <h5>Arm</h5>
+          <div class="row">
+            <div class="col-6">
+              <p><strong>Links:</strong> <span th:text="${latest.armLeft}"></span> cm</p>
+            </div>
+            <div class="col-6">
+              <p><strong>Rechts:</strong> <span th:text="${latest.armRight}"></span> cm</p>
+            </div>
+          </div>
+        </div>
 
-      <label for="splitDescription">Beschreibung:</label>
-      <input id="splitDescription" type="text" th:field="*{trainingSplit.description}" /><br>
+        <!-- Unterarm -->
+        <div class="col-md-6">
+          <h5>Unterarm</h5>
+          <div class="row">
+            <div class="col-6">
+              <p><strong>Links:</strong> <span th:text="${latest.forearmLeft}"></span> cm</p>
+            </div>
+            <div class="col-6">
+              <p><strong>Rechts:</strong> <span th:text="${latest.forearmRight}"></span> cm</p>
+            </div>
+          </div>
+        </div>
 
-      <br>
-      <button type="submit">Speichern</button>
-    </form>
+      </div>
 
-  <div th:if="${saved}">
-    <p style="color: green;">Profil gespeichert!</p>
+      <hr>
+
+      <!-- Brust & Schulter -->
+      <div class="row mt-3">
+        <div class="col-md-6">
+          <h5>Brustumfang</h5>
+          <p><span th:text="${latest.chest}"></span> cm</p>
+        </div>
+        <div class="col-md-6">
+          <h5>Schulterumfang</h5>
+          <p><span th:text="${latest.shoulder}"></span> cm</p>
+        </div>
+      </div>
+
+      <hr>
+
+      <!-- Taille & Hüfte -->
+      <div class="row mt-3">
+        <div class="col-md-6">
+          <h5>Taille</h5>
+          <p><span th:text="${latest.waist}"></span> cm</p>
+        </div>
+        <div class="col-md-6">
+          <h5>Hüfte</h5>
+          <p><span th:text="${latest.hip}"></span> cm</p>
+        </div>
+      </div>
+
+      <hr>
+
+      <!-- Rücken -->
+      <div class="row mt-3">
+        <div class="col-md-6">
+          <h5>Rücken</h5>
+          <p><span th:text="${latest.back}"></span> cm</p>
+        </div>
+      </div>
+
+      <hr>
+
+      <!-- Beine -->
+      <div class="row mt-3">
+        <div class="col-md-6">
+          <h5>Bein</h5>
+          <div class="row">
+            <div class="col-6">
+              <p><strong>Links:</strong> <span th:text="${latest.legLeft}"></span> cm</p>
+            </div>
+            <div class="col-6">
+              <p><strong>Rechts:</strong> <span th:text="${latest.legRight}"></span> cm</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <h5>APE Index</h5>
+          <p><span th:text="${latest.apeIndex}"></span></p>
+        </div>
+      </div>
+
+    </div>
   </div>
 
-  <a href="/workout/days">→ Trainingstage auswählen</a>
+  <!-- Links -->
+  <a class="btn btn-primary w-100 mb-2" href="/stats/new">Neue Werte eintragen</a>
+  <a class="btn btn-secondary w-100" href="/splits">Trainingssplit bearbeiten</a>
+
 </div>
+
 </body>
 </html>

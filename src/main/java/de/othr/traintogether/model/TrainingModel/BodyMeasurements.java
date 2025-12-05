@@ -1,27 +1,80 @@
 package de.othr.traintogether.model.TrainingModel;
 
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.Instant;
+
+@Entity
+@Table(name = "body_measurements")
+@Data
+@NoArgsConstructor  // ← JPA-konformer Default-Konstruktor
 public class BodyMeasurements {
 
-    public BodyMeasurements() {};
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    private Measurement arm = new Measurement();
-    private Measurement brust = new Measurement();
-    private Measurement bein = new Measurement();
-    private Measurement schulter = new Measurement();
-    private Measurement ruecken = new Measurement();
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false, nullable = false)
+    private Instant createdAt;
 
-    public Measurement getArm() { return arm; }
-    public void setArm(Measurement arm) { this.arm = arm; }
+    // Gewicht, Größe, BMI
+    private double gewicht = 0.0;
+    private double groesse = 0.0;
+    private double bmi = 0.0;
 
-    public Measurement getBrust() { return brust; }
-    public void setBrust(Measurement brust) { this.brust = brust; }
+    // APE Index
+    private double apeIndex = 0.0;
 
-    public Measurement getBein() { return bein; }
-    public void setBein(Measurement bein) { this.bein = bein; }
+    // ----- Grundumfang -----
 
-    public Measurement getSchulter() { return schulter; }
-    public void setSchulter(Measurement schulter) { this.schulter = schulter; }
+    @Embedded
+    @AttributeOverride(name = "value", column = @Column(name = "brust"))
+    private Measurement brust = new Measurement(0.0);
 
-    public Measurement getRuecken() { return ruecken; }
-    public void setRuecken(Measurement ruecken) { this.ruecken = ruecken; }
+    @Embedded
+    @AttributeOverride(name = "value", column = @Column(name = "schulter"))
+    private Measurement schulter = new Measurement(0.0);
+
+    @Embedded
+    @AttributeOverride(name = "value", column = @Column(name = "taille"))
+    private Measurement taille = new Measurement(0.0);
+
+    @Embedded
+    @AttributeOverride(name = "value", column = @Column(name = "huefte"))
+    private Measurement huefte = new Measurement(0.0);
+
+    // ----- Arme -----
+
+    @Embedded
+    @AttributeOverride(name = "value", column = @Column(name = "arm_links"))
+    private Measurement armLinks = new Measurement(0.0);
+
+    @Embedded
+    @AttributeOverride(name = "value", column = @Column(name = "arm_rechts"))
+    private Measurement armRechts = new Measurement(0.0);
+
+    // ----- Unterarme -----
+
+    @Embedded
+    @AttributeOverride(name = "value", column = @Column(name = "unterarm_links"))
+    private Measurement unterarmLinks = new Measurement(0.0);
+
+    @Embedded
+    @AttributeOverride(name = "value", column = @Column(name = "unterarm_rechts"))
+    private Measurement unterarmRechts = new Measurement(0.0);
+
+    // ----- Beine -----
+
+    @Embedded
+    @AttributeOverride(name = "value", column = @Column(name = "bein_links"))
+    private Measurement beinLinks = new Measurement(0.0);
+
+    @Embedded
+    @AttributeOverride(name = "value", column = @Column(name = "bein_rechts"))
+    private Measurement beinRechts = new Measurement(0.0);
+
 }
