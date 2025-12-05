@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{authenticate :: authlayout(~{::authContent})}">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+</head>
+<body>
+<form th:fragment="authContent" th:action="@{/login}" method="post" class="mx-auto">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+    <h1 class="h3 mb-3 fw-normal" th:text="#{text.sign.in}">Please sign in</h1>
+
+    <div class="form-floating mb-2">
+        <input type="email" name="email" class="form-control" id="floatingInput"
+               placeholder="name@example.com"
+               required>
+        <label for="floatingInput" th:text="#{auth.email}">Email address</label>
+    </div>
+    <div class="form-floating mb-3">
+        <input type="password" name="password" class="form-control" id="floatingPassword"
+               placeholder="Password"
+               required>
+        <label for="floatingPassword" th:text="#{auth.password}">Password</label>
+    </div>
+    <div th:if="${param.error != null}" class="alert alert-danger" th:text="#{error.wrong.credentials}">Wrong email or
+        password
+    </div>
+    <button class="btn btn-primary w-100 py-2 mb-3" type="submit" th:text="#{auth.sign.in}">Sign in</button>
+    <div class="d-flex justify-content-center align-items-center gap-2">
+        <span class="text-secondary" th:text="#{auth.no.account}">Don't have an account yet? </span>
+        <a class="link-secondary" href="register"
+           th:text="#{auth.register}">Register</a>
+    </div>
+</form>
+</body>
+</html>

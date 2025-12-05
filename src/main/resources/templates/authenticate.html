@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:fragment="authlayout(authContent)">
+<head>
+    <meta charset="UTF-8">
+    <title>Authenticate</title>
+    <script th:src="@{/webjars/bootstrap/5.3.8/js/bootstrap.bundle.min.js}"></script>
+    <script th:src="@{/webjars/jquery/3.7.1/jquery.min.js}"></script>
+    <link rel="stylesheet"
+          th:href="@{/webjars/bootstrap/5.3.8/css/bootstrap.min.css}"/>
+    <script th:src="@{/webjars/popper.js/2.11.7/umd/popper.min.js}" defer></script>
+    <script>
+        (function () {
+            try {
+                const theme = localStorage.getItem('theme') || 'light';
+                document.documentElement.setAttribute('data-bs-theme', theme);
+            } catch (e) {
+            }
+        })();
+    </script>
+</head>
+<body>
+
+
+<div class="d-flex justify-content-center py-4" style="margin-top: 20vh">
+    <div class="w-auto border rounded-4 shadow-sm p-4 bg-body-tertiary" style="min-width: 20rem;">
+        <section th:insert="${authContent}"></section>
+    </div>
+</div>
+</body>
+</html>
