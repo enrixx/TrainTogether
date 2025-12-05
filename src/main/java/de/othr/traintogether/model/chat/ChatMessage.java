@@ -1,9 +1,8 @@
 package de.othr.traintogether.model.chat;
 
-import de.othr.traintogether.model.User;
 import jakarta.persistence.*;
 import java.time.Instant;
-import java.util.Set;
+import java.util.Objects;
 
 @Entity
 @Table(name = "chat_messages")
@@ -14,12 +13,12 @@ public class ChatMessage {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "chat_room_id", nullable = false)
+    @JoinColumn(name = "chat_room_id", nullable = false, updatable = false)
     private ChatRoom chatRoom;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "sender_id", nullable = false)
-    private User sender;
+    @JoinColumn(name = "sender_member_id", nullable = false, updatable = false)
+    private ChatRoomMember sender;
 
     @Lob
     @Column(name = "content", nullable = false)
@@ -44,6 +43,13 @@ public class ChatMessage {
     @JoinColumn(name = "attachment_id", unique = true)
     private ChatAttachment attachment;
 
+    public ChatMessage() {}
+    public ChatMessage(ChatRoom chatRoom, ChatRoomMember sender, String content) {
+        this.chatRoom = Objects.requireNonNull(chatRoom, "chatRoom must not be null");
+        this.sender = Objects.requireNonNull(sender, "sender must not be null");
+        this.content = Objects.requireNonNull(content, "content must not be null");
+    }
+
     public Long getId() {
         return id;
     }
@@ -60,11 +66,11 @@ public class ChatMessage {
         this.chatRoom = chatRoom;
     }
 
-    public User getSender() {
+    public ChatRoomMember getSender() {
         return sender;
     }
 
-    public void setSender(User sender) {
+    public void setSender(ChatRoomMember sender) {
         this.sender = sender;
     }
 

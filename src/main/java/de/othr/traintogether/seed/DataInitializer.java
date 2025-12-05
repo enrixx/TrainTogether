@@ -2,7 +2,10 @@ package de.othr.traintogether.seed;
 
 import de.othr.traintogether.dto.RegisterDto;
 import de.othr.traintogether.repository.UserRepository;
+import de.othr.traintogether.repository.chat.ChatMessageRepository;
+import de.othr.traintogether.repository.chat.ChatRoomMemberRepository;
 import de.othr.traintogether.repository.chat.ChatRoomRepository;
+import de.othr.traintogether.service.ChatMessageService;
 import de.othr.traintogether.service.ChatRoomService;
 import de.othr.traintogether.service.UserService;
 import org.springframework.boot.CommandLineRunner;
@@ -15,12 +18,14 @@ public class DataInitializer implements CommandLineRunner {
     private final UserService userService;
     private final ChatRoomRepository chatRoomRepository;
     private final ChatRoomService chatRoomService;
+    private final ChatMessageService chatMessageService;
 
-    public DataInitializer(UserRepository repo, UserService userService, ChatRoomRepository chatRoomRepository, ChatRoomService chatRoomService) {
+    public DataInitializer(UserRepository repo, UserService userService, ChatRoomRepository chatRoomRepository, ChatRoomService chatRoomService, ChatRoomMemberRepository chatRoomMemberRepository, ChatMessageRepository chatMessageRepository, ChatMessageService chatMessageService) {
         this.userRepository = repo;
         this.userService = userService;
         this.chatRoomRepository = chatRoomRepository;
         this.chatRoomService = chatRoomService;
+        this.chatMessageService = chatMessageService;
     }
 
     @Override
@@ -49,5 +54,17 @@ public class DataInitializer implements CommandLineRunner {
         chatRoomService.createDm("user@u", "owner@o");
         java.util.HashSet<String> members = new java.util.HashSet<>(Set.of("user@u", "owner@o", "worker@w"));
         chatRoomService.createGroup("Test Group", null, members, "admin@a");
+
+        Long dm2 = chatRoomService.findDmByUser("user@u").getFirst().getId();
+        Long group = chatRoomService.findGroupsByUser("user@u").getFirst().getId();
+
+        chatMessageService.sendMessage("user@u", dm2, "Hi Admin, kurze Nachricht vom Seeder.");
+
+        chatMessageService.sendMessage("user@u", group, "Hallo zusammen!");
+        chatMessageService.sendMessage("owner@o", group, "Hi, freut mich dabei zu sein.");
+        chatMessageService.sendMessage("worker@w", group, "Moin, was geht?");
+        chatMessageService.sendMessage("user@u", group, "Wollen wir morgen trainieren?");
+        chatMessageService.sendMessage("owner@o", group, "Ja, gerne.");
+        chatMessageService.sendMessage("worker@w", group, "Passt bei mir.");
     }
 }
