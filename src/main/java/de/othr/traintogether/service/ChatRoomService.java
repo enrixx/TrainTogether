@@ -1,20 +1,19 @@
 package de.othr.traintogether.service;
 
-import de.othr.traintogether.dto.ChatRoomDto;
+import de.othr.traintogether.dto.ChatRoomListingDto;
 import de.othr.traintogether.mapper.ChatRoomMapper;
 import de.othr.traintogether.model.User;
-import de.othr.traintogether.model.chat.ChatRole;
-import de.othr.traintogether.model.chat.ChatRoom;
-import de.othr.traintogether.model.chat.ChatRoomMember;
-import de.othr.traintogether.model.chat.ChatRoomType;
+import de.othr.traintogether.model.chat.*;
 import de.othr.traintogether.repository.UserRepository;
+import de.othr.traintogether.repository.chat.ChatMessageRepository;
 import de.othr.traintogether.repository.chat.ChatRoomRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class ChatRoomService {
@@ -22,11 +21,13 @@ public class ChatRoomService {
     private final ChatRoomRepository chatRoomRepository;
     private final UserRepository userRepository;
     private final ChatRoomMapper chatRoomMapper;
+    private final ChatMessageRepository chatMessageRepository;
 
-    public ChatRoomService(ChatRoomRepository chatRoomRepository, UserRepository userRepository, ChatRoomMapper chatRoomMapper) {
+    public ChatRoomService(ChatRoomRepository chatRoomRepository, UserRepository userRepository, ChatRoomMapper chatRoomMapper, ChatMessageRepository chatMessageRepository) {
         this.chatRoomRepository = chatRoomRepository;
         this.userRepository = userRepository;
         this.chatRoomMapper = chatRoomMapper;
+        this.chatMessageRepository = chatMessageRepository;
     }
 
     @Transactional
@@ -94,20 +95,42 @@ public class ChatRoomService {
     }
 
     @Transactional(readOnly = true)
-    public List<ChatRoomDto> findDmByUser(String userEmail) {
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userEmail));
-        List<ChatRoom> rooms = chatRoomRepository.findByUserAndType(user, ChatRoomType.DM);
-        return rooms.stream()
-                .map(room -> chatRoomMapper.toDtoDm(room, user.getId()))
-                .collect(Collectors.toList());
+    public List<ChatRoomListingDto> findDmByUser(String userEmail) {
+        return findByUserAndType(userEmail, ChatRoomType.DM,
+                (room, member, unreadCount, lastMessage) -> chatRoomMapper.toDtoDm(room, unreadCount, lastMessage, member));
+
     }
 
     @Transactional(readOnly = true)
-    public List<ChatRoomDto> findGroupsByUser(String userEmail) {
+    public List<ChatRoomListingDto> findGroupsByUser(String userEmail) {
+        return findByUserAndType(userEmail, ChatRoomType.GROUP,
+                (room, member, unreadCount, lastMessage) -> chatRoomMapper.toDtoGroup(room, unreadCount, lastMessage));
+    }
+
+    @FunctionalInterface
+    private interface RoomToDtoMapper {
+        ChatRoomListingDto map(ChatRoom room, ChatRoomMember member, String unreadMessagesCount, Optional<ChatMessage> lastMessage);
+    }
+
+    private List<ChatRoomListingDto> findByUserAndType(String userEmail, ChatRoomType type, RoomToDtoMapper mapper) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userEmail));
-        List<ChatRoom> rooms = chatRoomRepository.findByUserAndType(user, ChatRoomType.GROUP);
-        return rooms.stream().map(chatRoomMapper::toDtoGroup).collect(Collectors.toList());
+        List<ChatRoom> rooms = chatRoomRepository.findByUserAndType(user, type);
+
+        List<ChatRoomListingDto> result = new ArrayList<>();
+        for (ChatRoom room : rooms) {
+            ChatRoomMember member = room.getMembers().stream()
+                    .filter(m -> m.getUser() != null && m.getUser().getId() != null
+                            && m.getUser().getId().equals(user.getId()))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("ChatRoomMember not found for user: " + userEmail));
+
+            long unread = chatMessageRepository.countByChatRoomIdAndSentAtAfter(room.getId(), member.getLastRead());
+            String unreadMessagesCount = unread > 99 ? "99+" : Long.toString(unread);
+            Optional<ChatMessage> lastMessage = chatMessageRepository.findFirstByChatRoomIdOrderBySentAtDesc(room.getId());
+
+            result.add(mapper.map(room, member, unreadMessagesCount, lastMessage));
+        }
+        return result;
     }
 }

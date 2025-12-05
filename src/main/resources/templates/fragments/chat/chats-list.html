@@ -10,7 +10,7 @@
         </svg>
     </div>
 
-    <div class="flex-grow-1 overflow-auto">
+    <div class="flex-grow-1 overflow-y-auto overflow-x-hidden">
         <div th:replace="~{fragments/chat/chat-list-category :: chatListCategory(chats=${groups}, title='Groups')}"></div>
         <div th:replace="~{fragments/chat/chat-list-category :: chatListCategory(chats=${dms}, title='Direct Messages')}"></div>
     </div>

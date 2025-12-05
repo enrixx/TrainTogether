@@ -28,6 +28,9 @@ public class ChatRoomMember {
     @Column(nullable = false)
     private ChatRole role;
 
+    @Column(name = "last_read", nullable = false)
+    private final Instant lastRead = Instant.now();
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private final Instant createdAt = Instant.now();
 
@@ -80,5 +83,10 @@ public class ChatRoomMember {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public Instant getLastRead() { return lastRead; }
+
+    public void setLastRead(Instant lastRead) {
     }
 }

@@ -1,26 +1,32 @@
 package de.othr.traintogether.mapper;
 
-import de.othr.traintogether.dto.ChatRoomDto;
+import de.othr.traintogether.dto.ChatRoomListingDto;
+import de.othr.traintogether.model.chat.ChatMessage;
 import de.othr.traintogether.model.chat.ChatRoom;
 import de.othr.traintogether.model.chat.ChatRoomMember;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
 public class ChatRoomMapper {
 
-    public ChatRoomDto toDtoGroup(ChatRoom room) {
+    public ChatRoomListingDto toDtoGroup(ChatRoom room, String unreadMessagesCount, Optional<ChatMessage> lastMessage) {
         if (room == null) return null;
-        ChatRoomDto dto = new ChatRoomDto();
-        dto.setId(room.getId());
-        dto.setType(room.getType());
-        dto.setName(room.getName());
-        dto.setCreatedAt(room.getCreatedAt());
+        ChatRoomListingDto dto = new ChatRoomListingDto(room.getId(), room.getName());
+        dto.setUnreadMessagesCount(unreadMessagesCount);
+        if (lastMessage.isPresent()) {
+            dto.setContainsMessage(true);
+            ChatMessage message = lastMessage.get();
+            dto.setLastMessageAt(formatSentAt(message.getSentAt()));
+            dto.setLastMessagePreview(message.getContent());
+        }
 
         String pic = room.getPictureUrl();
         if (pic == null || pic.isBlank()) {
@@ -28,21 +34,15 @@ public class ChatRoomMapper {
         } else {
             dto.setPictureUrl(pic);
         }
-
-        if (room.getMembers() == null || room.getMembers().isEmpty()) {
-            dto.setMemberIds(Collections.emptySet());
-        } else {
-            dto.setMemberIds(membersToUserIds(room.getMembers()));
-        }
         return dto;
     }
-    public ChatRoomDto toDtoDm(ChatRoom room, Long currentUserId) {
-        ChatRoomDto dto = toDtoGroup(room);
+    public ChatRoomListingDto toDtoDm(ChatRoom room, String unreadMessagesCount, Optional<ChatMessage> lastMessage, ChatRoomMember member) {
+        ChatRoomListingDto dto = toDtoGroup(room, unreadMessagesCount, lastMessage);
         if((long) room.getMembers().size() != 2) {
             return dto; // fallback to normal group mapping
         }
         ChatRoomMember otherMember = room.getMembers().stream()
-                .filter(m -> m.getUser() != null && !m.getUser().getId().equals(currentUserId))
+                .filter(m -> m.getUser() != null && !m.getUser().getId().equals(member.getUser().getId()))
                 .findFirst()
                 .orElse(null);
 
@@ -59,15 +59,19 @@ public class ChatRoomMapper {
         return dto;
     }
 
-    private Set<Long> membersToUserIds(Set<ChatRoomMember> members) {
-        if (members == null) return Collections.emptySet();
-        return members.stream()
-                .filter(Objects::nonNull)
-                .map(m -> {
-                    if (m.getUser() != null) return m.getUser().getId();
-                    return null;
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toCollection(HashSet::new));
+    private String formatSentAt(Instant sentAt) {
+        if (sentAt == null) return null;
+        ZoneId zone = ZoneId.systemDefault();
+        ZonedDateTime zdt = sentAt.atZone(zone);
+        LocalDate sentDate = zdt.toLocalDate();
+        LocalDate today = LocalDate.now(zone);
+
+        if (sentDate.equals(today)) {
+            return zdt.format(DateTimeFormatter.ofPattern("HH:mm"));
+        } else if (sentDate.getYear() == today.getYear()) {
+            return zdt.format(DateTimeFormatter.ofPattern("dd.MM"));
+        } else {
+            return zdt.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+        }
     }
 }
