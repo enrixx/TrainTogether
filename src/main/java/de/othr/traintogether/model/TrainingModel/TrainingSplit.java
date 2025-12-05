@@ -1,19 +1,42 @@
 package de.othr.traintogether.model.TrainingModel;
 
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.util.ArrayList;
+
+@Entity
+@Table(name = "training_splits")
+@Getter
+@Setter
+@NoArgsConstructor
 public class TrainingSplit {
 
-    private String name;  // z.B. "Push Pull Legs", "5er Split"
-    private String description; // Optional
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    public TrainingSplit() {}
+    private String splitName;
 
-    public TrainingSplit(String name) {
-        this.name = name;
+    @OneToMany(mappedBy = "split", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<TrainingDay> days = new java.util.ArrayList<>();
+
+    public TrainingSplit(String splitName) {
+        this.splitName = splitName;
+        initializeDays();
     }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    private void initializeDays() {
+        for (Weekday weekday : Weekday.values()) {
+            TrainingDay day = new TrainingDay();
+            day.setWeekday(weekday);
+            day.setSplit(this);
+
+            day.setExercises(new ArrayList<>()); // leer = Rest Day
+            this.days.add(day);
+        }
+    }
 }
