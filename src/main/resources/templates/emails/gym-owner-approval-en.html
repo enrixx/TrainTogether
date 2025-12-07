@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #198754; color: white; padding: 30px; text-align: center; border-radius: 5px 5px 0 0; }
+        .content { background-color: #f8f9fa; padding: 30px; border-radius: 0 0 5px 5px; }
+        .button { display: inline-block; padding: 12px 30px; background-color: #198754; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 20px; color: #6c757d; font-size: 0.9em; }
+        ul { padding-left: 20px; }
+        li { margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 Congratulations!</h1>
+        </div>
+        <div class="content">
+            <p>Hi <span th:text="${firstName}">User</span>,</p>
+            <p>Great news! Your gym owner request for <strong th:text="${gymName}">Gym Name</strong> has been approved by our team.</p>
+            <p>You can now log in to your account and access all gym owner features:</p>
+            <ul>
+                <li>Manage your gym profile</li>
+                <li>View and manage members</li>
+                <li>Create and schedule workouts</li>
+                <li>Access analytics and reports</li>
+            </ul>
+            <div style="text-align: center;">
+                <a th:href="${loginUrl}" class="button">Log In to Your Account</a>
+            </div>
+            <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
+            <p>Welcome to the TrainTogether gym owner community!</p>
+            <p>Best regards,<br>The TrainTogether Team</p>
+        </div>
+        <div class="footer">
+            <p>This email was sent by TrainTogether. If you didn't request this, please ignore this email.</p>
+        </div>
+    </div>
+</body>
+</html>
+

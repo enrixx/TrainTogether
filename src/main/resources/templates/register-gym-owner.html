@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{authenticate :: authlayout(~{::authContent})}">
+<head>
+    <meta charset="UTF-8">
+    <title>Register as Gym Owner</title>
+</head>
+<body>
+<form th:fragment="authContent" class="mx-auto" method="post" th:action="@{/register/gym-owner}"
+      th:object="${gymOwnerRegisterDto}">
+
+
+    <h1 class="h3 mb-3 fw-normal">Register as Gym Owner</h1>
+    <p class="text-muted small mb-3">Fill out the form below to register your gym and apply for gym owner access.</p>
+
+    <!-- Success/Error Messages -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${errorMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- General Form Errors -->
+    <div th:if="${#fields.hasErrors('global')}" class="alert alert-danger" role="alert">
+        <p th:each="err : ${#fields.errors('global')}" th:text="${err}"></p>
+    </div>
+
+    <!-- Personal Information Section -->
+    <h6 class="text-secondary mb-2">Personal Information</h6>
+
+    <div class="form-floating mb-2">
+        <input type="email" th:field="*{email}" id="registerEmail" class="form-control"
+               th:class="${#fields.hasErrors('email')} ? 'form-control is-invalid' : 'form-control'"
+               placeholder="name@example.com"
+               required>
+        <label for="registerEmail">Email address</label>
+        <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+    </div>
+
+    <div class="form-floating mb-2">
+        <input type="password" th:field="*{password}" id="registerPassword" class="form-control"
+               th:class="${#fields.hasErrors('password')} ? 'form-control is-invalid' : 'form-control'"
+               placeholder="Password"
+               required>
+        <label for="registerPassword">Password</label>
+        <div class="invalid-feedback" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+    </div>
+
+    <div class="form-floating mb-2">
+        <input type="text" th:field="*{firstName}" id="registerFirstName" class="form-control"
+               th:class="${#fields.hasErrors('firstName')} ? 'form-control is-invalid' : 'form-control'"
+               placeholder="First Name" required>
+        <label for="registerFirstName">First Name</label>
+        <div class="invalid-feedback" th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}"></div>
+    </div>
+
+    <div class="form-floating mb-2">
+        <input type="text" th:field="*{lastName}" id="registerLastName" class="form-control"
+               th:class="${#fields.hasErrors('lastName')} ? 'form-control is-invalid' : 'form-control'"
+               placeholder="Last Name" required>
+        <label for="registerLastName">Last Name</label>
+        <div class="invalid-feedback" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}"></div>
+    </div>
+
+    <div class="form-floating mb-3">
+        <input type="text" th:field="*{username}" id="registerUsername" class="form-control"
+               th:class="${#fields.hasErrors('username')} ? 'form-control is-invalid' : 'form-control'"
+               placeholder="Username (optional)">
+        <label for="registerUsername">Username (optional)</label>
+        <div class="invalid-feedback" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
+    </div>
+
+    <!-- Gym Information Section -->
+    <h6 class="text-secondary mb-2 mt-3">Gym Information</h6>
+
+    <div class="form-floating mb-2">
+        <input type="text" th:field="*{gymName}" id="gymName" class="form-control"
+               th:class="${#fields.hasErrors('gymName')} ? 'form-control is-invalid' : 'form-control'"
+               placeholder="Gym Name" required>
+        <label for="gymName">Gym Name</label>
+        <div class="invalid-feedback" th:if="${#fields.hasErrors('gymName')}" th:errors="*{gymName}"></div>
+    </div>
+
+    <div class="form-floating mb-2">
+        <input type="text" th:field="*{gymAddress}" id="gymAddress" class="form-control"
+               th:class="${#fields.hasErrors('gymAddress')} ? 'form-control is-invalid' : 'form-control'"
+               placeholder="Street Address" required>
+        <label for="gymAddress">Street Address</label>
+        <div class="invalid-feedback" th:if="${#fields.hasErrors('gymAddress')}" th:errors="*{gymAddress}"></div>
+    </div>
+
+    <div class="row g-2 mb-2">
+        <div class="col-md-8">
+            <div class="form-floating">
+                <input type="text" th:field="*{city}" id="city" class="form-control"
+                       th:class="${#fields.hasErrors('city')} ? 'form-control is-invalid' : 'form-control'"
+                       placeholder="City" required>
+                <label for="city">City</label>
+                <div class="invalid-feedback" th:if="${#fields.hasErrors('city')}" th:errors="*{city}"></div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-floating">
+                <input type="text" th:field="*{postalCode}" id="postalCode" class="form-control"
+                       th:class="${#fields.hasErrors('postalCode')} ? 'form-control is-invalid' : 'form-control'"
+                       placeholder="Postal Code" required>
+                <label for="postalCode">Postal Code</label>
+                <div class="invalid-feedback" th:if="${#fields.hasErrors('postalCode')}" th:errors="*{postalCode}"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-floating mb-2">
+        <input type="tel" th:field="*{phoneNumber}" id="phoneNumber" class="form-control"
+               th:class="${#fields.hasErrors('phoneNumber')} ? 'form-control is-invalid' : 'form-control'"
+               placeholder="Phone Number">
+        <label for="phoneNumber">Phone Number (optional)</label>
+        <div class="invalid-feedback" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></div>
+    </div>
+
+    <div class="mb-3">
+        <label for="gymDescription" class="form-label small">Tell us about your gym</label>
+        <textarea class="form-control"
+                  th:class="${#fields.hasErrors('gymDescription')} ? 'form-control is-invalid' : 'form-control'"
+                  id="gymDescription"
+                  th:field="*{gymDescription}"
+                  rows="4"
+                  placeholder="Describe your gym, its facilities, and why you want to register as a gym owner..."
+                  required></textarea>
+        <div class="invalid-feedback" th:if="${#fields.hasErrors('gymDescription')}" th:errors="*{gymDescription}"></div>
+        <small class="text-muted">Maximum 1000 characters</small>
+    </div>
+
+    <button class="btn btn-primary w-100 py-2 mb-2" type="submit">Submit Registration</button>
+
+    <div class="d-grid gap-2 mt-3">
+        <a th:href="@{/login}" class="btn btn-outline-secondary py-2" role="button">
+            <span th:text="#{auth.sign.in}">Login</span>
+        </a>
+        <a th:href="@{/register}" class="btn btn-outline-secondary py-2" role="button">
+            <span th:text="#{auth.register}">Register as User</span>
+        </a>
+    </div>
+</form>
+</body>
+</html>
+

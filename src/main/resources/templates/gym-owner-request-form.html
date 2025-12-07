@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::content})}">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title} ?: 'Gym Owner Request'">Gym Owner Request</title>
+</head>
+<body>
+
+<!--TODO: IS THIS NEEDED?-->
+<div th:fragment="content">
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="mb-0">Request Gym Owner Role</h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- Error Message -->
+                        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <span th:text="${errorMessage}"></span>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        <p class="text-muted">
+                            Submit a request to become a gym owner. An admin will review your request and you will be notified once it's approved.
+                        </p>
+                        <form th:action="@{/gym-owner-requests/request}" th:object="${gymOwnerRequestDto}" method="post">
+                            <div class="mb-3">
+                                <label for="requestMessage" class="form-label">Why do you want to become a gym owner?</label>
+                                <textarea class="form-control"
+                                          th:class="${#fields.hasErrors('requestMessage')} ? 'form-control is-invalid' : 'form-control'"
+                                          id="requestMessage"
+                                          th:field="*{requestMessage}"
+                                          rows="6"
+                                          placeholder="Tell us about yourself and why you want to become a gym owner..."></textarea>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('requestMessage')}" th:errors="*{requestMessage}">
+                                    Request message error
+                                </div>
+                                <small class="text-muted">Maximum 1000 characters</small>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <a th:href="@{/profile}" class="btn btn-secondary">Cancel</a>
+                                <button type="submit" class="btn btn-primary">Submit Request</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

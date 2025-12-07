@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Language Selector Fragment (Fixed Position - for auth pages) -->
+<div th:fragment="languageSelector" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
+    <a id="langToggle"
+       class="btn border rounded-pill position-relative p-1 shadow-sm bg-body-tertiary"
+       th:with="isGerman=${#locale.language == 'de'}"
+       th:href="@{''(lang=${isGerman ? 'en' : 'de'})}"
+       onclick="animateLangSwitch(event, this)"
+       style="height: 42px; width: 90px; overflow: hidden; display: block;">
+
+        <!-- Background Labels (Fixed Positions) -->
+        <div class="d-flex justify-content-between align-items-center w-100 h-100 px-2 position-absolute top-0 start-0 text-secondary fw-bold small"
+             style="z-index: 0;">
+            <span style="padding-left: 6px;">DE</span>
+            <span style="padding-right: 6px;">EN</span>
+        </div>
+
+        <!-- Sliding Flag Circle -->
+        <div id="flagSlider"
+             class="bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm position-absolute"
+             th:style="${isGerman} ? 'width: 32px; height: 32px; top: 4px; left: calc(100% - 36px); transition: all 0.2s ease-in-out; z-index: 1;'
+                                   : 'width: 32px; height: 32px; top: 4px; left: 4px; transition: all 0.2s ease-in-out; z-index: 1;'">
+            <span th:text="${isGerman ? '🇩🇪' : '🇬🇧'}" class="fs-6" style="line-height: 1;"></span>
+        </div>
+    </a>
+
+    <!-- Inline Script to Handle Animation Before Reload -->
+    <script th:inline="javascript">
+        function animateLangSwitch(e, element) {
+            e.preventDefault();
+
+            const slider = element.querySelector('#flagSlider');
+            const targetUrl = element.getAttribute('href');
+
+            const currentLeft = slider.style.left;
+            const isCurrentlyRight = currentLeft.includes('calc') || currentLeft.includes('%');
+
+            // Animate to the opposite side
+            if (isCurrentlyRight) {
+                slider.style.left = '4px';
+            } else {
+                slider.style.left = 'calc(100% - 36px)';
+            }
+
+            // Wait 200ms for CSS transition, then reload
+            setTimeout(() => {
+                window.location.href = targetUrl;
+            }, 200);
+        }
+    </script>
+</div>
+
+<!-- Language Selector for Dropdown Menu (no fixed position) -->
+<li th:fragment="languageSelectorDropdown" class="px-3 py-2">
+    <a id="langToggle"
+       class="btn border rounded-pill w-100 position-relative p-1 shadow-sm bg-body-tertiary"
+       th:with="isGerman=${#locale.language == 'de'}"
+       th:href="@{''(lang=${isGerman ? 'en' : 'de'})}"
+       onclick="animateLangSwitchDropdown(event, this)"
+       style="height: 42px; overflow: hidden;">
+
+        <!-- Background Labels (Fixed Positions) -->
+        <div class="d-flex justify-content-between align-items-center w-100 h-100 px-2 position-absolute top-0 start-0 text-secondary fw-bold small"
+             style="z-index: 0;">
+            <span style="padding-left: 6px;">DE</span>
+            <span style="padding-right: 6px;">EN</span>
+        </div>
+
+        <!-- Sliding Flag Circle -->
+        <div id="flagSlider"
+             class="bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm position-absolute"
+             th:style="${isGerman} ? 'width: 32px; height: 32px; top: 4px; left: calc(100% - 36px); transition: all 0.2s ease-in-out; z-index: 1;'
+                                   : 'width: 32px; height: 32px; top: 4px; left: 4px; transition: all 0.2s ease-in-out; z-index: 1;'">
+            <span th:text="${isGerman ? '🇩🇪' : '🇬🇧'}" class="fs-6" style="line-height: 1;"></span>
+        </div>
+    </a>
+
+    <!-- Inline Script to Handle Animation Before Reload (with dropdown stop propagation) -->
+    <script th:inline="javascript">
+        function animateLangSwitchDropdown(e, element) {
+            e.preventDefault();
+            e.stopPropagation(); // Stop Bootstrap from closing the dropdown
+
+            const slider = element.querySelector('#flagSlider');
+            const targetUrl = element.getAttribute('href');
+
+            const currentLeft = slider.style.left;
+            const isCurrentlyRight = currentLeft.includes('calc') || currentLeft.includes('%');
+
+            // Animate to the opposite side
+            if (isCurrentlyRight) {
+                slider.style.left = '4px';
+            } else {
+                slider.style.left = 'calc(100% - 36px)';
+            }
+
+            // Wait 200ms for CSS transition, then reload
+            setTimeout(() => {
+                window.location.href = targetUrl;
+            }, 200);
+        }
+    </script>
+</li>
+
+</body>
+</html>
+
