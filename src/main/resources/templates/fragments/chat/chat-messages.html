@@ -11,7 +11,7 @@
                 <span class="fw-semibold" th:text="#{chat.unread.label}">Unread messages</span>
             </div>
 
-            <div th:replace="~{${template} :: chatMessage(message=${message})}"></div>
+            <div th:replace="~{${template} :: chatMessage(message=${message}, roomType=${messagePage.roomType})}"></div>
         </div>
     </div>
     <div th:if="${messagePage.messages.isEmpty()}" class="flex-grow-1 d-flex align-items-center justify-content-center">

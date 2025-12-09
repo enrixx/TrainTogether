@@ -10,6 +10,7 @@ import java.util.List;
 public class ChatMessagePageDto {
     private List<ChatMessageDto> messages;
     private Long lastMessageId;
+    private String roomType;
     private boolean hasMore;
     private String nextCursor;
     private int pageSize;

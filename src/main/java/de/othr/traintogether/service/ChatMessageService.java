@@ -122,6 +122,7 @@ public class ChatMessageService {
         ChatMessagePageDto pageDto = new ChatMessagePageDto();
         pageDto.setMessages(messagesDto);
         pageDto.setLastMessageId(lastReadMessageId);
+        pageDto.setRoomType(member.getChatRoom().getType().name());
         pageDto.setHasMore(hasMore);
         pageDto.setNextCursor(nextCursor);
         pageDto.setPageSize(pageSize);

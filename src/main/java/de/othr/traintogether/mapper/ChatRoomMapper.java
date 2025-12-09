@@ -19,7 +19,7 @@ public class ChatRoomMapper {
 
     public ChatRoomListingDto toDtoGroup(ChatRoom room, String unreadMessagesCount, Optional<ChatMessage> lastMessage) {
         if (room == null) return null;
-        ChatRoomListingDto dto = new ChatRoomListingDto(room.getId(), room.getName());
+        ChatRoomListingDto dto = new ChatRoomListingDto(room.getId(),room.getType().name());
         dto.setUnreadMessagesCount(unreadMessagesCount);
         if (lastMessage.isPresent()) {
             dto.setContainsMessage(true);
@@ -27,6 +27,7 @@ public class ChatRoomMapper {
             dto.setLastMessageAt(formatSentAt(message.getSentAt()));
             dto.setLastMessagePreview(message.getContent());
         }
+        dto.setName(room.getName());
 
         String pic = room.getPictureUrl();
         if (pic == null || pic.isBlank()) {
