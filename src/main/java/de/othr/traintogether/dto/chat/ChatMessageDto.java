@@ -19,7 +19,7 @@ public class ChatMessageDto {
     @lombok.NonNull
     private String content;
     @lombok.NonNull
-    private Instant sentAt;
+    private String sentAt;
     private boolean edited;
     private boolean mine;
     private String replyTo;

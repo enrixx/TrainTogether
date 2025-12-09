@@ -30,7 +30,7 @@ public class ChatRoomMapper {
 
         String pic = room.getPictureUrl();
         if (pic == null || pic.isBlank()) {
-            dto.setPictureUrl("images/default-profile.png");
+            dto.setPictureUrl("/images/default-profile.png");
         } else {
             dto.setPictureUrl(pic);
         }
@@ -50,7 +50,7 @@ public class ChatRoomMapper {
 
             String pic = otherMember.getUser().getProfilePictureUrl();
             if (pic == null || pic.isBlank()) {
-                dto.setPictureUrl("images/default-profile.png");
+                dto.setPictureUrl("/images/default-profile.png");
             } else {
                 dto.setPictureUrl(pic);
             }

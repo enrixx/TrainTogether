@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html lang="en">
+<div th:fragment="chatMessage(message)" class="d-flex flex-row justify-content-start">
+    <img th:src="${message.sender.SenderPictureUrl}"
+         alt="avatar" style="width: 45px; height: 100%;">
+    <div>
+        <p class="small p-2 ms-3 mb-1 rounded-3 bg-body-tertiary" th:text="${message.content}">Message</p>
+        <p class="small ms-3 mb-3 rounded-3 text-muted float-end" th:text="${message.sentAt}">Time</p>
+    </div>
+</div>
