@@ -7,14 +7,12 @@ import java.util.List;
 
 @Getter
 @Setter
-public class ChatMessagePageDto {
+public class ChatMessagesCursorDto {
+
     private List<ChatMessageDto> messages;
     private Long lastMessageId;
-    private String roomType;
-    private boolean topHasMore;
-    private String topCursor;
-    private boolean bottomHasMore;
-    private String bottomCursor;
+    private boolean hasMore;
+    private String cursor;
     private int pageSize;
+    private String roomType;
 }
-

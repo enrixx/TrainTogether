@@ -66,5 +66,14 @@ public class DataInitializer implements CommandLineRunner {
         chatMessageService.sendMessage("user@u", group, "Wollen wir morgen trainieren?");
         chatMessageService.sendMessage("owner@o", group, "Ja, gerne.");
         chatMessageService.sendMessage("worker@w", group, "Passt bei mir.");
+
+        for (long i = 0; i < 300; i++) {
+            if(i % 2 == 0){
+                chatMessageService.sendMessage("owner@o", group, "Message Nummer " + (i + 1));
+            }
+            else {
+                chatMessageService.sendMessage("user@u", group, "Message Nummer " + (i + 1));
+            }
+        }
     }
 }

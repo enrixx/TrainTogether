@@ -1,24 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<div th:fragment="chatMessages" class="d-flex flex-column h-100" style="min-height: 0">
-    <div th:if="${!messagePage.messages.isEmpty()}" id="messagesContainer"  class="flex-grow-1 overflow-auto pe-3 pt-3">
-        <div th:each="message : ${messagePage.messages}" th:with="template=${message.mine} ? 'fragments/chat/message-mine' : 'fragments/chat/message-other'">
+<div th:fragment="chatMessages" th:each="message : ${messages}"
+     th:with="template=${message.mine} ? 'fragments/chat/message-mine' : 'fragments/chat/message-other'">
 
-            <div th:if="${message.id == messagePage.lastMessageId}"
-                 th:attr="data-message-id=${message.id}"
-                 class="text-center text-danger py-3">
-                <div class="flex-grow-1 border-top border-2 border-danger"></div>
-                <span class="fw-semibold" th:text="#{chat.unread.label}">Unread messages</span>
-            </div>
+    <div th:if="${message.id == lastMessageId}"
+         th:attr="data-message-id=${message.id}"
+         class="text-center text-danger py-3">
+        <div class="flex-grow-1 border-top border-2 border-danger"></div>
+        <span class="fw-semibold" th:text="#{chat.unread.label}">Unread messages</span>
+    </div>
 
-            <div th:replace="~{${template} :: chatMessage(message=${message}, roomType=${messagePage.roomType})}"></div>
-        </div>
-    </div>
-    <div th:if="${messagePage.messages.isEmpty()}" class="flex-grow-1 d-flex align-items-center justify-content-center">
-        <div class="text-center text-muted">
-            <p class="h6 mb-1" th:text="#{chat.messages.empty.title}">his is the start of your conversation</p>
-            <p class="mb-0" th:text="#{chat.messages.empty.desc}">No messages yet - write something to start the conversation.</p>
-        </div>
-    </div>
+    <div th:replace="~{${template} :: chatMessage(message=${message}, roomType=${roomType})}"></div>
 </div>
-</html>

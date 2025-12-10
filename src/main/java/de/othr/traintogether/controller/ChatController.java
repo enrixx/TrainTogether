@@ -1,12 +1,17 @@
 package de.othr.traintogether.controller;
 
 import de.othr.traintogether.dto.chat.ChatMessagePageDto;
+import de.othr.traintogether.dto.chat.ChatMessagesCursorDto;
+import de.othr.traintogether.dto.chat.ChatMessagesFragmentDto;
 import de.othr.traintogether.service.ChatMessageService;
 import de.othr.traintogether.service.ChatRoomService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import java.security.Principal;
 
@@ -18,10 +23,12 @@ public class ChatController {
 
     private final ChatRoomService chatRoomService;
     private final ChatMessageService chatMessageService;
+    private final SpringTemplateEngine templateEngine;
 
-    public ChatController(ChatRoomService chatRoomService, ChatMessageService chatMessageService) {
+    public ChatController(ChatRoomService chatRoomService, ChatMessageService chatMessageService, SpringTemplateEngine templateEngine) {
         this.chatRoomService = chatRoomService;
         this.chatMessageService = chatMessageService;
+        this.templateEngine = templateEngine;
     }
 
     @ModelAttribute
@@ -39,6 +46,7 @@ public class ChatController {
         return "chat";
     }
 
+    //TODO: check if user is member of chat room
     @GetMapping("/{chatId}")
     public String getMessages(
             @PathVariable("chatId") Long chatId,
@@ -48,7 +56,7 @@ public class ChatController {
             Principal principal) {
 
         try {
-            ChatMessagePageDto page = chatMessageService.getMessageCursorPage(principal.getName(), chatId, cursor, pageSize);
+            ChatMessagePageDto page = chatMessageService.getMessageInitialCursorPage(principal.getName(), chatId, pageSize);
             model.addAttribute("messagePage", page);
         } catch (IllegalArgumentException e) {
             return "error/404";
@@ -56,5 +64,49 @@ public class ChatController {
             return "error/500";
         }
         return  "chat";
+    }
+
+    @GetMapping("/{chatId}/messages/fragment")
+    @ResponseBody
+    public ResponseEntity<ChatMessagesFragmentDto> getMessagesFragment(
+            @PathVariable("chatId") Long chatId,
+            @RequestParam("direction") String direction,
+            @RequestParam(name = "cursor", required = false) String cursor,
+            @RequestParam(name = "pageSize", defaultValue = "50") Integer pageSize,
+            Principal principal) {
+
+        try {
+            ChatMessagesCursorDto fragmentDto;
+            if ("up".equalsIgnoreCase(direction)) {
+                // service sollte eine Cursor-basierte Methode bereitstellen
+                fragmentDto = chatMessageService.getMessageTopCursorPage(principal.getName(), chatId, cursor, pageSize);
+            } else {
+                fragmentDto = chatMessageService.getMessageBottomCursorPage(principal.getName(), chatId, cursor, pageSize);
+            }
+
+            if(fragmentDto == null) {
+                ChatMessagesFragmentDto emptyDto = new ChatMessagesFragmentDto("", false, null);
+                return ResponseEntity.ok(emptyDto);
+            }
+
+            //TODO: move Render to service
+            Context ctx = new Context();
+            ctx.setVariable("messages", fragmentDto.getMessages());
+            ctx.setVariable("lastMessageId", fragmentDto.getLastMessageId());
+            // render Fragment
+            String html = templateEngine.process("fragments/chat/chat-messages", ctx);
+
+            ChatMessagesFragmentDto dto = new ChatMessagesFragmentDto(
+                    html,
+                    fragmentDto.isHasMore(),
+                    fragmentDto.getCursor()
+            );
+
+            return ResponseEntity.ok(dto);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
     }
 }

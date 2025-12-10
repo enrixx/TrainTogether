@@ -14,6 +14,7 @@ import java.util.Optional;
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
     long countByChatRoomIdAndSentAtAfter(Long chatRoomId, Instant sentAt);
     Optional<ChatMessage> findFirstByChatRoomIdAndSentAtAfter(Long chatRoomId, Instant sentAt);
+    Optional<ChatMessage> findFirstByChatRoomIdAndIdBefore(Long chatRoomId, Long id);
 
     // newest message in chat room
     Optional<ChatMessage> findFirstByChatRoomIdOrderBySentAtDesc(Long chatRoomId);
