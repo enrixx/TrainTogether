@@ -1,5 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
 <div th:fragment="chatMessage(message, roomType)" class="d-flex flex-row justify-content-start">
     <img th:if="${roomType != 'DM'}" th:src="${message.sender.SenderPictureUrl}"
          alt="avatar" style="width: 45px; height: 100%;">

@@ -1,6 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<div th:fragment="chatMessage(message, roomType)" class="d-flex flex-row justify-content-end">
+<div th:fragment="chatMessage(message, roomType)"
+     class="d-flex flex-row justify-content-end"
+     th:attr="data-message-id=${message.id}">
     <div>
         <p class="small p-2 me-3 mb-1 text-white rounded-3 bg-primary" th:text="${message.content}">Message</p>
         <p class="small me-3 mb-3 rounded-3 text-muted" th:text="${message.sentAt}">Time</p>
