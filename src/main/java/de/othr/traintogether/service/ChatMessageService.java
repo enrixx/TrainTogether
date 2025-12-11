@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -76,7 +77,7 @@ public class ChatMessageService {
         chatMessageRepository.delete(message);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public ChatMessagePageDto getMessageInitialCursorPage(String userEmail, Long chatRoomId, Integer pageSize) {
 
         ChatRoomMember member = GetMember(userEmail, chatRoomId);
@@ -104,8 +105,8 @@ public class ChatMessageService {
 
         //check if more messages on top, this way is only needed at initial load
         boolean topHasMore = false;
-        Optional<ChatMessage> messageBevorFirst = chatMessageRepository.findFirstByChatRoomIdAndIdBefore(chatRoomId, messages.getFirst().getId());
-        if (messageBevorFirst.isPresent()) {
+        Optional<ChatMessage> messageBeforeFirst = chatMessageRepository.findFirstByChatRoomIdAndIdBefore(chatRoomId, messages.getFirst().getId());
+        if (messageBeforeFirst.isPresent()) {
             topHasMore = true;
         }
 
@@ -122,18 +123,16 @@ public class ChatMessageService {
         pageDto.setTopCursor(newTopCursor);
         pageDto.setBottomHasMore(bottomHasMore);
         pageDto.setBottomCursor(newBottomCursor);
-        //TODO: update last read
         return pageDto;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public ChatMessagesCursorDto getMessageTopCursorPage(String userEmail, Long chatRoomId, String topCursor, Integer pageSize) {
         ChatRoomMember member = GetMember(userEmail, chatRoomId);
 
         //Getting page up from top cursor
         Instant topInstant = decodeCursorInstant(topCursor);
         Long topId = decodeCursorId(topCursor);
-        //TODO: sort right?
         Pageable pageable = PageRequest.of(0, Math.max(1, pageSize + 1), Sort.by(Sort.Order.desc("sentAt"), Sort.Order.desc("id")));
         List<ChatMessage> messages = chatMessageRepository.findByChatRoomIdBefore(chatRoomId, topInstant, topId, pageable);
 
@@ -146,6 +145,8 @@ public class ChatMessageService {
             messages = messages.subList(0, pageSize);
         }
 
+        Collections.reverse(messages);
+
         ChatMessagesCursorDto messageDto = fillMessageCursorDto(member, chatRoomId, messages, pageSize);
 
         ChatMessage first = messages.getFirst();
@@ -153,11 +154,10 @@ public class ChatMessageService {
 
         messageDto.setHasMore(topHasMore);
         messageDto.setCursor(newTopCursor);
-        //TODO: update last read is it here even needed?
         return messageDto;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public ChatMessagesCursorDto getMessageBottomCursorPage(String userEmail, Long chatRoomId, String bottomCursor, Integer pageSize) {
         ChatRoomMember member = GetMember(userEmail, chatRoomId);
 
@@ -178,12 +178,17 @@ public class ChatMessageService {
 
         ChatMessagesCursorDto messageDto = fillMessageCursorDto(member, chatRoomId, messages, pageSize);
 
+        if (messageDto.getLastMessageId() != null) {
+            messageDto.setLastMessageId(null);
+            member.setLastRead(messages.getLast().getSentAt());
+            chatRoomMemberRepository.save(member);
+        }
+
         ChatMessage last = messages.getLast();
         String newBottomCursor = last.getSentAt().toEpochMilli() + ":" + last.getId();
 
         messageDto.setHasMore(bottomHasMore);
         messageDto.setCursor(newBottomCursor);
-        //TODO: update last read
         return messageDto;
     }
 
@@ -275,14 +280,20 @@ public class ChatMessageService {
                 .toList();
 
         Optional<ChatMessage> lastReadMessageOpt = chatMessageRepository.findFirstByChatRoomIdAndSentAtAfter(chatRoomId, member.getLastRead());
+        if (lastReadMessageOpt.isPresent()) {
+            member.setLastRead(messages.getLast().getSentAt());
+            chatRoomMemberRepository.save(member);
+        }
         Long lastReadMessageId = lastReadMessageOpt.map(ChatMessage::getId).orElse(null);
         ChatMessagePageDto pageDto = new ChatMessagePageDto();
         pageDto.setMessages(messagesDto);
         pageDto.setLastMessageId(lastReadMessageId);
         pageDto.setRoomType(member.getChatRoom().getType().name());
+        pageDto.setRoomId(chatRoomId);
         pageDto.setPageSize(pageSize);
         return pageDto;
     }
+
     private ChatMessagesCursorDto fillMessageCursorDto(ChatRoomMember member, Long chatRoomId, List<ChatMessage> messages, Integer pageSize) {
 
         List<ChatMessageDto> messagesDto = messages.stream()

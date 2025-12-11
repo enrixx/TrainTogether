@@ -1,9 +1,11 @@
 <div th:fragment="chatMessages" class="d-flex flex-column h-100" style="min-height: 0">
+    <script th:src="@{/js/chat-scroll-load.js}" defer></script>
     <div th:if="${!messagePage.messages.isEmpty()}" id="messagesContainer" class="flex-grow-1 overflow-auto pe-3 pt-3"
          th:attr="data-top-cursor=${messagePage.topCursor},
               data-top-has-more=${messagePage.topHasMore},
               data-bottom-cursor=${messagePage.bottomCursor},
               data-bottom-has-more=${messagePage.bottomHasMore},
+              data-room-id=${messagePage.roomId},
               data-page-size=${messagePage.pageSize}">
         <div id="top-sentinel"></div>
 
