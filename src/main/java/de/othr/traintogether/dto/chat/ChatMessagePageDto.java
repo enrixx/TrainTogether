@@ -11,6 +11,7 @@ public class ChatMessagePageDto {
     private List<ChatMessageDto> messages;
     private Long lastMessageId;
     private String roomType;
+    private Long roomId;
     private boolean topHasMore;
     private String topCursor;
     private boolean bottomHasMore;

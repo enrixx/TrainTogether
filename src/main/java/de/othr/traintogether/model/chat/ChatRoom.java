@@ -1,12 +1,18 @@
 package de.othr.traintogether.model.chat;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+@Getter
+@Setter
+@NoArgsConstructor
 @Entity
 @Table(name = "chat_rooms")
 public class ChatRoom {
@@ -33,60 +39,14 @@ public class ChatRoom {
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ChatRoomMember> members = new HashSet<>();
 
-    public ChatRoom() {}
-    public  ChatRoom(ChatRoomType type) {
+    public ChatRoom(ChatRoomType type) {
         this.type = Objects.requireNonNull(type, "type must not be null");
     }
+
     public ChatRoom(ChatRoomType type, String name, String pictureUrl) {
         this(type);
         this.name = name;
         this.pictureUrl = pictureUrl;
-    }
-
-     // getters + setters
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public ChatRoomType getType() {
-        return type;
-    }
-
-    public void setType(ChatRoomType type) {
-        this.type = type;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getPictureUrl() {
-        return pictureUrl;
-    }
-
-    public void setPictureUrl(String pictureUrl) {
-        this.pictureUrl = pictureUrl;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Instant createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Set<ChatRoomMember> getMembers() {
-        return members;
     }
 
     public void addMember(ChatRoomMember member) {
@@ -96,7 +56,7 @@ public class ChatRoom {
 
     public void removeMember(ChatRoomMember member) {
         if (members.remove(member)) {
-            member.setChatRoom(null);
+            //TODO: flag member as removed so the chat doesnt appear for him
         }
     }
 }

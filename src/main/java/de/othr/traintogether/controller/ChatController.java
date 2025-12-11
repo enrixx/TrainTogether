@@ -63,7 +63,7 @@ public class ChatController {
         } catch (Exception e) {
             return "error/500";
         }
-        return  "chat";
+        return "chat";
     }
 
     @GetMapping("/{chatId}/messages/fragment")
@@ -84,12 +84,11 @@ public class ChatController {
                 fragmentDto = chatMessageService.getMessageBottomCursorPage(principal.getName(), chatId, cursor, pageSize);
             }
 
-            if(fragmentDto == null) {
+            if (fragmentDto == null) {
                 ChatMessagesFragmentDto emptyDto = new ChatMessagesFragmentDto("", false, null);
                 return ResponseEntity.ok(emptyDto);
             }
 
-            //TODO: move Render to service
             Context ctx = new Context();
             ctx.setVariable("messages", fragmentDto.getMessages());
             ctx.setVariable("lastMessageId", fragmentDto.getLastMessageId());
