@@ -74,5 +74,6 @@ public class MainLayoutController {
         model.addAttribute("title", "Workouts");
         return "workouts";
     }
+
 }
 
