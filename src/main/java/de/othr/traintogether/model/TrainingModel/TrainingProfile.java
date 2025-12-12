@@ -27,15 +27,53 @@ public class TrainingProfile {
     @Column(length = 2000)
     private String description;
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "profile_id")
     private List<BodyMeasurements> measurements = new ArrayList<>();
 
-    // 1:1 Trainingssplit
-    @OneToOne(cascade = CascadeType.ALL)
-    private TrainingSplit split = new TrainingSplit();
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "profile_id")
+    private List<TrainingSplit> splits = new ArrayList<>();
+
+    private Long activeTraininSplitId;
 
     public TrainingProfile(Long userId) {
         this.userId = userId;
         this.description = "";
     }
+
+    public void addSplit(TrainingSplit newSplit){
+        splits.addFirst(newSplit);
+    }
+
+    public void deleteSplit(int splitId){
+        splits.remove(splitId);
+    }
+
+    public Long getActiveTraininSplitId(){
+
+        if(activeTraininSplitId == null){
+            this.activeTraininSplitId = 1L;
+        }
+
+        return activeTraininSplitId;
+    }
+
+    public TrainingSplit getActiveTraininSplit(){
+        if(activeTraininSplitId == null){
+            this.activeTraininSplitId = 1L;
+        }
+        TrainingSplit activeSplit = splits.stream()
+                .filter(s -> s.getId() == this.activeTraininSplitId)
+                .findFirst()
+                .orElse(null);
+
+        return activeSplit;
+
+    }
+
+    public void setActiveTraininSplitId(Long activeTraininSplitId){
+        this.activeTraininSplitId = activeTraininSplitId;
+    }
+
 }

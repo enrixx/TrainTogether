@@ -19,6 +19,10 @@ public class TrainingExercise {
     @Enumerated(EnumType.STRING)
     private ExerciseName exercise;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "personal_exercise_id")
+    private PersonalExercise personalExercise;
+
     private int sets;
     private int reps;
 
@@ -26,8 +30,8 @@ public class TrainingExercise {
     @JoinColumn(name = "day_id")
     private TrainingDay day;
 
-    public TrainingExercise(ExerciseName exercise, int sets, int reps, TrainingDay day) {
-        this.exercise = exercise;
+    public TrainingExercise(PersonalExercise exercise, int sets, int reps, TrainingDay day) {
+        this.personalExercise = exercise;
         this.sets = sets;
         this.reps = reps;
         this.day = day;

@@ -6,6 +6,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "training_splits")
@@ -20,23 +23,45 @@ public class TrainingSplit {
 
     private String splitName;
 
-    @OneToMany(mappedBy = "split", cascade = CascadeType.ALL, orphanRemoval = true)
-    private java.util.List<TrainingDay> days = new java.util.ArrayList<>();
+    @OneToMany(
+            mappedBy = "split",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
 
-    public TrainingSplit(String splitName) {
-        this.splitName = splitName;
-        initializeDays();
+    private List<TrainingDay> days = new ArrayList<>();
+
+    public TrainingSplit(String name) {
+        this.splitName = name;
+
+        for (Weekday weekday : Weekday.values()) {
+            TrainingDay day = new TrainingDay(weekday);
+            addDay(day);
+        }
+    }
+
+    public void addDay(TrainingDay day) {
+        days.add(day);
+        day.setSplit(this);
+    }
+
+    public void removeDay(TrainingDay day) {
+        days.remove(day);
+        day.setSplit(null);
     }
 
 
-    private void initializeDays() {
-        for (Weekday weekday : Weekday.values()) {
-            TrainingDay day = new TrainingDay();
-            day.setWeekday(weekday);
-            day.setSplit(this);
+    @PostLoad
+    private void ensureAllDaysExist() {
+        Set<Weekday> existing = days.stream()
+                .map(TrainingDay::getWeekday)
+                .collect(Collectors.toSet());
 
-            day.setExercises(new ArrayList<>()); // leer = Rest Day
-            this.days.add(day);
+        for (Weekday weekday : Weekday.values()) {
+            if (!existing.contains(weekday)) {
+                TrainingDay d = new TrainingDay(weekday);
+                addDay(d);
+            }
         }
     }
 }

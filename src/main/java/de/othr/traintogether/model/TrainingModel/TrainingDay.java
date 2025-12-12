@@ -5,6 +5,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "training_days")
 @Getter
@@ -19,16 +22,38 @@ public class TrainingDay {
     @Enumerated(EnumType.STRING)
     private Weekday weekday;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "split_id")
     private TrainingSplit split;
 
     @OneToMany(mappedBy = "day", cascade = CascadeType.ALL, orphanRemoval = true)
-    private java.util.List<TrainingExercise> exercises = new java.util.ArrayList<>();
+    private List<TrainingExercise> exercises = new ArrayList<>();
 
+    @ManyToMany
+    @JoinTable(
+            name = "training_day_personal_exercises",
+            joinColumns = @JoinColumn(name = "day_id"),
+            inverseJoinColumns = @JoinColumn(name = "personal_exercise_id")
+    )
+    private List<PersonalExercise> personalExercises = new ArrayList<>();
 
-    public TrainingDay(Weekday weekday, TrainingSplit split) {
+    public TrainingDay(Weekday weekday) {
         this.weekday = weekday;
-        this.split = split;
+    }
+
+    public void addExercise(TrainingExercise exercise) {
+        exercises.add(exercise);
+    }
+
+    public void removeExercise(TrainingExercise exercise) {
+        exercises.remove(exercise);
+    }
+
+    public void addPersonalExercise(PersonalExercise personalExercise) {
+        personalExercises.add(personalExercise);
+    }
+
+    public void removePersonalExercise(PersonalExercise personalExercise) {
+        personalExercises.remove(personalExercise);
     }
 }

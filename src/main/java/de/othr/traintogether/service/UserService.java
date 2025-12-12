@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.LocalDateTime;
 import java.util.Locale;
@@ -27,6 +28,7 @@ public class UserService {
     private final GymOwnerRequestRepository gymOwnerRequestRepository;
     private final GymRepository gymRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public UserService(UserRepository userRepository,
                        AuthorityRepository authorityRepository,
@@ -35,6 +37,8 @@ public class UserService {
                        GymOwnerRequestRepository gymOwnerRequestRepository,
                        GymRepository gymRepository,
                        PasswordResetTokenRepository passwordResetTokenRepository) {
+                       MinioService minioService,
+                       ApplicationEventPublisher eventPublisher) {
         this.userRepository = userRepository;
         this.authorityRepository = authorityRepository;
         this.passwordEncoder = passwordEncoder;
@@ -42,6 +46,7 @@ public class UserService {
         this.gymOwnerRequestRepository = gymOwnerRequestRepository;
         this.gymRepository = gymRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     // FRONTEND CALLS
@@ -74,6 +79,8 @@ public class UserService {
 
         Authority authorityRole = new Authority(user, role.name());
         authorityRepository.save(authorityRole);
+
+        eventPublisher.publishEvent(new UserCreatedEvent(user));
     }
 
     @Transactional
