@@ -54,7 +54,7 @@ public class GymOwnerRequestService {
     }
 
     @Transactional
-    public void approveRequest(Long requestId, String adminEmail) {
+    public boolean approveRequest(Long requestId, String adminEmail) {
         GymOwnerRequest request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new RuntimeException("Request not found"));
 
@@ -84,24 +84,26 @@ public class GymOwnerRequestService {
         requestRepository.save(request);
 
         // Send approval email using session locale
-        try {
-            Locale currentLocale = LocaleContextHolder.getLocale();
-            String language = currentLocale.getLanguage();
-            emailService.sendGymOwnerApprovalEmail(
-                    user.getEmail(),
-                    user.getFirstName(),
-                    request.getGymName() != null ? request.getGymName() : "your gym",
-                    language
-            );
+        Locale currentLocale = LocaleContextHolder.getLocale();
+        String language = currentLocale.getLanguage();
+        boolean emailSent = emailService.sendGymOwnerApprovalEmail(
+                user.getEmail(),
+                user.getFirstName(),
+                request.getGymName() != null ? request.getGymName() : "your gym",
+                language
+        );
+
+        if (emailSent) {
             logger.info("Approval email sent to user: {} in {} language", user.getEmail(), language);
-        } catch (Exception e) {
-            logger.error("Failed to send approval email to {}: {}", user.getEmail(), e.getMessage());
-            // Don't throw exception - approval should succeed even if email fails
+        } else {
+            logger.warn("Failed to send approval email to user: {}", user.getEmail());
         }
+
+        return emailSent;
     }
 
     @Transactional
-    public void rejectRequest(Long requestId, String adminEmail) {
+    public boolean rejectRequest(Long requestId, String adminEmail) {
         GymOwnerRequest request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new RuntimeException("Request not found"));
 
@@ -112,6 +114,12 @@ public class GymOwnerRequestService {
             throw new RuntimeException("Request has already been reviewed");
         }
 
+        User user = request.getUser();
+
+        // DO NOT remove PENDING_GYM_OWNER authority
+        // DO NOT add USER authority
+        // User keeps PENDING_GYM_OWNER role so they can reapply
+
         request.setStatus(RequestStatus.REJECTED);
         request.setReviewedAt(LocalDateTime.now());
         request.setReviewedBy(admin);
@@ -119,20 +127,22 @@ public class GymOwnerRequestService {
         requestRepository.save(request);
 
         // Send rejection email using session locale
-        try {
-            Locale currentLocale = LocaleContextHolder.getLocale();
-            String language = currentLocale.getLanguage();
-            emailService.sendGymOwnerRejectionEmail(
-                    request.getUser().getEmail(),
-                    request.getUser().getFirstName(),
-                    request.getGymName() != null ? request.getGymName() : "your gym",
-                    language
-            );
+        Locale currentLocale = LocaleContextHolder.getLocale();
+        String language = currentLocale.getLanguage();
+        boolean emailSent = emailService.sendGymOwnerRejectionEmail(
+                request.getUser().getEmail(),
+                request.getUser().getFirstName(),
+                request.getGymName() != null ? request.getGymName() : "your gym",
+                language
+        );
+
+        if (emailSent) {
             logger.info("Rejection email sent to user: {} in {} language", request.getUser().getEmail(), language);
-        } catch (Exception e) {
-            logger.error("Failed to send rejection email to {}: {}", request.getUser().getEmail(), e.getMessage());
-            // Don't throw exception - rejection should succeed even if email fails
+        } else {
+            logger.warn("Failed to send rejection email to user: {}", request.getUser().getEmail());
         }
+
+        return emailSent;
     }
 
     @Transactional(readOnly = true)
@@ -142,5 +152,53 @@ public class GymOwnerRequestService {
 
         return requestRepository.existsByUserIdAndStatus(user.getId(), RequestStatus.PENDING);
     }
-}
 
+    @Transactional(readOnly = true)
+    public boolean hasRejectedRequest(String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return requestRepository.existsByUserIdAndStatus(user.getId(), RequestStatus.REJECTED);
+    }
+
+    @Transactional
+    public void submitGymOwnerRequest(String userEmail, String gymName, String gymAddress,
+                                     String city, String postalCode, String phoneNumber,
+                                     String gymDescription) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+
+        if (requestRepository.existsByUserIdAndStatus(user.getId(), RequestStatus.PENDING)) {
+            throw new RuntimeException("You already have a pending gym owner request");
+        }
+
+        Authority gymOwnerAuthority = authorityRepository.findByUserAndAuthority(user, "GYM_OWNER");
+        if (gymOwnerAuthority != null) {
+            throw new RuntimeException("You are already a gym owner");
+        }
+
+        Authority pendingAuthority = authorityRepository.findByUserAndAuthority(user, "PENDING_GYM_OWNER");
+        if (pendingAuthority == null) {
+            pendingAuthority = new Authority(user, "PENDING_GYM_OWNER");
+            authorityRepository.save(pendingAuthority);
+            logger.info("Added PENDING_GYM_OWNER authority to user: {}", userEmail);
+        }
+
+        GymOwnerRequest request = new GymOwnerRequest();
+        request.setUser(user);
+        request.setGymName(gymName);
+        request.setGymAddress(gymAddress);
+        request.setCity(city);
+        request.setPostalCode(postalCode);
+        request.setPhoneNumber(phoneNumber);
+        request.setGymDescription(gymDescription);
+        request.setRequestMessage(gymDescription);
+        request.setStatus(RequestStatus.PENDING);
+        request.setRequestedAt(LocalDateTime.now());
+
+        requestRepository.save(request);
+
+        logger.info("Gym owner request submitted by user: {}", userEmail);
+    }
+}

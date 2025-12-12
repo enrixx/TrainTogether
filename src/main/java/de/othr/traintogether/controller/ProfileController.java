@@ -2,6 +2,7 @@ package de.othr.traintogether.controller;
 
 import de.othr.traintogether.dto.UpdateProfileDto;
 import de.othr.traintogether.dto.UserDto;
+import de.othr.traintogether.service.GymOwnerRequestService;
 import de.othr.traintogether.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -22,9 +23,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class ProfileController {
 
     private final UserService userService;
+    private final GymOwnerRequestService gymOwnerRequestService;
 
-    public ProfileController(UserService userService) {
+    public ProfileController(UserService userService, GymOwnerRequestService gymOwnerRequestService) {
         this.userService = userService;
+        this.gymOwnerRequestService = gymOwnerRequestService;
     }
 
     @GetMapping
@@ -39,6 +42,10 @@ public class ProfileController {
         model.addAttribute("title", "Profile");
         model.addAttribute("user", user);
         model.addAttribute("updateProfileDto", new UpdateProfileDto(user.getEmail(), user.getUsername(), user.getFirstName(), user.getLastName()));
+
+        // Check if user has rejected gym owner request (for reapplication button)
+        boolean hasRejectedRequest = gymOwnerRequestService.hasRejectedRequest(email);
+        model.addAttribute("hasRejectedGymOwnerRequest", hasRejectedRequest);
 
         return "profile";
     }

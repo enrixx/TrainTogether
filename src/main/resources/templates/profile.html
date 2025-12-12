@@ -192,6 +192,25 @@
                 </div>
             </div>
         </div>
+
+        <!-- Gym Owner Request Section (only for regular users without any request) -->
+        <div class="row" sec:authorize="hasAuthority('USER')">
+            <div class="col-md-12 mb-4">
+                <div class="card border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Are you a gym owner?</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3">Apply to register your gym on TrainTogether and reach more customers!</p>
+                        <div class="text-center">
+                            <a th:href="@{/gym-owner-request}" class="btn btn-primary btn-lg">
+                                Apply for Gym Owner Role
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 </body>

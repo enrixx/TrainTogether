@@ -18,22 +18,26 @@ public class EmailService {
 
     private final Resend resend;
     private final String fromEmail;
+    private final String supportEmail;
     private final String appUrl;
     private final TemplateEngine templateEngine;
 
     public EmailService(@Value("${resend.api-key}") String apiKey,
                        @Value("${resend.from-email}") String fromEmail,
+                       @Value("${resend.support-email:}") String supportEmail,
                        @Value("${app.url}") String appUrl,
                        TemplateEngine templateEngine) {
         this.resend = new Resend(apiKey);
         this.fromEmail = fromEmail;
+        this.supportEmail = supportEmail.isEmpty() ? null : supportEmail;
         this.appUrl = appUrl;
         this.templateEngine = templateEngine;
         logger.info("EmailService initialized. Emails will be sent from: {}", fromEmail);
+        logger.info("Support email: {}", this.supportEmail != null ? this.supportEmail : "Using Resend default");
         logger.info("Application URL for email links: {}", appUrl);
     }
 
-    public void sendGymOwnerApprovalEmail(String toEmail, String firstName, String gymName, String language) {
+    public boolean sendGymOwnerApprovalEmail(String toEmail, String firstName, String gymName, String language) {
         try {
             String subject = getApprovalSubject(language);
             String htmlContent = renderApprovalTemplate(firstName, gymName, language);
@@ -48,13 +52,17 @@ public class EmailService {
             CreateEmailResponse response = resend.emails().send(params);
             logger.info("Approval email sent successfully to {} in {} language. Email ID: {}",
                        toEmail, language, response.getId());
+            return true;
         } catch (ResendException e) {
             logger.error("Failed to send approval email to {}: {}", toEmail, e.getMessage(), e);
-            throw new RuntimeException("Failed to send approval email", e);
+            return false;
+        } catch (Exception e) {
+            logger.error("Unexpected error sending approval email to {}: {}", toEmail, e.getMessage(), e);
+            return false;
         }
     }
 
-    public void sendGymOwnerRejectionEmail(String toEmail, String firstName, String gymName, String language) {
+    public boolean sendGymOwnerRejectionEmail(String toEmail, String firstName, String gymName, String language) {
         try {
             String subject = getRejectionSubject(language);
             String htmlContent = renderRejectionTemplate(firstName, gymName, language);
@@ -69,9 +77,13 @@ public class EmailService {
             CreateEmailResponse response = resend.emails().send(params);
             logger.info("Rejection email sent successfully to {} in {} language. Email ID: {}",
                        toEmail, language, response.getId());
+            return true;
         } catch (ResendException e) {
             logger.error("Failed to send rejection email to {}: {}", toEmail, e.getMessage(), e);
-            throw new RuntimeException("Failed to send rejection email", e);
+            return false;
+        } catch (Exception e) {
+            logger.error("Unexpected error sending rejection email to {}: {}", toEmail, e.getMessage(), e);
+            return false;
         }
     }
 
@@ -85,10 +97,12 @@ public class EmailService {
         return templateEngine.process(templateName, context);
     }
 
+
     private String renderRejectionTemplate(String firstName, String gymName, String language) {
         Context context = new Context();
         context.setVariable("firstName", firstName);
         context.setVariable("gymName", gymName);
+        context.setVariable("supportEmail", supportEmail != null ? supportEmail : "");
 
         String templateName = "emails/gym-owner-rejection-" + language;
         return templateEngine.process(templateName, context);

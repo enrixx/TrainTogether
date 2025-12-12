@@ -22,8 +22,8 @@
             <p>After careful review, we are unable to approve your gym owner request at this time.</p>
             <p>This could be due to various reasons such as incomplete information, verification issues, or other requirements that need to be met.</p>
             <p>If you believe this is an error or would like more information, please contact our support team. We're here to help!</p>
-            <div style="text-align: center;">
-                <a href="mailto:support@traintogether.com" class="button">Contact Support</a>
+            <div th:if="${supportEmail != null and !supportEmail.isEmpty()}" style="text-align: center;">
+                <a th:href="${'mailto:' + supportEmail}" class="button" style="display: inline-block; padding: 12px 30px; background-color: #0d6efd; color: white !important; text-decoration: none; border-radius: 5px; margin: 20px 0;">Contact Support</a>
             </div>
             <p>Thank you for your understanding.</p>
             <p>Best regards,<br>The TrainTogether Team</p>

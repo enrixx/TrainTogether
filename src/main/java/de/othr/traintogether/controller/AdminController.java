@@ -60,8 +60,13 @@ public class AdminController {
                                  RedirectAttributes redirectAttributes) {
         try {
             String adminEmail = authentication.getName();
-            gymOwnerRequestService.approveRequest(id, adminEmail);
-            redirectAttributes.addFlashAttribute("successMessage", "Request approved successfully!");
+            boolean emailSent = gymOwnerRequestService.approveRequest(id, adminEmail);
+
+            if (emailSent) {
+                redirectAttributes.addFlashAttribute("successMessage", "Request approved successfully! Notification email sent.");
+            } else {
+                redirectAttributes.addFlashAttribute("warningMessage", "Request approved successfully, but notification email could not be sent. Please check your email configuration.");
+            }
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Failed to approve request: " + e.getMessage());
         }
@@ -75,8 +80,13 @@ public class AdminController {
                                RedirectAttributes redirectAttributes) {
         try {
             String adminEmail = authentication.getName();
-            gymOwnerRequestService.rejectRequest(id, adminEmail);
-            redirectAttributes.addFlashAttribute("successMessage", "Request rejected successfully!");
+            boolean emailSent = gymOwnerRequestService.rejectRequest(id, adminEmail);
+
+            if (emailSent) {
+                redirectAttributes.addFlashAttribute("successMessage", "Request rejected successfully! Notification email sent.");
+            } else {
+                redirectAttributes.addFlashAttribute("warningMessage", "Request rejected successfully, but notification email could not be sent. Please check your email configuration.");
+            }
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Failed to reject request: " + e.getMessage());
         }

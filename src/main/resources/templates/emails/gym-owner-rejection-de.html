@@ -22,8 +22,8 @@
             <p>Nach sorgfältiger Prüfung können wir deine Fitnessstudio-Besitzer-Anfrage derzeit nicht genehmigen.</p>
             <p>Dies kann verschiedene Gründe haben, wie unvollständige Informationen, Verifizierungsprobleme oder andere Anforderungen, die erfüllt werden müssen.</p>
             <p>Wenn du glaubst, dass dies ein Fehler ist oder weitere Informationen wünschst, kontaktiere bitte unser Support-Team. Wir sind hier, um zu helfen!</p>
-            <div style="text-align: center;">
-                <a href="mailto:support@traintogether.com" class="button">Support kontaktieren</a>
+            <div th:if="${supportEmail != null and !supportEmail.isEmpty()}" style="text-align: center;">
+                <a th:href="${'mailto:' + supportEmail}" class="button" style="display: inline-block; padding: 12px 30px; background-color: #0d6efd; color: white !important; text-decoration: none; border-radius: 5px; margin: 20px 0;">Support kontaktieren</a>
             </div>
             <p>Vielen Dank für dein Verständnis.</p>
             <p>Beste Grüße,<br>Das TrainTogether Team</p>
