@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<!-- updateSplitModal -->
+<div th:fragment="updateSplitModal">
+    <div class="modal fade" id="updateSplitModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+
+                <form th:action="@{/training/profile/me/update-split}" method="post">
+                    <input type="hidden" name="splitId" th:value="${split.id}">
+
+                    <div class="modal-header">
+                        <h5 class="modal-title">Split bearbeiten</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <!-- SPLIT NAME -->
+                        <div class="mb-3">
+                            <label class="form-label">Name des Splits</label>
+                            <input class="form-control"
+                                   name="splitName"
+                                   th:value="${split.splitName}">
+                        </div>
+
+                        <hr>
+
+                        <!-- TRAINING DAYS -->
+                        <div th:each="day : ${split.days}" class="mb-4">
+                            <h6 th:text="${day.weekday}"></h6>
+
+                            <!-- EXISTING EXERCISES -->
+                            <ul class="list-group mb-2">
+                                <li class="list-group-item d-flex justify-content-between align-items-center"
+                                    th:each="ex : ${day.exercises}">
+
+                                    <span>
+                                        <span th:if="${ex.personalExercise != null}"
+                                              th:text="'Custom: ' + ${ex.personalExercise.name}"></span>
+
+                                        <span th:if="${ex.personalExercise == null}"
+                                              th:text="${ex.exercise}"></span>
+
+                                        <small class="text-muted ms-2"
+                                               th:text="'(' + ${ex.sets} + 'x' + ${ex.reps} + ')'"></small>
+                                    </span>
+
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-danger"
+                                            name="deleteExerciseId"
+                                            th:value="${ex.id}">
+                                        Löschen
+                                    </button>
+
+                                </li>
+                            </ul>
+
+                            <!-- ADD EXERCISE TO THIS DAY -->
+                            <div class="card p-3 border">
+                                <h6>Übung hinzufügen</h6>
+
+                                <div class="row g-2">
+
+                                    <!-- ENUM EXERCISE -->
+                                    <div class="col-md-6">
+                                        <label class="form-label">Standard-Übung</label>
+                                        <select class="form-select"
+                                                name="exerciseEnum"
+                                                th:id="'exerciseEnum-' + ${day.id}">
+                                            <option value="">Keine Auswahl</option>
+                                            <option th:each="ex : ${T(de.othr.traintogether.model.TrainingModel.ExerciseName).values()}"
+                                                    th:value="${ex}"
+                                                    th:text="${ex}">
+                                            </option>
+                                        </select>
+                                    </div>
+
+                                    <!-- PERSONAL EXERCISE -->
+                                    <div class="col-md-6">
+                                        <label class="form-label">Persönliche Übung</label>
+                                        <select class="form-select"
+                                                name="exercisePersonal"
+                                                th:id="'exercisePersonal-' + ${day.id}">
+                                            <option value="">Keine Auswahl</option>
+                                            <option th:each="p : ${personalExercises}"
+                                                    th:value="${p.id}"
+                                                    th:text="${p.name}">
+                                            </option>
+                                        </select>
+                                    </div>
+
+                                </div>
+
+                                <div class="row g-2 mt-2">
+                                    <div class="col-md-3">
+                                        <label class="form-label">Sätze</label>
+                                        <input type="number" class="form-control" name="sets">
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <label class="form-label">Wiederholungen</label>
+                                        <input type="number" class="form-control" name="reps">
+                                    </div>
+
+                                    <input type="hidden" name="dayId" th:value="${day.id}">
+
+                                    <div class="col-md-6 d-flex align-items-end">
+                                        <button type="submit"
+                                                class="btn btn-success w-100"
+                                                name="addExercise"
+                                                value="true">
+                                            Hinzufügen
+                                        </button>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                        <button type="submit" class="btn btn-primary" name="saveSplit">Speichern</button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

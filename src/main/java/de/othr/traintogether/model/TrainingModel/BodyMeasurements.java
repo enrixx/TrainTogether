@@ -10,7 +10,7 @@ import java.time.Instant;
 @Entity
 @Table(name = "body_measurements")
 @Data
-@NoArgsConstructor  // ← JPA-konformer Default-Konstruktor
+@NoArgsConstructor
 public class BodyMeasurements {
 
     @Id

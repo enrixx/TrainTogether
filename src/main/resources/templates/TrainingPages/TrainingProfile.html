@@ -1,140 +1,137 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="de" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::content})}">
 <head>
-  <title>Training Profile</title>
-  <link href="/css/bootstrap.min.css" rel="stylesheet"/>
-
-  <style>
-    .bmi-under { background: #b3d9ff; padding: 6px; border-radius: 6px; }
-    .bmi-normal { background: #c6f6c6; padding: 6px; border-radius: 6px; }
-    .bmi-over { background: #ffe9b3; padding: 6px; border-radius: 6px; }
-    .bmi-obese { background: #ffb3b3; padding: 6px; border-radius: 6px; }
-  </style>
+    <meta charset="UTF-8">
+    <title>Training Profile</title>
 </head>
+<body>
+<div th:fragment="content">
+    <main class="container-fluid p-5">
 
-<body class="bg-light">
+        <!-- Description / Kommentar -->
+        <div class="p-4 mb-4 bg-body-tertiary rounded-3">
+            <h2>About Me</h2>
+            <p th:text="${profile.description}">Mein Trainingsprofil — automatisch generiert.</p>
 
-<div class="container py-4">
+            <button class="btn btn-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#editDescriptionModal">
+                Beschreibung bearbeiten
+            </button>
 
-  <h1 class="mb-4">Training Profile</h1>
+            <button type="button"
+                    class="btn btn-primary"
+                    data-bs-toggle="modal"
+                    th:data-bs-target="'#addExerciseModal}'">
+                Übung hinzufügen
+            </button>
+        </div>
 
-  <!-- Aktuelles Measurement -->
-  <div class="card mb-4">
-    <div class="card-header">Aktuelle Körperwerte</div>
-    <div class="card-body" th:if="${latest != null}">
+        <!-- Trainingssplit -->
+        <div class="mb-4 w-100">
+            <h3 class="p-3 bg-body-tertiary" th:text="'Training Split: ' + ${split.splitName}">Push-Pull-Legs</h3>
 
-      <!-- BMI -->
-      <h4 class="mt-3">BMI</h4>
-      <p th:with="bmi=${latest.bmi},
-                className=${bmi < 18.5 ? 'bmi-under' :
-                           (bmi < 25 ? 'bmi-normal' :
-                           (bmi < 30 ? 'bmi-over' : 'bmi-obese'))}">
-                <span th:classappend="${className}">
-                    <strong th:text="${#numbers.formatDecimal(bmi,1,1)}"></strong>
-                </span>
-      </p>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editSplitModal">
+                Trainingssplit bearbeiten
+            </button>
 
-      <hr>
-
-      <!-- Measurements Section -->
-      <div class="row">
-
-        <!-- Arm -->
-        <div class="col-md-6">
-          <h5>Arm</h5>
-          <div class="row">
-            <div class="col-6">
-              <p><strong>Links:</strong> <span th:text="${latest.armLeft}"></span> cm</p>
+            <div class="row g-2 w-100">
+                <div class="col" th:each="day : ${split.days}">
+                    <div class="p-2 border rounded-3 bg-body-secondary text-center h-100 d-flex flex-column w-100">
+                        <strong th:text="${day.weekday}">Montag</strong>
+                        <ul class="list-unstyled mt-2 flex-grow-1">
+                            <li th:each="ex : ${day.personalExercises}" th:text="${ex.name} + ' - '   + 'X' "></li>  <!--${ex.sets}-->
+                            <li th:if="${#lists.isEmpty(day.personalExercises)}" class="text-muted">RESTDAY</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
-            <div class="col-6">
-              <p><strong>Rechts:</strong> <span th:text="${latest.armRight}"></span> cm</p>
+        </div>
+
+        <a></a>
+        <!-- Body Measurements -->
+        <div class="mb-4">
+            <h3>Body Measurements</h3>
+            <div class="row g-2">
+
+                <!-- BMI -->
+                <div class="col-md-2">
+                    <div class="p-3 border rounded-3 text-center">
+                        <strong>BMI</strong>
+                        <p th:text="${measurements.bmi}"
+                           th:class="${measurements.bmi < 18.5} ? 'text-primary' : (${measurements.bmi >= 25} ? 'text-danger' : 'text-success')">
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Arms -->
+                <div class="col-md-2">
+                    <div class="p-3 border rounded-3 text-center">
+                        <strong>Arm Links</strong>
+                        <p th:text="${measurements.armLinks.value}">32.0</p>
+                    </div>
+                    <div class="p-3 border rounded-3 text-center mt-2">
+                        <strong>Arm Rechts</strong>
+                        <p th:text="${measurements.armRechts.value}">32.5</p>
+                    </div>
+                </div>
+
+
+                <!-- Unterarme -->
+                <div class="col-md-2">
+                    <div class="p-3 border rounded-3 text-center">
+                        <strong>Unterarm Links</strong>
+                        <p th:text="${measurements.unterarmLinks.value}">28.0</p>
+                    </div>
+                    <div class="p-3 border rounded-3 text-center mt-2">
+                        <strong>Unterarm Rechts</strong>
+                        <p th:text="${measurements.unterarmRechts.value}">28.2</p>
+                    </div>
+                </div>
+
+                <!-- Beine -->
+                <div class="col-md-2">
+                    <div class="p-3 border rounded-3 text-center">
+                        <strong>Bein Links</strong>
+                        <p th:text="${measurements.beinLinks.value}">55.0</p>
+                    </div>
+                    <div class="p-3 border rounded-3 text-center mt-2">
+                        <strong>Bein Rechts</strong>
+                        <p th:text="${measurements.beinRechts.value}">55.5</p>
+                    </div>
+                </div>
+
+                <!-- Brust/Schulter/Taille/Hüfte -->
+                <div class="col-md-2">
+                    <div class="p-3 border rounded-3 text-center">
+                        <strong>Brust</strong>
+                        <p th:text="${measurements.brust.value}">100.0</p>
+                    </div>
+                    <div class="p-3 border rounded-3 text-center mt-2">
+                        <strong>Schulter</strong>
+                        <p th:text="${measurements.schulter.value}">50.0</p>
+                    </div>
+                    <div class="p-3 border rounded-3 text-center mt-2">
+                        <strong>Taille</strong>
+                        <p th:text="${measurements.taille.value}">85.0</p>
+                    </div>
+                    <div class="p-3 border rounded-3 text-center mt-2">
+                        <strong>Hüfte</strong>
+                        <p th:text="${measurements.huefte.value}">95.0</p>
+                    </div>
+                </div>
+
             </div>
-          </div>
+
         </div>
 
-        <!-- Unterarm -->
-        <div class="col-md-6">
-          <h5>Unterarm</h5>
-          <div class="row">
-            <div class="col-6">
-              <p><strong>Links:</strong> <span th:text="${latest.forearmLeft}"></span> cm</p>
-            </div>
-            <div class="col-6">
-              <p><strong>Rechts:</strong> <span th:text="${latest.forearmRight}"></span> cm</p>
-            </div>
-          </div>
-        </div>
 
-      </div>
+        <div th:replace="~{fragments/training_dialogs/edit-description :: editDescriptionModal}"></div>
+        <div th:replace="~{fragments/training_dialogs/editSplitModal :: editSplitModal}"></div>
+        <div th:replace="~{fragments/training_dialogs/addExerciseModal :: addExerciseModal}"></div>
 
-      <hr>
-
-      <!-- Brust & Schulter -->
-      <div class="row mt-3">
-        <div class="col-md-6">
-          <h5>Brustumfang</h5>
-          <p><span th:text="${latest.chest}"></span> cm</p>
-        </div>
-        <div class="col-md-6">
-          <h5>Schulterumfang</h5>
-          <p><span th:text="${latest.shoulder}"></span> cm</p>
-        </div>
-      </div>
-
-      <hr>
-
-      <!-- Taille & Hüfte -->
-      <div class="row mt-3">
-        <div class="col-md-6">
-          <h5>Taille</h5>
-          <p><span th:text="${latest.waist}"></span> cm</p>
-        </div>
-        <div class="col-md-6">
-          <h5>Hüfte</h5>
-          <p><span th:text="${latest.hip}"></span> cm</p>
-        </div>
-      </div>
-
-      <hr>
-
-      <!-- Rücken -->
-      <div class="row mt-3">
-        <div class="col-md-6">
-          <h5>Rücken</h5>
-          <p><span th:text="${latest.back}"></span> cm</p>
-        </div>
-      </div>
-
-      <hr>
-
-      <!-- Beine -->
-      <div class="row mt-3">
-        <div class="col-md-6">
-          <h5>Bein</h5>
-          <div class="row">
-            <div class="col-6">
-              <p><strong>Links:</strong> <span th:text="${latest.legLeft}"></span> cm</p>
-            </div>
-            <div class="col-6">
-              <p><strong>Rechts:</strong> <span th:text="${latest.legRight}"></span> cm</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-6">
-          <h5>APE Index</h5>
-          <p><span th:text="${latest.apeIndex}"></span></p>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- Links -->
-  <a class="btn btn-primary w-100 mb-2" href="/stats/new">Neue Werte eintragen</a>
-  <a class="btn btn-secondary w-100" href="/splits">Trainingssplit bearbeiten</a>
-
+    </main>
 </div>
-
 </body>
 </html>

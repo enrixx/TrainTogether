@@ -1,10 +1,10 @@
-/*
 package de.othr.traintogether.seed;
 
 import de.othr.traintogether.model.TrainingModel.*;
 import de.othr.traintogether.model.User;
 import de.othr.traintogether.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -25,6 +25,29 @@ public class TrainingDataSeeder implements CommandLineRunner {
         User user = userRepo.findAll().get(0);
 
         // BodyMeasurements
+        BodyMeasurements bm = getBodyMeasurements();
+
+        // ----------- TrainingSplit + 7 Tage -------------
+        TrainingSplit split = new TrainingSplit("Push-Pull-Legs");
+
+        for (Weekday wd : Weekday.values()) {
+            TrainingDay day = new TrainingDay(wd);
+            split.addDay(day);
+        }
+
+        // ----------- TrainingProfile erstellen -------------
+        TrainingProfile profile = new TrainingProfile(user.getId());
+        profile.setDescription("Mein Trainingsprofil — automatisch generiert.");
+        profile.getSplits().add(split);
+        profile.getMeasurements().add(bm);
+
+        profileRepo.save(profile);
+
+        System.out.println("✅ TrainingDataSeeder ausgeführt");
+    }
+
+    @NotNull
+    private static BodyMeasurements getBodyMeasurements() {
         BodyMeasurements bm = new BodyMeasurements();
         bm.setGewicht(75.0);
         bm.setGroesse(180.0);
@@ -41,22 +64,7 @@ public class TrainingDataSeeder implements CommandLineRunner {
         bm.setUnterarmRechts(new Measurement(28.2));
         bm.setBeinLinks(new Measurement(55.0));
         bm.setBeinRechts(new Measurement(55.5));
-
-        bmRepo.save(bm);
-
-        // TrainingSplit + TrainingDays automatisch Montag-Sonntag
-        TrainingSplit split = new TrainingSplit("Push-Pull-Legs");
-        splitRepo.save(split);
-
-        // TrainingProfile
-        TrainingProfile profile = new TrainingProfile(user.getId());
-        profile.getMeasurements().add(bm);
-
-        profile.setSplit(split);
-        profile.setDescription("Mein Trainingsprofil — automatisch generiert.");
-        profileRepo.save(profile);
-
-        System.out.println("✅ TrainingDataSeeder ausgeführt");
+        return bm;
     }
 }
-*/
+

@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.context.ApplicationEventPublisher;
 
 @Service
 public class UserService {
@@ -20,15 +21,18 @@ public class UserService {
     private final AuthorityRepository authorityRepository;
     private final PasswordEncoder passwordEncoder;
     private final MinioService minioService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public UserService(UserRepository userRepository,
                        AuthorityRepository authorityRepository,
                        PasswordEncoder passwordEncoder,
-                       MinioService minioService) {
+                       MinioService minioService,
+                       ApplicationEventPublisher eventPublisher) {
         this.userRepository = userRepository;
         this.authorityRepository = authorityRepository;
         this.passwordEncoder = passwordEncoder;
         this.minioService = minioService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -55,6 +59,8 @@ public class UserService {
 
         Authority authorityRole = new Authority(user, role);
         authorityRepository.save(authorityRole);
+        
+        eventPublisher.publishEvent(new UserCreatedEvent(user));
     }
 
     @Transactional(readOnly = true)

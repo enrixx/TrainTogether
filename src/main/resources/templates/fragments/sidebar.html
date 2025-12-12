@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
@@ -36,12 +36,14 @@
                     <span th:text="#{nav.workouts}">Workouts</span>
                 </a>
             </li>
-            <li><a href="trainingprofile" class="nav-link link-body-emphasis">
-                <svg class="bi pe-none me-2" width="16" height="16" aria-hidden="true">
-                    <use xlink:href="#grid"></use>
-                </svg>
-                My Profile
-            </a></li>
+            <li sec:authorize="hasAnyAuthority('ADMIN','USER')">
+                <a th:href="@{'/training/profile/me'}" class="nav-link link-body-emphasis">
+                    <svg class="bi pe-none me-2" width="16" height="16" aria-hidden="true">
+                        <use xlink:href="#grid"></use>
+                    </svg>
+                    My Profile
+                </a>
+            </li>
         </ul>
     </div>
 </div>

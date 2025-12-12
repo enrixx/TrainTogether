@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div th:fragment="editSplitModal">
+    <div class="modal fade" id="editSplitModal" tabindex="-1" aria-hidden="true" data-bs-target="#staticBackdrop">
+        <div class="modal-dialog modal-xl" >
+            <div class="modal-content" >
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Trainingssplit bearbeiten</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <ul class="nav nav-tabs" id="splitTabs" role="tablist">
+                        <li class="nav-item" th:each="split, iter : ${splits}">
+                            <button class="nav-link"
+                                    th:classappend="${iter.index == 0} ? 'active'"
+                                    th:id="'tab-' + ${split.id}"
+                                    data-bs-toggle="tab"
+                                    th:data-bs-target="'#content-' + ${split.id}"
+                                    type="button"
+                                    role="tab"
+                                    th:text="${split.splitName}">
+                            </button>
+                        </li>
+
+                        <li class="nav-item">
+                            <button class="nav-link"
+                                    id="new-split-tab"
+                                    data-bs-toggle="tab"
+                                    data-bs-target="#new-split-content"
+                                    type="button" role="tab">
+                                + Neuer Split
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content mt-3">
+                        <div th:each="split, iter : ${splits}"
+                             class="tab-pane fade"
+                             th:classappend="${iter.index == 0} ? 'show active'"
+                             th:id="'content-' + ${split.id}"
+                             role="tabpanel">
+
+                        <!-- EXISTIERENDE SPLITS -->
+                        <div class="container text-center">
+                            <div class="row" >
+                                <div class="col" th:each="weekday : ${T(de.othr.traintogether.model.TrainingModel.Weekday).values()}"
+                                                 th:with="matchingDay=${split.days[weekday.ordinal()]}">
+                                    <h6 th:text="${weekday}"></h6>
+
+                                    <ul class="list-group" th:if="${matchingDay != null}">
+                                        <li class="list-group-item"
+                                            th:each="ex : ${matchingDay.personalExercises}"
+                                            th:text="${ex.name}">
+                                        </li>
+                                    </ul>
+<!--                                    <form th:action="@{/training/profile/me/add-exercise-to-day}" method="post" class="mt-2">-->
+
+<!--                                        &lt;!&ndash; Welcher Tag wird bearbeitet &ndash;&gt;-->
+<!--                                        <input type="hidden" name="trainingDayId" th:value="${matchingDay.id}">-->
+
+<!--                                        <div class="input-group">-->
+
+<!--                                            <select class="form-select" name="personalExerciseId" required>-->
+<!--                                                <option value="">Bitte wählen...</option>-->
+<!--                                                <option th:each="ex : ${allExercises}"-->
+<!--                                                        th:value="${ex.id}"-->
+<!--                                                        th:text="${ex.name}">-->
+<!--                                                </option>-->
+<!--                                            </select>-->
+<!--                                            <div class="invalid-feedback">-->
+<!--                                                Bitte wähle eine Übung aus.-->
+<!--                                            </div>-->
+<!--                                        </div>-->
+<!--                                        <button type="submit" class="btn btn-success w-100">Add</button>-->
+<!--                                    </form>-->
+
+
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-primary w-100 mt-2"
+                                            data-bs-toggle="modal"
+                                            th:data-bs-target="'#addExerciseModal}'"
+                                            th:data-day-id="${matchingDay.id}">>
+                                        Übung hinzufügen
+                                    </button>
+
+
+                                </div>
+                            </div>
+                        </div>
+                        </div>
+
+
+                        <!-- NEUEN SPLIT ANLEGEN -->
+                        <div class="tab-pane fade"
+                             id="new-split-content" role="tabpanel">
+                            <h5>Neuen Split erstellen</h5>
+
+                            <form th:action="@{/training/profile/me/create-split}" method="post">
+                                <label>Split-Name</label>
+                                <input type="text" name="splitName" class="form-control" minlength="1">
+
+                                <button type="submit" class="btn btn-success mt-3">
+                                    Erstellen
+                                </button>
+                            </form>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                        <button type="submit" class="btn btn-primary">Speichern</button>
+                    </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const modalEl = document.getElementById('addExerciseModal');
+
+    modalEl.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const dayId = button.getAttribute('data-day-id');
+        document.getElementById('trainingDayInput').value = dayId;
+    });
+</script>
+
+</body>
+</html>
