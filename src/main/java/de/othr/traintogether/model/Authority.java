@@ -1,5 +1,8 @@
 package de.othr.traintogether.model;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.Objects;
 
@@ -8,6 +11,9 @@ import java.util.Objects;
         uniqueConstraints = {
         @UniqueConstraint(columnNames = {"user_id", "authority"})
 })
+@Getter
+@Setter
+@NoArgsConstructor
 public class Authority {
 
     @Id
@@ -21,14 +27,8 @@ public class Authority {
     @Column(nullable = false, length = 50)
     private String authority;
 
-    public Authority() {}
     public Authority(User user, String authority) {
         this.user = Objects.requireNonNull(user, "User cannot be null");
         this.authority = Objects.requireNonNull(authority, "Authority cannot be null");
-    }
-
-    // getters + setters
-    public String getAuthority(){
-        return authority;
     }
 }
