@@ -1,5 +1,5 @@
 (function () {
-    const MAX_MESSAGES = 120;
+    const MAX_MESSAGES = 220;
     const container = document.getElementById('messagesContainer');
     if (!container) return;
 

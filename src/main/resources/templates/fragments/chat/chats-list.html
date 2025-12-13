@@ -1,8 +1,8 @@
 <div th:fragment="chatList" class="col-md-6 col-lg-5 col-xl-4 mb-4 mb-md-0 p-3 pe-0 ps-0 d-flex flex-column h-100"
      style="max-width: 30vw">
     <div class="input-group rounded mb-3 ps-3 pe-2">
-        <input type="search" class="form-control rounded" placeholder="Search"
-               aria-label="Search"
+        <input type="search" class="form-control rounded" th:placeholder="#{chat.search.placeholder}"
+               th:attr="aria-label=#{chat.search.aria}"
                aria-describedby="search-addon"/>
         <svg style="height: 100%; width: auto; padding: 8px;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
             <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
@@ -10,8 +10,8 @@
     </div>
 
     <div class="flex-grow-1 overflow-y-auto overflow-x-hidden">
-        <div th:replace="~{fragments/chat/chat-list-category :: chatListCategory(chats=${courses}, title='Courses')}"></div>
-        <div th:replace="~{fragments/chat/chat-list-category :: chatListCategory(chats=${groups}, title='Groups')}"></div>
-        <div th:replace="~{fragments/chat/chat-list-category :: chatListCategory(chats=${dms}, title='Direct Messages')}"></div>
+        <div th:replace="~{fragments/chat/chat-list-category :: chatListCategory(chats=${courses}, title=#{chat.category.courses})}"></div>
+        <div th:replace="~{fragments/chat/chat-list-category :: chatListCategory(chats=${groups}, title=#{chat.category.groups})}"></div>
+        <div th:replace="~{fragments/chat/chat-list-category :: chatListCategory(chats=${dms}, title=#{chat.category.dms})}"></div>
     </div>
 </div>
