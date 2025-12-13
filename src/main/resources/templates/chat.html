@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::content})}">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{nav.chat}">Chat</title>
+</head>
+
+<body>
+<div th:fragment="content" class="container-fluid h-100 d-flex flex-row ps-0">
+    <div th:replace="~{fragments/chat/chats-list :: chatList}"></div>
+
+    <div class="col-md-6 col-lg-7 col-xl-8 pb-3 ps-3 d-flex flex-column h-100 border-start border-1 border-secondary">
+        <div th:if="${messagePage != null}" class="d-flex flex-column h-100">
+            <div th:replace="~{fragments/chat/chat-messages-container :: chatMessages}"></div>
+            <div th:replace="~{fragments/chat/message-input :: messageInput}"></div>
+        </div>
+
+        <div th:if="${messagePage == null}" class="flex-grow-1 d-flex align-items-center justify-content-center">
+            <div class="text-center text-muted">
+                <p class="h6 mb-1" th:text="#{chat.no.selected.title}">No chat selected - choose a chat to start.</p>
+                <p class="mb-0" th:text="#{chat.no.selected.desc}">Select a conversation on the left to view messages and start chatting.</p>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

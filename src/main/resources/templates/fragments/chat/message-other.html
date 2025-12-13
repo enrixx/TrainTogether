@@ -1,0 +1,21 @@
+<div th:fragment="chatMessage(message, roomType)"
+     class="d-flex flex-row justify-content-start"
+     th:attr="data-message-id=${message.id}, data-cursor=${message.cursor}">
+    <img th:if="${roomType != 'DM'}" th:src="${message.sender.SenderPictureUrl}"
+         alt="avatar" style="width: 45px; height: 45px; object-fit: cover;">
+    <div style="max-width: calc(100% - 60px);">
+        <div class="p-2 ms-3 mb-1 rounded-3 bg-body-tertiary">
+            <p th:if="${roomType != 'DM'}"
+               class="text-muted mb-1"
+               th:text="${message.sender.SenderName}"
+               style="font-size:0.75rem;">Name</p>
+
+            <p class="small"
+               th:text="${message.content}"
+               style="white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word;">
+                Message
+            </p>
+        </div>
+        <p class="small ms-3 mb-3 rounded-3 text-muted float-end" th:text="${message.sentAt}">Time</p>
+    </div>
+</div>
