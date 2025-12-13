@@ -72,7 +72,7 @@
             container.dataset.topCursor = topCursor;
             container.dataset.topHasMore = String(topHasMore);
 
-            //TODO: trimMessages();
+            trimMessages('bottom');
         } catch (e) {
             console.error('Failed loading older messages', e);
         } finally {
@@ -112,11 +112,54 @@
             container.dataset.bottomCursor = bottomCursor || '';
             container.dataset.bottomHasMore = String(bottomHasMore);
 
-            //TODO: trimMessages();
+            trimMessages('top');
         } catch (e) {
             console.error('Failed loading newer messages', e);
         } finally {
             loading = false;
         }
     }
+
+    function trimMessages(side) {
+        const nodes = Array.from(container.querySelectorAll('[data-message-id]'));
+        if (nodes.length <= MAX_MESSAGES) return;
+
+        const removeCount = nodes.length - MAX_MESSAGES;
+
+        const readCursor = (el) => {
+            if (!el) return null;
+            return el.dataset.cursor;
+        };
+
+        if (side === 'top') {
+            // remove from the top
+            for (let i = 0; i < removeCount; i++) {
+                const node = nodes[i];
+                if (node) node.remove();
+            }
+
+            // update topCursor und topHasMore
+            const remaining = Array.from(container.querySelectorAll('[data-message-id]'));
+            const first = remaining[0];
+            topCursor = readCursor(first);
+            topHasMore = true;
+            container.dataset.topCursor = topCursor;
+            container.dataset.topHasMore = String(topHasMore);
+        } else {
+            // remove from the bottom
+            for (let i = 0; i < removeCount; i++) {
+                const node = nodes[nodes.length - 1 - i];
+                if (node) node.remove();
+            }
+
+            // update bottomCursor und bottomHasMore
+            const remaining = Array.from(container.querySelectorAll('[data-message-id]'));
+            const last = remaining[remaining.length - 1];
+            bottomCursor = last.dataset.cursor;
+            bottomHasMore = true;
+            container.dataset.bottomCursor = bottomCursor;
+            container.dataset.bottomHasMore = String(bottomHasMore);
+        }
+    }
+
 })();

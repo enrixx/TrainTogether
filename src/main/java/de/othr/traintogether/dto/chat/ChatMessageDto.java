@@ -20,6 +20,8 @@ public class ChatMessageDto {
     private String content;
     @lombok.NonNull
     private String sentAt;
+    @lombok.NonNull
+    private String cursor;
     private boolean edited;
     private boolean mine;
     private String replyTo;

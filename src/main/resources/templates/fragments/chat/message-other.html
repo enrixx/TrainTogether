@@ -1,4 +1,6 @@
-<div th:fragment="chatMessage(message, roomType)" class="d-flex flex-row justify-content-start">
+<div th:fragment="chatMessage(message, roomType)"
+     class="d-flex flex-row justify-content-start"
+     th:attr="data-message-id=${message.id}, data-cursor=${message.cursor}">
     <img th:if="${roomType != 'DM'}" th:src="${message.sender.SenderPictureUrl}"
          alt="avatar" style="width: 45px; height: 100%;">
     <div>

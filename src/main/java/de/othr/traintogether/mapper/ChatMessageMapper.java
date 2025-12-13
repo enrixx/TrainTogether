@@ -4,6 +4,7 @@ import de.othr.traintogether.dto.chat.ChatMessageDto;
 import de.othr.traintogether.dto.chat.MessageSenderDto;
 import de.othr.traintogether.model.chat.ChatMessage;
 import de.othr.traintogether.model.chat.ChatRoomMember;
+import de.othr.traintogether.service.chat.CursorService;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -14,6 +15,13 @@ import java.time.format.DateTimeFormatter;
 
 @Component
 public class ChatMessageMapper {
+
+    private final CursorService cursorService;
+
+    public ChatMessageMapper(CursorService cursorService) {
+        this.cursorService = cursorService;
+    }
+
     public ChatMessageDto toDto(ChatMessage message, ChatRoomMember me) {
         var sender = message.getSender();
 
@@ -40,7 +48,8 @@ public class ChatMessageMapper {
                 message.getId(),
                 messageSenderDto,
                 message.getContent(),
-                formatSentAt(message.getSentAt()));
+                formatSentAt(message.getSentAt()),
+                cursorService.buildCursor(message.getSentAt(), message.getId()));
 
         messageDto.setEdited(message.isEdited());
         messageDto.setMine(message.getSender().getId().equals(me.getId()));
