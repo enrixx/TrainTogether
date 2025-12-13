@@ -1,4 +1,4 @@
-package de.othr.traintogether.service;
+package de.othr.traintogether.service.chat;
 
 import de.othr.traintogether.dto.ChatRoomListingDto;
 import de.othr.traintogether.mapper.ChatRoomMapper;

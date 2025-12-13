@@ -1,4 +1,4 @@
-package de.othr.traintogether.service;
+package de.othr.traintogether.service.chat;
 
 import de.othr.traintogether.dto.chat.ChatMessageDto;
 import de.othr.traintogether.dto.chat.ChatMessagePageDto;
@@ -31,13 +31,15 @@ public class ChatMessageService {
     private final ChatMessageRepository chatMessageRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMessageMapper chatMessageMapper;
+    private final CursorService cursorService;
 
-    public ChatMessageService(ChatRoomMemberRepository chatRoomMemberRepository, UserRepository userRepository, ChatMessageRepository chatMessageRepository, ChatRoomRepository chatRoomRepository, ChatMessageMapper chatMessageMapper) {
+    public ChatMessageService(ChatRoomMemberRepository chatRoomMemberRepository, UserRepository userRepository, ChatMessageRepository chatMessageRepository, ChatRoomRepository chatRoomRepository, ChatMessageMapper chatMessageMapper, CursorService cursorService) {
         this.chatRoomMemberRepository = chatRoomMemberRepository;
         this.userRepository = userRepository;
         this.chatMessageRepository = chatMessageRepository;
         this.chatRoomRepository = chatRoomRepository;
         this.chatMessageMapper = chatMessageMapper;
+        this.cursorService = cursorService;
     }
 
     @Transactional
@@ -89,8 +91,8 @@ public class ChatMessageService {
         }
 
         //Getting page from top cursor
-        Instant topInstant = decodeCursorInstant(topCursor);
-        Long topId = decodeCursorId(topCursor);
+        Instant topInstant = cursorService.decodeCursorInstant(topCursor);
+        Long topId = cursorService.decodeCursorId(topCursor);
         Pageable pageable = PageRequest.of(0, Math.max(1, pageSize + 1), Sort.by(Sort.Order.desc("sentAt"), Sort.Order.desc("id")));
         List<ChatMessage> messages = chatMessageRepository.findByChatRoomIdAfter(chatRoomId, topInstant, topId, pageable);
 
@@ -114,10 +116,10 @@ public class ChatMessageService {
 
         //reassign topCurser even if not changed
         ChatMessage first = messages.getFirst();
-        String newTopCursor = first.getSentAt().toEpochMilli() + ":" + first.getId();
+        String newTopCursor = cursorService.buildCursor(first.getSentAt(), first.getId());
 
         ChatMessage last = messages.getLast();
-        String newBottomCursor = last.getSentAt().toEpochMilli() + ":" + last.getId();
+        String newBottomCursor = cursorService.buildCursor(last.getSentAt(), last.getId());
 
         pageDto.setTopHasMore(topHasMore);
         pageDto.setTopCursor(newTopCursor);
@@ -131,8 +133,8 @@ public class ChatMessageService {
         ChatRoomMember member = GetMember(userEmail, chatRoomId);
 
         //Getting page up from top cursor
-        Instant topInstant = decodeCursorInstant(topCursor);
-        Long topId = decodeCursorId(topCursor);
+        Instant topInstant = cursorService.decodeCursorInstant(topCursor);
+        Long topId = cursorService.decodeCursorId(topCursor);
         Pageable pageable = PageRequest.of(0, Math.max(1, pageSize + 1), Sort.by(Sort.Order.desc("sentAt"), Sort.Order.desc("id")));
         List<ChatMessage> messages = chatMessageRepository.findByChatRoomIdBefore(chatRoomId, topInstant, topId, pageable);
 
@@ -145,12 +147,14 @@ public class ChatMessageService {
             messages = messages.subList(0, pageSize);
         }
 
+        messages.removeIf(m -> topId.equals(m.getId()));
+
         Collections.reverse(messages);
 
         ChatMessagesCursorDto messageDto = fillMessageCursorDto(member, chatRoomId, messages, pageSize);
 
         ChatMessage first = messages.getFirst();
-        String newTopCursor = first.getSentAt().toEpochMilli() + ":" + first.getId();
+        String newTopCursor = cursorService.buildCursor(first.getSentAt(), first.getId());
 
         messageDto.setHasMore(topHasMore);
         messageDto.setCursor(newTopCursor);
@@ -162,8 +166,8 @@ public class ChatMessageService {
         ChatRoomMember member = GetMember(userEmail, chatRoomId);
 
         //Getting page down from bottom cursor
-        Instant bottomInstant = decodeCursorInstant(bottomCursor);
-        Long bottomId = decodeCursorId(bottomCursor);
+        Instant bottomInstant = cursorService.decodeCursorInstant(bottomCursor);
+        Long bottomId = cursorService.decodeCursorId(bottomCursor);
         Pageable pageable = PageRequest.of(0, Math.max(1, pageSize + 1), Sort.by(Sort.Order.desc("sentAt"), Sort.Order.desc("id")));
         List<ChatMessage> messages = chatMessageRepository.findByChatRoomIdAfter(chatRoomId, bottomInstant, bottomId, pageable);
 
@@ -176,6 +180,8 @@ public class ChatMessageService {
             messages = messages.subList(0, pageSize);
         }
 
+        messages.removeIf(m -> bottomId.equals(m.getId()));
+
         ChatMessagesCursorDto messageDto = fillMessageCursorDto(member, chatRoomId, messages, pageSize);
 
         if (messageDto.getLastMessageId() != null) {
@@ -185,7 +191,7 @@ public class ChatMessageService {
         }
 
         ChatMessage last = messages.getLast();
-        String newBottomCursor = last.getSentAt().toEpochMilli() + ":" + last.getId();
+        String newBottomCursor = cursorService.buildCursor(last.getSentAt(), last.getId());
 
         messageDto.setHasMore(bottomHasMore);
         messageDto.setCursor(newBottomCursor);
@@ -213,28 +219,6 @@ public class ChatMessageService {
         return trimmed;
     }
 
-    private Instant decodeCursorInstant(String cursor) {
-        if (cursor == null || cursor.isBlank()) return null;
-        String[] parts = cursor.split(":");
-        try {
-            return Instant.ofEpochMilli(Long.parseLong(parts[0]));
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid cursor");
-        }
-    }
-
-    private Long decodeCursorId(String cursor) {
-        if (cursor == null || cursor.isBlank()) return null;
-        String[] parts = cursor.split(":");
-        if (parts.length < 2 || parts[1].isBlank()) return null;
-        try {
-            return Long.parseLong(parts[1]);
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid cursor id");
-
-        }
-    }
-
     private String determineDefaultTopCurser(ChatRoomMember member, Long chatRoomId) {
         // determine anchor message
         Instant lastReadInstance = member.getLastRead();
@@ -258,7 +242,7 @@ public class ChatMessageService {
             return null;
         }
 
-        return anchor.getSentAt().toEpochMilli() + ":" + anchor.getId();
+        return cursorService.buildCursor(anchor.getSentAt(), anchor.getId());
     }
 
     private ChatMessagePageDto buildEmptyMessagePageDto() {
