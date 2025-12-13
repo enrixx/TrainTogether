@@ -3,6 +3,7 @@ package de.othr.traintogether.service.chat;
 import de.othr.traintogether.dto.chat.ChatMessageDto;
 import de.othr.traintogether.dto.chat.ChatMessagePageDto;
 import de.othr.traintogether.dto.chat.ChatMessagesCursorDto;
+import de.othr.traintogether.dto.chat.SendChatMessageDto;
 import de.othr.traintogether.mapper.ChatMessageMapper;
 import de.othr.traintogether.model.User;
 import de.othr.traintogether.model.chat.ChatMessage;
@@ -43,14 +44,19 @@ public class ChatMessageService {
     }
 
     @Transactional
-    public void sendMessage(String userEmail, Long chatRoomID, String content) {
+    public void sendMessage(String userEmail, Long chatRoomID, SendChatMessageDto messageDto) {
         ChatRoomMember chatRoomMember = GetMember(userEmail, chatRoomID);
         if (chatRoomMember.getRole() == ChatRole.READ_ONLY) {
             throw new IllegalArgumentException("User has read-only access to the chat room: " + chatRoomID);
         }
 
-        String trimmed = TrimMessageContent(content);
-        chatMessageRepository.save(new ChatMessage(chatRoomMember.getChatRoom(), chatRoomMember, trimmed));
+        //TODO: handle replyTo attachment later
+        String trimmed = TrimMessageContent(messageDto.getContent());
+        ChatMessage message = new ChatMessage(chatRoomMember.getChatRoom(), chatRoomMember, trimmed);
+        chatMessageRepository.save(message);
+
+        chatRoomMember.setLastRead(message.getSentAt());
+        chatRoomMemberRepository.save(chatRoomMember);
     }
 
     @Transactional

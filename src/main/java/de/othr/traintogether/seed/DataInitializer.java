@@ -1,6 +1,7 @@
 package de.othr.traintogether.seed;
 
 import de.othr.traintogether.dto.RegisterDto;
+import de.othr.traintogether.dto.chat.SendChatMessageDto;
 import de.othr.traintogether.repository.UserRepository;
 import de.othr.traintogether.repository.chat.ChatMessageRepository;
 import de.othr.traintogether.repository.chat.ChatRoomMemberRepository;
@@ -10,6 +11,7 @@ import de.othr.traintogether.service.chat.ChatRoomService;
 import de.othr.traintogether.service.UserService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+
 import java.util.Set;
 
 @Component
@@ -58,21 +60,20 @@ public class DataInitializer implements CommandLineRunner {
         Long dm2 = chatRoomService.findDmByUser("user@u").getFirst().getId();
         Long group = chatRoomService.findGroupsByUser("user@u").getFirst().getId();
 
-        chatMessageService.sendMessage("user@u", dm2, "Hi Admin, kurze Nachricht vom Seeder.");
+        chatMessageService.sendMessage("user@u", dm2, new SendChatMessageDto("Hi Admin, kurze Nachricht vom Seeder."));
 
-        chatMessageService.sendMessage("user@u", group, "Hallo zusammen!");
-        chatMessageService.sendMessage("owner@o", group, "Hi, freut mich dabei zu sein.");
-        chatMessageService.sendMessage("worker@w", group, "Moin, was geht?");
-        chatMessageService.sendMessage("user@u", group, "Wollen wir morgen trainieren?");
-        chatMessageService.sendMessage("owner@o", group, "Ja, gerne.");
-        chatMessageService.sendMessage("worker@w", group, "Passt bei mir.");
+        chatMessageService.sendMessage("user@u", group, new SendChatMessageDto("Hallo zusammen!"));
+        chatMessageService.sendMessage("owner@o", group, new SendChatMessageDto("Hi, freut mich dabei zu sein."));
+        chatMessageService.sendMessage("worker@w", group, new SendChatMessageDto("Moin, was geht?"));
+        chatMessageService.sendMessage("user@u", group, new SendChatMessageDto("Wollen wir morgen trainieren?"));
+        chatMessageService.sendMessage("owner@o", group, new SendChatMessageDto("Ja, gerne."));
+        chatMessageService.sendMessage("worker@w", group, new SendChatMessageDto("Passt bei mir."));
 
         for (long i = 0; i < 300; i++) {
-            if(i % 2 == 0){
-                chatMessageService.sendMessage("owner@o", group, "Message Nummer " + (i + 1));
-            }
-            else {
-                chatMessageService.sendMessage("user@u", group, "Message Nummer " + (i + 1));
+            if (i % 2 == 0) {
+                chatMessageService.sendMessage("owner@o", group, new SendChatMessageDto("Message Nummer " + (i + 1)));
+            } else {
+                chatMessageService.sendMessage("user@u", group, new SendChatMessageDto("Message Nummer " + (i + 1)));
             }
         }
     }

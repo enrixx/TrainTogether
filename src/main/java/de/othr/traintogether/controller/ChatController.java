@@ -3,13 +3,16 @@ package de.othr.traintogether.controller;
 import de.othr.traintogether.dto.chat.ChatMessagePageDto;
 import de.othr.traintogether.dto.chat.ChatMessagesCursorDto;
 import de.othr.traintogether.dto.chat.ChatMessagesFragmentDto;
+import de.othr.traintogether.dto.chat.SendChatMessageDto;
 import de.othr.traintogether.service.chat.ChatMessageService;
 import de.othr.traintogether.service.chat.ChatRoomService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
@@ -37,6 +40,7 @@ public class ChatController {
             String userEmail = principal.getName();
             model.addAttribute("groups", chatRoomService.findGroupsByUser(userEmail));
             model.addAttribute("dms", chatRoomService.findDmByUser(userEmail));
+            model.addAttribute("sendChatMessageDto", new SendChatMessageDto());
             model.addAttribute("title", "Chat");
         }
     }
@@ -46,7 +50,6 @@ public class ChatController {
         return "chat";
     }
 
-    //TODO: check if user is member of chat room
     @GetMapping("/{chatId}")
     public String getMessages(
             @PathVariable("chatId") Long chatId,
@@ -59,11 +62,31 @@ public class ChatController {
             ChatMessagePageDto page = chatMessageService.getMessageInitialCursorPage(principal.getName(), chatId, pageSize);
             model.addAttribute("messagePage", page);
         } catch (IllegalArgumentException e) {
+            //TODO: write exception on error page
             return "error/404";
         } catch (Exception e) {
             return "error/500";
         }
         return "chat";
+    }
+
+    @PostMapping("/{chatId}")
+    public String sendMessage(
+            @PathVariable("chatId") Long chatId,
+            @Valid @ModelAttribute("sendChatMessageDto") SendChatMessageDto SendChatMessageDto,
+            RedirectAttributes redirectAttributes,
+            Principal principal) {
+
+        try {
+            chatMessageService.sendMessage(principal.getName(), chatId, SendChatMessageDto);
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("sendError", e.getMessage());
+            return "redirect:/chat/" + chatId;
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("sendError", "Interner Fehler");
+            return "redirect:/chat/" + chatId;
+        }
+        return "redirect:/chat/" + chatId;
     }
 
     @GetMapping("/{chatId}/messages/fragment")
