@@ -88,7 +88,6 @@ public class ChatMessageService {
     @Transactional
     public ChatMessagePageDto getMessageInitialCursorPage(String userEmail, Long chatRoomId, Integer pageSize) {
 
-        //TODO: better load then only one
         ChatRoomMember member = GetMember(userEmail, chatRoomId);
         String topCursor = determineDefaultTopCurser(member, chatRoomId);
 
