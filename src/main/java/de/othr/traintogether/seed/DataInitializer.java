@@ -2,6 +2,7 @@ package de.othr.traintogether.seed;
 
 import de.othr.traintogether.dto.RegisterDto;
 import de.othr.traintogether.dto.chat.SendChatMessageDto;
+import de.othr.traintogether.model.chat.ChatRole;
 import de.othr.traintogether.repository.UserRepository;
 import de.othr.traintogether.repository.chat.ChatMessageRepository;
 import de.othr.traintogether.repository.chat.ChatRoomMemberRepository;
@@ -12,6 +13,7 @@ import de.othr.traintogether.service.UserService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
 import java.util.Set;
 
 @Component
@@ -55,12 +57,13 @@ public class DataInitializer implements CommandLineRunner {
         chatRoomService.createDm("user@u", "admin@a");
         chatRoomService.createDm("user@u", "owner@o");
         java.util.HashSet<String> members = new java.util.HashSet<>(Set.of("user@u", "owner@o", "worker@w"));
-        chatRoomService.createGroup("Test Group", null, members, "admin@a");
+        chatRoomService.createGroup("Test Group", null, members, "admin@a", ChatRole.MEMBER);
+        chatRoomService.createGroup(" Read only Test Group", null, members, "admin@a", ChatRole.READ_ONLY);
 
         Long dm2 = chatRoomService.findDmByUser("user@u").getFirst().getId();
-        Long group = chatRoomService.findGroupsByUser("user@u").getFirst().getId();
+        Long group = chatRoomService.findGroupsByUser("user@u", Optional.of(true)).getFirst().getId();
 
-        chatMessageService.sendMessage("user@u", dm2, new SendChatMessageDto("Hi Admin, kurze Nachricht vom Seeder."));
+        chatMessageService.sendMessage("admin@a", dm2, new SendChatMessageDto("Hi User, kurze Nachricht vom Seeder."));
 
         chatMessageService.sendMessage("user@u", group, new SendChatMessageDto("Hallo zusammen!"));
         chatMessageService.sendMessage("owner@o", group, new SendChatMessageDto("Hi, freut mich dabei zu sein."));
@@ -73,7 +76,7 @@ public class DataInitializer implements CommandLineRunner {
             if (i % 2 == 0) {
                 chatMessageService.sendMessage("owner@o", group, new SendChatMessageDto("Message Nummer " + (i + 1)));
             } else {
-                chatMessageService.sendMessage("user@u", group, new SendChatMessageDto("Message Nummer " + (i + 1)));
+                chatMessageService.sendMessage("worker@w", group, new SendChatMessageDto("Message Nummer " + (i + 1)));
             }
         }
     }

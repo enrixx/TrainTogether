@@ -17,5 +17,6 @@ public class ChatMessagePageDto {
     private boolean bottomHasMore;
     private String bottomCursor;
     private int pageSize;
+    private boolean canSend;
 }
 

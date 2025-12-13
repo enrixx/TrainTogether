@@ -17,6 +17,7 @@ import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import java.security.Principal;
+import java.util.Optional;
 
 
 @Controller
@@ -38,7 +39,8 @@ public class ChatController {
     public void populateCommon(Model model, Principal principal) {
         if (principal != null) {
             String userEmail = principal.getName();
-            model.addAttribute("groups", chatRoomService.findGroupsByUser(userEmail));
+            model.addAttribute("courses", chatRoomService.findGroupsByUser(userEmail, Optional.of(false)));
+            model.addAttribute("groups", chatRoomService.findGroupsByUser(userEmail, Optional.of(true)));
             model.addAttribute("dms", chatRoomService.findDmByUser(userEmail));
             model.addAttribute("sendChatMessageDto", new SendChatMessageDto());
             model.addAttribute("title", "Chat");
@@ -115,6 +117,7 @@ public class ChatController {
             Context ctx = new Context();
             ctx.setVariable("messages", fragmentDto.getMessages());
             ctx.setVariable("lastMessageId", fragmentDto.getLastMessageId());
+            ctx.setVariable("roomType", fragmentDto.getRoomType());
             // render Fragment
             String html = templateEngine.process("fragments/chat/chat-messages", ctx);
 

@@ -1,4 +1,4 @@
-<div th:fragment="chatListCategory(chats, title)" th:if="${chats != null}" class="mb-2">
+<div th:fragment="chatListCategory(chats, title)" th:if="${chats != null && chats.size() > 0}" class="mb-2">
     <a data-bs-toggle="collapse" th:href="@{#collapseChats{section}(section=${title.replaceAll(' ', '')})}"
        role="button"
        aria-expanded="false" th:aria-controls="@{collapseChats{section}(section=${title.replaceAll(' ', '')})}"

@@ -47,7 +47,7 @@ public class ChatRoomService {
     }
 
     @Transactional
-    public void createGroup(String name, String pictureUrl, Set<String> userEmails, String ownerEmail) {
+    public void createGroup(String name, String pictureUrl, Set<String> userEmails, String ownerEmail, ChatRole memberRole) {
 
         User owner = userRepository.findByEmail(ownerEmail)
                 .orElseThrow(() -> new IllegalArgumentException("Owner not found: " + ownerEmail));
@@ -57,14 +57,14 @@ public class ChatRoomService {
         for (String userEmail : userEmails) {
             User user = userRepository.findByEmail(userEmail)
                     .orElseThrow(() -> new IllegalArgumentException("User not found: " + userEmail));
-            ChatRoomMember member = new ChatRoomMember(room, user, ChatRole.MEMBER);
+            ChatRoomMember member = new ChatRoomMember(room, user, memberRole);
             room.addMember(member);
         }
         chatRoomRepository.save(room);
     }
 
     @Transactional
-    public void addUserToGroup(Long chatRoomId, String userEmail) {
+    public void addUserToGroup(Long chatRoomId, String userEmail, ChatRole chatRole) {
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
                 .orElseThrow(() -> new IllegalArgumentException("ChatRoom not found: " + chatRoomId));
         if (chatRoom.getType() != ChatRoomType.GROUP) {
@@ -77,7 +77,7 @@ public class ChatRoomService {
                 .anyMatch(m -> m.getUser() != null && user.getId() != null && user.getId().equals(m.getUser().getId()));
         if (exists) return;
 
-        ChatRoomMember newMember = new ChatRoomMember(chatRoom, user, ChatRole.MEMBER);
+        ChatRoomMember newMember = new ChatRoomMember(chatRoom, user, chatRole);
         chatRoom.addMember(newMember);
         chatRoomRepository.save(chatRoom);
     }
@@ -96,14 +96,14 @@ public class ChatRoomService {
 
     @Transactional(readOnly = true)
     public List<ChatRoomListingDto> findDmByUser(String userEmail) {
-        return findByUserAndType(userEmail, ChatRoomType.DM,
+        return findByUserAndType(userEmail, ChatRoomType.DM, Optional.empty(),
                 (room, member, unreadCount, lastMessage) -> chatRoomMapper.toDtoDm(room, unreadCount, lastMessage, member));
 
     }
 
     @Transactional(readOnly = true)
-    public List<ChatRoomListingDto> findGroupsByUser(String userEmail) {
-        return findByUserAndType(userEmail, ChatRoomType.GROUP,
+    public List<ChatRoomListingDto> findGroupsByUser(String userEmail, Optional<Boolean> canWrite) {
+        return findByUserAndType(userEmail, ChatRoomType.GROUP, canWrite,
                 (room, member, unreadCount, lastMessage) -> chatRoomMapper.toDtoGroup(room, unreadCount, lastMessage));
     }
 
@@ -112,7 +112,7 @@ public class ChatRoomService {
         ChatRoomListingDto map(ChatRoom room, ChatRoomMember member, String unreadMessagesCount, Optional<ChatMessage> lastMessage);
     }
 
-    private List<ChatRoomListingDto> findByUserAndType(String userEmail, ChatRoomType type, RoomToDtoMapper mapper) {
+    private List<ChatRoomListingDto> findByUserAndType(String userEmail, ChatRoomType type, Optional<Boolean> canWrite, RoomToDtoMapper mapper) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userEmail));
         List<ChatRoom> rooms = chatRoomRepository.findByUserAndType(user, type);
@@ -129,7 +129,14 @@ public class ChatRoomService {
             String unreadMessagesCount = unread > 99 ? "99+" : Long.toString(unread);
             Optional<ChatMessage> lastMessage = chatMessageRepository.findFirstByChatRoomIdOrderBySentAtDesc(room.getId());
 
-            result.add(mapper.map(room, member, unreadMessagesCount, lastMessage));
+            if(canWrite.isEmpty()){
+                result.add(mapper.map(room, member, unreadMessagesCount, lastMessage));
+            }
+            else if(canWrite.get() && member.getRole() != ChatRole.READ_ONLY){
+                result.add(mapper.map(room, member, unreadMessagesCount, lastMessage));
+            } else if (!canWrite.get() && member.getRole() == ChatRole.READ_ONLY) {
+                result.add(mapper.map(room, member, unreadMessagesCount, lastMessage));
+            }
         }
         return result;
     }

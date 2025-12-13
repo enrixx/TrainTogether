@@ -88,12 +88,13 @@ public class ChatMessageService {
     @Transactional
     public ChatMessagePageDto getMessageInitialCursorPage(String userEmail, Long chatRoomId, Integer pageSize) {
 
+        //TODO: better load then only one
         ChatRoomMember member = GetMember(userEmail, chatRoomId);
         String topCursor = determineDefaultTopCurser(member, chatRoomId);
 
         // no messages at all
         if (topCursor == null) {
-            return buildEmptyMessagePageDto();
+            return buildEmptyMessagePageDto(chatRoomId, member);
         }
 
         //Getting page from top cursor
@@ -103,7 +104,7 @@ public class ChatMessageService {
         List<ChatMessage> messages = chatMessageRepository.findByChatRoomIdAfter(chatRoomId, topInstant, topId, pageable);
 
         if (messages.isEmpty()) {
-            return buildEmptyMessagePageDto();
+            return buildEmptyMessagePageDto(chatRoomId, member);
         }
 
         boolean bottomHasMore = messages.size() > pageSize;
@@ -131,6 +132,7 @@ public class ChatMessageService {
         pageDto.setTopCursor(newTopCursor);
         pageDto.setBottomHasMore(bottomHasMore);
         pageDto.setBottomCursor(newBottomCursor);
+        pageDto.setCanSend(member.getRole() != ChatRole.READ_ONLY);
         return pageDto;
     }
 
@@ -251,7 +253,7 @@ public class ChatMessageService {
         return cursorService.buildCursor(anchor.getSentAt(), anchor.getId());
     }
 
-    private ChatMessagePageDto buildEmptyMessagePageDto() {
+    private ChatMessagePageDto buildEmptyMessagePageDto(Long chatRoomId, ChatRoomMember member) {
         ChatMessagePageDto emptyPage = new ChatMessagePageDto();
         emptyPage.setMessages(List.of());
         emptyPage.setLastMessageId(null);
@@ -259,7 +261,9 @@ public class ChatMessageService {
         emptyPage.setTopCursor(null);
         emptyPage.setBottomHasMore(false);
         emptyPage.setBottomCursor(null);
+        emptyPage.setRoomId(chatRoomId);
         emptyPage.setPageSize(0);
+        emptyPage.setCanSend(member.getRole() != ChatRole.READ_ONLY);
         return emptyPage;
     }
 

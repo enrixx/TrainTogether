@@ -1,4 +1,5 @@
 <form th:fragment="messageInput"
+      th:if="${messagePage.canSend}"
       th:action="@{/chat/{chatId}(chatId=${messagePage.roomId})}" method="post"
       th:object="${sendChatMessageDto}"
       class="d-flex align-items-center gap-2 pe-3 pt-3 mt-2"
@@ -9,8 +10,8 @@
         </svg>
     </button>
     <input type="text" class="form-control form-control-lg flex-grow" aria-label="Nachricht eingeben"
-           id="exampleFormControlInput2"
            placeholder="Type message"
+           autocomplete="off"
            th:field="*{content}">
     <button type="submit" class="btn btn-link p-0" aria-label="Send message">
         <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-send" viewBox="0 0 16 16">
