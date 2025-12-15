@@ -1,12 +1,12 @@
 package de.othr.traintogether.service;
 
-import com.resend.Resend;
-import com.resend.core.exception.ResendException;
-import com.resend.services.emails.model.CreateEmailOptions;
-import com.resend.services.emails.model.CreateEmailResponse;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -16,24 +16,17 @@ public class EmailService {
 
     private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
 
-    private final Resend resend;
-    private final String fromEmail;
-    private final String supportEmail;
+    private final JavaMailSender mailSender;
     private final String appUrl;
     private final TemplateEngine templateEngine;
 
-    public EmailService(@Value("${resend.api-key}") String apiKey,
-                       @Value("${resend.from-email}") String fromEmail,
-                       @Value("${resend.support-email:}") String supportEmail,
-                       @Value("${app.url}") String appUrl,
-                       TemplateEngine templateEngine) {
-        this.resend = new Resend(apiKey);
-        this.fromEmail = fromEmail;
-        this.supportEmail = supportEmail.isEmpty() ? null : supportEmail;
+    public EmailService(JavaMailSender mailSender,
+                        @Value("${app.url}") String appUrl,
+                        TemplateEngine templateEngine) {
+        this.mailSender = mailSender;
         this.appUrl = appUrl;
         this.templateEngine = templateEngine;
-        logger.info("EmailService initialized. Emails will be sent from: {}", fromEmail);
-        logger.info("Support email: {}", this.supportEmail != null ? this.supportEmail : "Using Resend default");
+        logger.info("EmailService initialized. Emails will be sent from Gmail authenticated account");
         logger.info("Application URL for email links: {}", appUrl);
     }
 
@@ -42,18 +35,17 @@ public class EmailService {
             String subject = getApprovalSubject(language);
             String htmlContent = renderApprovalTemplate(firstName, gymName, language);
 
-            CreateEmailOptions params = CreateEmailOptions.builder()
-                    .from(fromEmail)
-                    .to(toEmail)
-                    .subject(subject)
-                    .html(htmlContent)
-                    .build();
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            CreateEmailResponse response = resend.emails().send(params);
-            logger.info("Approval email sent successfully to {} in {} language. Email ID: {}",
-                       toEmail, language, response.getId());
+            helper.setTo(toEmail);
+            helper.setSubject(subject);
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+            logger.info("Approval email sent successfully to {} in {} language", toEmail, language);
             return true;
-        } catch (ResendException e) {
+        } catch (MessagingException e) {
             logger.error("Failed to send approval email to {}: {}", toEmail, e.getMessage(), e);
             return false;
         } catch (Exception e) {
@@ -67,18 +59,17 @@ public class EmailService {
             String subject = getRejectionSubject(language);
             String htmlContent = renderRejectionTemplate(firstName, gymName, language);
 
-            CreateEmailOptions params = CreateEmailOptions.builder()
-                    .from(fromEmail)
-                    .to(toEmail)
-                    .subject(subject)
-                    .html(htmlContent)
-                    .build();
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            CreateEmailResponse response = resend.emails().send(params);
-            logger.info("Rejection email sent successfully to {} in {} language. Email ID: {}",
-                       toEmail, language, response.getId());
+            helper.setTo(toEmail);
+            helper.setSubject(subject);
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+            logger.info("Rejection email sent successfully to {} in {} language", toEmail, language);
             return true;
-        } catch (ResendException e) {
+        } catch (MessagingException e) {
             logger.error("Failed to send rejection email to {}: {}", toEmail, e.getMessage(), e);
             return false;
         } catch (Exception e) {
@@ -97,12 +88,11 @@ public class EmailService {
         return templateEngine.process(templateName, context);
     }
 
-
     private String renderRejectionTemplate(String firstName, String gymName, String language) {
         Context context = new Context();
         context.setVariable("firstName", firstName);
         context.setVariable("gymName", gymName);
-        context.setVariable("supportEmail", supportEmail != null ? supportEmail : "");
+        context.setVariable("supportEmail", "");
 
         String templateName = "emails/gym-owner-rejection-" + language;
         return templateEngine.process(templateName, context);
@@ -110,14 +100,13 @@ public class EmailService {
 
     private String getApprovalSubject(String language) {
         return "de".equals(language)
-            ? "🎉 Deine Fitnessstudio-Besitzer-Anfrage wurde genehmigt!"
-            : "🎉 Your Gym Owner Request Has Been Approved!";
+                ? "🎉 Deine Fitnessstudio-Besitzer-Anfrage wurde genehmigt!"
+                : "🎉 Your Gym Owner Request Has Been Approved!";
     }
 
     private String getRejectionSubject(String language) {
         return "de".equals(language)
-            ? "Update zu deiner Fitnessstudio-Besitzer-Anfrage"
-            : "Update on Your Gym Owner Request";
+                ? "Update zu deiner Fitnessstudio-Besitzer-Anfrage"
+                : "Update on Your Gym Owner Request";
     }
 }
-
