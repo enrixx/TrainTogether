@@ -44,7 +44,9 @@ public class ProfileController {
         model.addAttribute("updateProfileDto", new UpdateProfileDto(user.getEmail(), user.getUsername(), user.getFirstName(), user.getLastName()));
 
         // Check if user has rejected gym owner request (for reapplication button)
-        boolean hasRejectedRequest = gymOwnerRequestService.hasRejectedRequest(email);
+        // Only show if user has NO pending request
+        boolean hasPendingRequest = gymOwnerRequestService.hasPendingRequest(email);
+        boolean hasRejectedRequest = !hasPendingRequest && gymOwnerRequestService.hasRejectedRequest(email);
         model.addAttribute("hasRejectedGymOwnerRequest", hasRejectedRequest);
 
         return "profile";

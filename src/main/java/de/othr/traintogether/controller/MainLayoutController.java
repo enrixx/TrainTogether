@@ -43,7 +43,8 @@ public class MainLayoutController {
                 model.addAttribute("hasPendingGymOwnerRequest", hasPendingRequest);
 
                 // Check if user has a rejected gym owner request (for reapplication button)
-                boolean hasRejectedRequest = gymOwnerRequestService.hasRejectedRequest(email);
+                // Only show rejected banner if user has NO pending request
+                boolean hasRejectedRequest = !hasPendingRequest && gymOwnerRequestService.hasRejectedRequest(email);
                 model.addAttribute("hasRejectedGymOwnerRequest", hasRejectedRequest);
             }
         }

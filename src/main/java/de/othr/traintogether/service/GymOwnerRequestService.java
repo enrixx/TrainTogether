@@ -185,17 +185,38 @@ public class GymOwnerRequestService {
             logger.info("Added PENDING_GYM_OWNER authority to user: {}", userEmail);
         }
 
-        GymOwnerRequest request = new GymOwnerRequest();
-        request.setUser(user);
-        request.setGymName(gymName);
-        request.setGymAddress(gymAddress);
-        request.setCity(city);
-        request.setPostalCode(postalCode);
-        request.setPhoneNumber(phoneNumber);
-        request.setGymDescription(gymDescription);
-        request.setRequestMessage(gymDescription);
-        request.setStatus(RequestStatus.PENDING);
-        request.setRequestedAt(LocalDateTime.now());
+        // Check if user has a rejected request - if so, update it instead of creating new one
+        GymOwnerRequest request = requestRepository.findByUserIdAndStatus(user.getId(), RequestStatus.REJECTED)
+                .orElse(null);
+
+        if (request != null) {
+            logger.info("Reusing rejected request for user: {}", userEmail);
+            request.setGymName(gymName);
+            request.setGymAddress(gymAddress);
+            request.setCity(city);
+            request.setPostalCode(postalCode);
+            request.setPhoneNumber(phoneNumber);
+            request.setGymDescription(gymDescription);
+            request.setRequestMessage(gymDescription);
+            request.setStatus(RequestStatus.PENDING);
+            request.setRequestedAt(LocalDateTime.now());
+            // Clear previous review data
+            request.setReviewedAt(null);
+            request.setReviewedBy(null);
+        } else {
+            // Creating new request
+            request = new GymOwnerRequest();
+            request.setUser(user);
+            request.setGymName(gymName);
+            request.setGymAddress(gymAddress);
+            request.setCity(city);
+            request.setPostalCode(postalCode);
+            request.setPhoneNumber(phoneNumber);
+            request.setGymDescription(gymDescription);
+            request.setRequestMessage(gymDescription);
+            request.setStatus(RequestStatus.PENDING);
+            request.setRequestedAt(LocalDateTime.now());
+        }
 
         requestRepository.save(request);
 
