@@ -14,6 +14,9 @@
 
 <header th:replace="~{fragments/appbar :: appbar}"></header>
 
+<!-- toast container -->
+<div th:replace="~{fragments/toast :: toasts}"></div>
+
 <!-- Sidebar + Content -->
 <main class="d-flex flex-grow-1 overflow-hidden">
     <aside sec:authorize="isAuthenticated()" th:replace="~{fragments/sidebar :: nav-sidebar}"
