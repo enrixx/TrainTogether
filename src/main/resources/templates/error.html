@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${status} + ' - Fehler'">Fehler</title>
+    <script th:src="@{/webjars/bootstrap/5.3.8/js/bootstrap.bundle.min.js}"></script>
+    <script th:src="@{/webjars/jquery/3.7.1/jquery.min.js}"></script>
+    <link rel="stylesheet"
+          th:href="@{/webjars/bootstrap/5.3.8/css/bootstrap.min.css}"/>
+    <script th:src="@{/webjars/popper.js/2.11.7/umd/popper.min.js}" defer></script>
+    <script>
+        (function () {
+            try {
+                const theme = localStorage.getItem('theme') || 'light';
+                document.documentElement.setAttribute('data-bs-theme', theme);
+            } catch (e) {
+            }
+        })();
+    </script>
+</head>
+<body class="d-flex flex-column h-100 overflow-auto">
+    <main class="container bg-body-secondary p-4">
+        <div class="p-5 mb-4 bg-body-tertiary rounded-3 mt-4">
+            <div class="container-fluid py-2 text-center">
+                <h1 class="display-4">Fehler</h1>
+                <p class="lead text-muted" th:text="${error} ?: 'Ein Fehler ist aufgetreten.'">Ein Fehler ist aufgetreten.</p>
+                <div class="row justify-content-center align-items-center mt-4">
+                    <div class="col-auto">
+                        <span class="fs-1 fw-bold text-danger" th:text="${status}">500</span>
+                    </div>
+                    <div class="col-8 text-start">
+                        <p class="mb-1"><strong>Nachricht:</strong> <span th:text="${message} ?: 'Keine weitere Information verfügbar.'">Keine weitere Information verfügbar.</span></p>
+                        <p class="mb-0 text-muted"><small th:text="${path} ?: ''"></small></p>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <a class="btn btn-primary me-2" th:href="@{/}">Zur Startseite</a>
+                    <a class="btn btn-outline-secondary" href="#" onclick="history.back(); return false;">Zurück</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="p-3 bg-body-tertiary border rounded-3">
+                    <h5>Was nun?</h5>
+                    <p class="mb-0 text-muted">Wenn das Problem weiterhin besteht, kontaktiere bitte den Support oder versuche es später erneut.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
