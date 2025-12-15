@@ -18,15 +18,18 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
     private final String appUrl;
+    private final String senderEmail;
     private final TemplateEngine templateEngine;
 
     public EmailService(JavaMailSender mailSender,
                         @Value("${app.url}") String appUrl,
+                        @Value("${spring.mail.username}") String senderEmail,
                         TemplateEngine templateEngine) {
         this.mailSender = mailSender;
         this.appUrl = appUrl;
+        this.senderEmail = senderEmail;
         this.templateEngine = templateEngine;
-        logger.info("EmailService initialized. Emails will be sent from Gmail authenticated account");
+        logger.info("EmailService initialized. Emails will be sent from Gmail authenticated account: {}", senderEmail);
         logger.info("Application URL for email links: {}", appUrl);
     }
 
@@ -92,7 +95,8 @@ public class EmailService {
         Context context = new Context();
         context.setVariable("firstName", firstName);
         context.setVariable("gymName", gymName);
-        context.setVariable("supportEmail", "");
+        context.setVariable("loginUrl", appUrl + "/login");
+        context.setVariable("email", senderEmail);
 
         String templateName = "emails/gym-owner-rejection-" + language;
         return templateEngine.process(templateName, context);

@@ -3,13 +3,16 @@
 <title>Gym Owner Request Rejected</title>
 <head>
     <meta charset="UTF-8">
+    <title>Gym Owner Request Rejected</title>
     <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .header { background-color: #dc3545; color: white; padding: 30px; text-align: center; border-radius: 5px 5px 0 0; }
         .content { background-color: #f8f9fa; padding: 30px; border-radius: 0 0 5px 5px; }
-        .button { display: inline-block; padding: 12px 30px; background-color: #0d6efd; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .button { display: inline-block; padding: 12px 30px; background-color: #0d6efd; color: white; text-decoration: none; border-radius: 5px; margin: 20px 8px; }
+        .secondary { background-color: #6c757d; }
         .footer { text-align: center; margin-top: 20px; color: #6c757d; font-size: 0.9em; }
+        .actions { text-align: center; margin: 20px 0; }
     </style>
 </head>
 <body>
@@ -23,9 +26,12 @@
             <p>After careful review, we are unable to approve your gym owner request at this time.</p>
             <p>This could be due to various reasons such as incomplete information, verification issues, or other requirements that need to be met.</p>
             <p>If you believe this is an error or would like more information, please contact our support team. We're here to help!</p>
-            <div th:if="${supportEmail != null and !supportEmail.isEmpty()}" style="text-align: center;">
-                <a th:href="${'mailto:' + supportEmail}" class="button" style="display: inline-block; padding: 12px 30px; background-color: #0d6efd; color: white !important; text-decoration: none; border-radius: 5px; margin: 20px 0;">Contact Support</a>
+            <p>You can reapply by logging in to your account on our website and submitting a new application, or contact our support at <a th:href="${'mailto:' + email}" th:text="${email}">support@example.com</a>.</p>
+
+            <div class="actions">
+                <a th:href="${loginUrl}" class="button secondary">Login & Reapply</a>
             </div>
+
             <p>Thank you for your understanding.</p>
             <p>Best regards,<br>The TrainTogether Team</p>
         </div>
@@ -35,4 +41,3 @@
     </div>
 </body>
 </html>
-

@@ -89,7 +89,7 @@ public class GymOwnerRequestService {
         boolean emailSent = emailService.sendGymOwnerApprovalEmail(
                 user.getEmail(),
                 user.getFirstName(),
-                request.getGymName() != null ? request.getGymName() : "your gym",
+                request.getGymName(),
                 language
         );
 
@@ -114,12 +114,6 @@ public class GymOwnerRequestService {
             throw new RuntimeException("Request has already been reviewed");
         }
 
-        User user = request.getUser();
-
-        // DO NOT remove PENDING_GYM_OWNER authority
-        // DO NOT add USER authority
-        // User keeps PENDING_GYM_OWNER role so they can reapply
-
         request.setStatus(RequestStatus.REJECTED);
         request.setReviewedAt(LocalDateTime.now());
         request.setReviewedBy(admin);
@@ -132,7 +126,7 @@ public class GymOwnerRequestService {
         boolean emailSent = emailService.sendGymOwnerRejectionEmail(
                 request.getUser().getEmail(),
                 request.getUser().getFirstName(),
-                request.getGymName() != null ? request.getGymName() : "your gym",
+                request.getGymName(),
                 language
         );
 

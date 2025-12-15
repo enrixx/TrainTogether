@@ -49,7 +49,7 @@
         <div class="text-danger" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}"></div>
     </div>
     <button class="btn btn-primary w-100 py-2 mb-2" type="submit" th:text="#{auth.register}">Register</button>
-
+    
     <div class="d-grid gap-2 mt-3">
         <a th:href="@{/login}" class="btn btn-outline-secondary py-2" role="button">
             <span th:text="#{auth.sign.in}">Login</span>
