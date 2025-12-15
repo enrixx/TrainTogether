@@ -46,7 +46,7 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider)
                 .csrf(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/register", "/login").permitAll()
+                        .requestMatchers("/", "/register", "/login", "/error", "/error/**").permitAll()
                         .requestMatchers("/js/**", "/images/**","/css/**", "/webjars/**","/favicon.ico").permitAll()
                         .anyRequest().authenticated())
                 .httpBasic(AbstractHttpConfigurer::disable)

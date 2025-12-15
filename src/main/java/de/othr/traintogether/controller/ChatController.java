@@ -12,7 +12,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
@@ -64,10 +63,11 @@ public class ChatController {
             ChatMessagePageDto page = chatMessageService.getMessageInitialCursorPage(principal.getName(), chatId, pageSize);
             model.addAttribute("messagePage", page);
         } catch (IllegalArgumentException e) {
-            //TODO: write exception on error page
-            return "error/404";
+            model.addAttribute("sendError", e.getMessage());
+            return "chat";
         } catch (Exception e) {
-            return "error/500";
+            model.addAttribute("sendError", "Interner Fehler");
+            return "chat";
         }
         return "chat";
     }
@@ -76,16 +76,16 @@ public class ChatController {
     public String sendMessage(
             @PathVariable("chatId") Long chatId,
             @Valid @ModelAttribute("sendChatMessageDto") SendChatMessageDto SendChatMessageDto,
-            RedirectAttributes redirectAttributes,
+            Model model,
             Principal principal) {
 
         try {
             chatMessageService.sendMessage(principal.getName(), chatId, SendChatMessageDto);
         } catch (IllegalArgumentException e) {
-            redirectAttributes.addFlashAttribute("sendError", e.getMessage());
+            model.addAttribute("sendError", e.getMessage());
             return "redirect:/chat/" + chatId;
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("sendError", "Interner Fehler");
+            model.addAttribute("sendError", "Interner Fehler");
             return "redirect:/chat/" + chatId;
         }
         return "redirect:/chat/" + chatId;
