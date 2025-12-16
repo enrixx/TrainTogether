@@ -1,0 +1,24 @@
+<div th:fragment="chatDetails" class="col-lg-4 col-md-5">
+    <div class="card">
+        <div class="card-body text-center">
+            <img th:src="@{/images/default-profile.png}" alt="avatar" class="rounded-circle mb-3" width="120" height="120">
+            <h4 class="card-title mb-1" th:text="${chatName ?: 'Sample Group'}">Sample Group</h4>
+            <p class="text-muted mb-2" th:text="${chatSubtitle ?: 'Group · 12 members'}">Group · 12 members</p>
+            <p class="small text-muted">This area shows the main chat information. Replace the static fields with your DTOs when ready.</p>
+        </div>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                Type
+                <span class="badge bg-secondary rounded-pill" th:text="${chatType ?: 'GROUP'}">GROUP</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                Created
+                <span class="text-muted">2025-01-01</span>
+            </li>
+            <li class="list-group-item">
+                <strong>Description</strong>
+                <p class="mb-0 text-muted small">This is a static description placeholder for the chat. Replace with real content later.</p>
+            </li>
+        </ul>
+    </div>
+</div>

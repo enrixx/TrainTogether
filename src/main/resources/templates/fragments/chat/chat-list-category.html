@@ -50,7 +50,7 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end text-small">
                             <li th:if="${chat.roomType == 'GROUP'}">
-                                <a class="dropdown-item" href="/" th:text="#{chat.settings}">Settings</a>
+                                <a class="dropdown-item" th:href="@{/chat/{id}/settings(id=${chat.id})}" th:text="#{chat.settings}">Settings</a>
                             </li>
                             <li th:if="${chat.roomType == 'GROUP'}">
                                 <hr class="dropdown-divider">

@@ -1,0 +1,67 @@
+<div th:fragment="chatDetailsEdit" class="col-lg-4 col-md-5">
+    <div class="card">
+        <div class="card-body text-center position-relative">
+            <form th:action="@{/chat/{id}/settings(id=${chatId})}" method="post" enctype="multipart/form-data" class="w-100">
+                <div class="position-relative d-inline-block mb-3">
+                    <img id="avatarPreview"
+                         th:src="${avatarUrl ?: '/images/default-profile.png'}"
+                         alt="avatar"
+                         class="rounded-circle"
+                         width="120" height="120">
+
+                    <button type="button"
+                            class="btn btn-sm btn-outline-secondary position-absolute top-0 end-0 m-1"
+                            onclick="document.getElementById('avatarFile').click()"
+                            aria-label="Change avatar">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16" aria-hidden="true">
+                            <path d="M12.146.854a.5.5 0 0 1 .708 0l2.292 2.292a.5.5 0 0 1 0 .708l-9.193 9.193a.5.5 0 0 1-.168.11l-4 1.5a.5.5 0 0 1-.65-.65l1.5-4a.5.5 0 0 1 .11-.168l9.193-9.193zM11.207 3L13 4.793 14.793 3 13 1.207 11.207 3zM10.5 3.707 2 12.207V13h.793L12.293 4.5 10.5 3.707z"/>
+                        </svg>
+                    </button>
+
+                    <input id="avatarFile" name="avatar" type="file" accept="image/*" class="d-none"
+                           onchange="(function(input){ if(input.files && input.files[0]) { document.getElementById('avatarPreview').src = URL.createObjectURL(input.files[0]); }})(this)">
+                </div>
+
+                <div class="mb-2">
+                    <label for="chatNameInput" class="form-label visually-hidden">Name</label>
+                    <input id="chatNameInput" name="name" type="text" class="form-control form-control-lg text-center"
+                           th:value="${chatName ?: ''}" placeholder="Group name">
+                </div>
+
+                <p class="text-muted mb-2" th:text="${chatSubtitle ?: 'Group · 12 members'}">Group · 12 members</p>
+                <p class="small text-muted mb-3">Ändere Bild, Namen und Beschreibung des Chats.</p>
+
+                <div class="mb-3 text-start">
+                    <label class="form-label small" for="chatDescription">Description</label>
+                    <textarea id="chatDescription" name="description" class="form-control form-control-sm" rows="3"
+                              placeholder="Add a short description" th:text="${description ?: ''}"></textarea>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                        <a th:href="@{/chat}" class="btn btn-sm btn-outline-secondary ms-2">Cancel</a>
+                    </div>
+                    <div class="text-end">
+                        <a class="btn btn-sm btn-outline-secondary disabled" tabindex="-1" role="button" aria-disabled="true">Preview</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                Type
+                <span class="badge bg-secondary rounded-pill" th:text="${chatType ?: 'GROUP'}">GROUP</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                Created
+                <span class="text-muted" th:text="${created ?: '2025-01-01'}">2025-01-01</span>
+            </li>
+            <li class="list-group-item">
+                <strong>Info</strong>
+                <p class="mb-0 text-muted small">Weitere Einstellungen können später ergänzt werden.</p>
+            </li>
+        </ul>
+    </div>
+</div>

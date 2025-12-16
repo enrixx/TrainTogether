@@ -36,6 +36,9 @@ public class ChatRoom {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
+    @Column(name = "description", length = 255)
+    private String description;
+
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ChatRoomMember> members = new HashSet<>();
 

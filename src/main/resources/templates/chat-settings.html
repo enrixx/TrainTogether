@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::content})}">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{chat.settings}">Chat Settings</title>
+</head>
+
+<body>
+<div th:fragment="content" class="container-fluid h-100 d-flex flex-column p-3 overflow-auto">
+    <div class="row g-3">
+        <div class="col-12">
+            <a th:href="@{/chat}" class="btn btn-sm btn-secondary mb-2">&larr; <span th:text="#{nav.chat}">Chat</span></a>
+            <h2 class="mb-0" th:text="#{chat.settings}">Chat Settings</h2>
+        </div>
+
+        <div th:replace="~{fragments/chat/chat-details :: chatDetails}"></div>
+        <div th:replace="~{fragments/chat/chat-details-edit :: chatDetailsEdit}"></div>
+
+        <div class="col-lg-8 col-md-7">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Members</h5>
+                        <div>
+                            <button class="btn btn-sm btn-primary me-2">Invite</button>
+                        </div>
+                    </div>
+
+                    <ul class="list-group">
+                        <!-- Static members list; later replace by th:each over DTO list -->
+                        <li class="list-group-item d-flex align-items-center">
+                            <img th:src="@{/images/default-profile.png}" alt="member" class="rounded-circle me-3" width="40" height="40">
+                            <div class="flex-grow-1">
+                                <div class="fw-bold">Alice Example</div>
+                                <div class="small text-muted">alice@example.com</div>
+                            </div>
+                            <span class="badge bg-success">Owner</span>
+                        </li>
+
+                        <li class="list-group-item d-flex align-items-center">
+                            <img th:src="@{/images/default-profile.png}" alt="member" class="rounded-circle me-3" width="40" height="40">
+                            <div class="flex-grow-1">
+                                <div class="fw-bold">Charlie Worker</div>
+                                <div class="small text-muted">charlie@example.com</div>
+                            </div>
+                            <span class="badge bg-secondary m-2">Member</span>
+                            <button class="btn btn-sm btn-outline-danger" disabled>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-dash-fill" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd" d="M11 7.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5"/>
+                                    <path d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
+                                </svg>
+                            </button>
+                        </li>
+                    </ul>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>
+

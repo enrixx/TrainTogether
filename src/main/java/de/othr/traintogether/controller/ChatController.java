@@ -1,9 +1,6 @@
 package de.othr.traintogether.controller;
 
-import de.othr.traintogether.dto.chat.ChatMessagePageDto;
-import de.othr.traintogether.dto.chat.ChatMessagesCursorDto;
-import de.othr.traintogether.dto.chat.ChatMessagesFragmentDto;
-import de.othr.traintogether.dto.chat.SendChatMessageDto;
+import de.othr.traintogether.dto.chat.*;
 import de.othr.traintogether.service.chat.ChatMessageService;
 import de.othr.traintogether.service.chat.ChatRoomService;
 import jakarta.validation.Valid;
@@ -70,6 +67,16 @@ public class ChatController {
             return "chat";
         }
         return "chat";
+    }
+
+    @GetMapping("/{chatId}/settings")
+    public String getChatSettings(
+            @PathVariable("chatId") Long chatId,
+            Model model, Principal principal) {
+
+        ChatSettingsDto dto = chatRoomService.getChatSettings(principal.getName(), chatId);
+        model.addAttribute("chatDetails", dto);
+        return "chat-settings";
     }
 
     @PostMapping("/{chatId}/messages")

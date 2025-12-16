@@ -106,6 +106,19 @@ public class ChatRoomService {
                 (room, member, unreadCount, lastMessage) -> chatRoomMapper.toDtoGroup(room, unreadCount, lastMessage));
     }
 
+    @Transactional(readOnly = true)
+    public ChatSettingsDto getChatSettings(String userEmail, Long chatRoomId) {
+        ChatRoomMember member = chatAuthService.getActiveMember(userEmail, chatRoomId);
+        ChatDetailsDto chatDetailsDto = ChatDetailsDto.fromEntity(member.getChatRoom());
+        List<ChatMemberDto> chatMemberDtos = member.getChatRoom().getMembers().stream()
+                .map(ChatMemberDto::fromEntity)
+                .collect(Collectors.toList());
+        return new ChatSettingsDto(
+                member.getRole() == ChatRole.ADMIN,
+                chatDetailsDto,
+                chatMemberDtos);
+    }
+
     @FunctionalInterface
     private interface RoomToDtoMapper {
         ChatRoomListingDto map(ChatRoom room, ChatRoomMember member, String unreadMessagesCount, Optional<ChatMessage> lastMessage);
