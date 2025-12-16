@@ -72,7 +72,7 @@ public class ChatController {
         return "chat";
     }
 
-    @PostMapping("/{chatId}")
+    @PostMapping("/{chatId}/messages")
     public String sendMessage(
             @PathVariable("chatId") Long chatId,
             @Valid @ModelAttribute("sendChatMessageDto") SendChatMessageDto SendChatMessageDto,
@@ -128,6 +128,33 @@ public class ChatController {
             );
 
             return ResponseEntity.ok(dto);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
+    }
+
+
+    @DeleteMapping("/{chatId}/members/me")
+    public ResponseEntity<Void> leaveChat(@PathVariable("chatId") Long chatId, Principal principal) {
+        try {
+            chatRoomService.removeUserFromRoom(chatId, principal.getName());
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
+    }
+
+    @DeleteMapping("/{chatId}/members/{memberEmail}")
+    public ResponseEntity<Void> kickMember(@PathVariable("chatId") Long chatId,
+                                           @PathVariable("memberEmail") String userEmail) {
+        try {
+            // optional: zusätzliche Berechtigungsprüfung (z.B. Owner==principal) hier einbauen
+            chatRoomService.removeUserFromRoom(chatId, userEmail);
+            return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         } catch (Exception e) {

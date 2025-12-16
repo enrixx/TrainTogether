@@ -50,13 +50,15 @@ public class ChatRoom {
     }
 
     public void addMember(ChatRoomMember member) {
+        for (ChatRoomMember m : members) {
+            if (Objects.equals(m.getUser().getId(), member.getUser().getId())) {
+                if (m.isRemoved()) {
+                    m.setRemoved(false);
+                }
+                return; // already a member
+            }
+        }
         member.setChatRoom(this);
         members.add(member);
-    }
-
-    public void removeMember(ChatRoomMember member) {
-        if (members.remove(member)) {
-            //TODO: flag member as removed so the chat doesnt appear for him
-        }
     }
 }

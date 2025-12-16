@@ -44,4 +44,6 @@ public class ChatRoomMember {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private final Instant createdAt = Instant.now();
+
+    private boolean removed = false;
 }

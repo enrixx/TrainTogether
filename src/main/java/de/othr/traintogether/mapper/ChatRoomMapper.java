@@ -18,7 +18,7 @@ public class ChatRoomMapper {
 
     public ChatRoomListingDto toDtoGroup(ChatRoom room, String unreadMessagesCount, Optional<ChatMessage> lastMessage) {
         if (room == null) return null;
-        ChatRoomListingDto dto = new ChatRoomListingDto(room.getId(),room.getType().name());
+        ChatRoomListingDto dto = new ChatRoomListingDto(room.getId(), room.getType().name());
         dto.setUnreadMessagesCount(unreadMessagesCount);
         if (lastMessage.isPresent()) {
             dto.setContainsMessage(true);
@@ -36,13 +36,14 @@ public class ChatRoomMapper {
         }
         return dto;
     }
+
     public ChatRoomListingDto toDtoDm(ChatRoom room, String unreadMessagesCount, Optional<ChatMessage> lastMessage, ChatRoomMember member) {
         ChatRoomListingDto dto = toDtoGroup(room, unreadMessagesCount, lastMessage);
-        if((long) room.getMembers().size() != 2) {
+        if ((long) room.getMembers().size() != 2) {
             return dto; // fallback to normal group mapping
         }
         ChatRoomMember otherMember = room.getMembers().stream()
-                .filter(m -> m.getUser() != null && !m.getUser().getId().equals(member.getUser().getId()))
+                .filter(m -> !m.getUser().getId().equals(member.getUser().getId()))
                 .findFirst()
                 .orElse(null);
 

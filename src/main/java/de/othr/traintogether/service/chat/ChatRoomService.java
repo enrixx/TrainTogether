@@ -6,6 +6,7 @@ import de.othr.traintogether.model.User;
 import de.othr.traintogether.model.chat.*;
 import de.othr.traintogether.repository.UserRepository;
 import de.othr.traintogether.repository.chat.ChatMessageRepository;
+import de.othr.traintogether.repository.chat.ChatRoomMemberRepository;
 import de.othr.traintogether.repository.chat.ChatRoomRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,12 +23,14 @@ public class ChatRoomService {
     private final UserRepository userRepository;
     private final ChatRoomMapper chatRoomMapper;
     private final ChatMessageRepository chatMessageRepository;
+    private final ChatRoomMemberRepository chatRoomMemberRepository;
 
-    public ChatRoomService(ChatRoomRepository chatRoomRepository, UserRepository userRepository, ChatRoomMapper chatRoomMapper, ChatMessageRepository chatMessageRepository) {
+    public ChatRoomService(ChatRoomRepository chatRoomRepository, UserRepository userRepository, ChatRoomMapper chatRoomMapper, ChatMessageRepository chatMessageRepository, ChatRoomMemberRepository chatRoomMemberRepository) {
         this.chatRoomRepository = chatRoomRepository;
         this.userRepository = userRepository;
         this.chatRoomMapper = chatRoomMapper;
         this.chatMessageRepository = chatMessageRepository;
+        this.chatRoomMemberRepository = chatRoomMemberRepository;
     }
 
     @Transactional
@@ -74,7 +77,7 @@ public class ChatRoomService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userEmail));
 
         boolean exists = chatRoom.getMembers().stream()
-                .anyMatch(m -> m.getUser() != null && user.getId() != null && user.getId().equals(m.getUser().getId()));
+                .anyMatch(m -> user.getId() != null && user.getId().equals(m.getUser().getId()));
         if (exists) return;
 
         ChatRoomMember newMember = new ChatRoomMember(chatRoom, user, chatRole);
@@ -84,14 +87,13 @@ public class ChatRoomService {
 
     @Transactional
     public void removeUserFromRoom(Long chatRoomId, String userEmail) {
-        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
-                .orElseThrow(() -> new IllegalArgumentException("ChatRoom not found: " + chatRoomId));
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userEmail));
+        ChatRoomMember member = chatRoomMemberRepository.findByChatRoomIdAndUserId(chatRoomId, user.getId())
+                .orElseThrow(() -> new IllegalArgumentException("User is not a member of the chat room: " + chatRoomId));
 
-        chatRoom.getMembers().removeIf(member -> member.getUser() != null && member.getUser().getId() != null
-                && member.getUser().getId().equals(user.getId()));
-        chatRoomRepository.save(chatRoom);
+        member.setRemoved(true);
+        chatRoomMemberRepository.save(member);
     }
 
     @Transactional(readOnly = true)
@@ -120,19 +122,22 @@ public class ChatRoomService {
         List<ChatRoomListingDto> result = new ArrayList<>();
         for (ChatRoom room : rooms) {
             ChatRoomMember member = room.getMembers().stream()
-                    .filter(m -> m.getUser() != null && m.getUser().getId() != null
+                    .filter(m -> m.getUser().getId() != null
                             && m.getUser().getId().equals(user.getId()))
                     .findFirst()
                     .orElseThrow(() -> new IllegalArgumentException("ChatRoomMember not found for user: " + userEmail));
+
+            if (member.isRemoved()) {
+                continue;
+            }
 
             long unread = chatMessageRepository.countByChatRoomIdAndSentAtAfter(room.getId(), member.getLastRead());
             String unreadMessagesCount = unread > 99 ? "99+" : Long.toString(unread);
             Optional<ChatMessage> lastMessage = chatMessageRepository.findFirstByChatRoomIdOrderBySentAtDesc(room.getId());
 
-            if(canWrite.isEmpty()){
+            if (canWrite.isEmpty()) {
                 result.add(mapper.map(room, member, unreadMessagesCount, lastMessage));
-            }
-            else if(canWrite.get() && member.getRole() != ChatRole.READ_ONLY){
+            } else if (canWrite.get() && member.getRole() != ChatRole.READ_ONLY) {
                 result.add(mapper.map(room, member, unreadMessagesCount, lastMessage));
             } else if (!canWrite.get() && member.getRole() == ChatRole.READ_ONLY) {
                 result.add(mapper.map(room, member, unreadMessagesCount, lastMessage));
