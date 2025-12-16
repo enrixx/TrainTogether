@@ -2,6 +2,7 @@
      style="max-width: 30vw">
     <script th:src="@{/js/chat-search.js}" defer></script>
     <div class="input-group rounded mb-3 ps-3 pe-2">
+        <label for="chatSearch"></label>
         <input type="search" class="form-control rounded" th:placeholder="#{chat.search.placeholder}"
                th:attr="aria-label=#{chat.search.aria}"
                id="chatSearch"/>
