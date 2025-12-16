@@ -5,12 +5,9 @@ import de.othr.traintogether.dto.chat.ChatMessagePageDto;
 import de.othr.traintogether.dto.chat.ChatMessagesCursorDto;
 import de.othr.traintogether.dto.chat.SendChatMessageDto;
 import de.othr.traintogether.mapper.ChatMessageMapper;
-import de.othr.traintogether.model.User;
 import de.othr.traintogether.model.chat.*;
-import de.othr.traintogether.repository.UserRepository;
 import de.othr.traintogether.repository.chat.ChatMessageRepository;
 import de.othr.traintogether.repository.chat.ChatRoomMemberRepository;
-import de.othr.traintogether.repository.chat.ChatRoomRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -25,24 +22,22 @@ import java.util.Optional;
 @Service
 public class ChatMessageService {
     private final ChatRoomMemberRepository chatRoomMemberRepository;
-    private final UserRepository userRepository;
     private final ChatMessageRepository chatMessageRepository;
-    private final ChatRoomRepository chatRoomRepository;
     private final ChatMessageMapper chatMessageMapper;
     private final CursorService cursorService;
+    private final ChatAuthService chatAuthService;
 
-    public ChatMessageService(ChatRoomMemberRepository chatRoomMemberRepository, UserRepository userRepository, ChatMessageRepository chatMessageRepository, ChatRoomRepository chatRoomRepository, ChatMessageMapper chatMessageMapper, CursorService cursorService) {
+    public ChatMessageService(ChatRoomMemberRepository chatRoomMemberRepository, ChatMessageRepository chatMessageRepository, ChatMessageMapper chatMessageMapper, CursorService cursorService, ChatAuthService chatAuthService) {
         this.chatRoomMemberRepository = chatRoomMemberRepository;
-        this.userRepository = userRepository;
         this.chatMessageRepository = chatMessageRepository;
-        this.chatRoomRepository = chatRoomRepository;
         this.chatMessageMapper = chatMessageMapper;
         this.cursorService = cursorService;
+        this.chatAuthService = chatAuthService;
     }
 
     @Transactional
     public void sendMessage(String userEmail, Long chatRoomID, SendChatMessageDto messageDto) {
-        ChatRoomMember chatRoomMember = getActiveMember(userEmail, chatRoomID);
+        ChatRoomMember chatRoomMember = chatAuthService.getActiveMember(userEmail, chatRoomID);
         if (chatRoomMember.getRole() == ChatRole.READ_ONLY) {
             throw new IllegalArgumentException("User has read-only access to the chat room: " + chatRoomID);
         }
@@ -72,13 +67,8 @@ public class ChatMessageService {
     }
 
     @Transactional
-    public void editMessageContent(String userEmail, Long chatRoomID, Long messageId, String newContent) {
-        ChatRoomMember chatRoomMember = getActiveMember(userEmail, chatRoomID);
-        ChatMessage message = chatMessageRepository.findById(messageId)
-                .orElseThrow(() -> new IllegalArgumentException("Message not found: " + messageId));
-        if (!message.getSender().getId().equals(chatRoomMember.getId())) {
-            throw new IllegalArgumentException("User is not the sender of the message: " + messageId);
-        }
+    public void editMessageContent(String userEmail, Long chatRoomId, Long messageId, String newContent) {
+        ChatMessage message = chatAuthService.getOwnedMessage(userEmail, chatRoomId, messageId);
 
         String trimmed = trimMessageContent(newContent);
         message.setContent(trimmed);
@@ -87,20 +77,15 @@ public class ChatMessageService {
     }
 
     @Transactional
-    public void deleteMessage(String userEmail, Long chatRoomID, Long messageId) {
-        ChatRoomMember chatRoomMember = getActiveMember(userEmail, chatRoomID);
-        ChatMessage message = chatMessageRepository.findById(messageId)
-                .orElseThrow(() -> new IllegalArgumentException("Message not found: " + messageId));
-        if (!message.getSender().getId().equals(chatRoomMember.getId())) {
-            throw new IllegalArgumentException("User is not the sender of the message: " + messageId);
-        }
+    public void deleteMessage(String userEmail, Long chatRoomId, Long messageId) {
+        ChatMessage message = chatAuthService.getOwnedMessage(userEmail, chatRoomId, messageId);
         chatMessageRepository.delete(message);
     }
 
     @Transactional
     public ChatMessagePageDto getMessageInitialCursorPage(String userEmail, Long chatRoomId, Integer pageSize) {
 
-        ChatRoomMember member = getActiveMember(userEmail, chatRoomId);
+        ChatRoomMember member = chatAuthService.getActiveMember(userEmail, chatRoomId);
         String topCursor = determineDefaultTopCurser(member, chatRoomId);
 
         // no messages at all
@@ -149,7 +134,7 @@ public class ChatMessageService {
 
     @Transactional
     public ChatMessagesCursorDto getMessageTopCursorPage(String userEmail, Long chatRoomId, String topCursor, Integer pageSize) {
-        ChatRoomMember member = getActiveMember(userEmail, chatRoomId);
+        ChatRoomMember member = chatAuthService.getActiveMember(userEmail, chatRoomId);
 
         //Getting page up from top cursor
         Instant topInstant = cursorService.decodeCursorInstant(topCursor);
@@ -182,7 +167,7 @@ public class ChatMessageService {
 
     @Transactional
     public ChatMessagesCursorDto getMessageBottomCursorPage(String userEmail, Long chatRoomId, String bottomCursor, Integer pageSize) {
-        ChatRoomMember member = getActiveMember(userEmail, chatRoomId);
+        ChatRoomMember member = chatAuthService.getActiveMember(userEmail, chatRoomId);
 
         //Getting page down from bottom cursor
         Instant bottomInstant = cursorService.decodeCursorInstant(bottomCursor);
@@ -215,20 +200,6 @@ public class ChatMessageService {
         messageDto.setHasMore(bottomHasMore);
         messageDto.setCursor(newBottomCursor);
         return messageDto;
-    }
-
-    private ChatRoomMember getActiveMember(String userEmail, Long chatRoomID) {
-
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userEmail));
-        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomID).orElseThrow(() ->
-                new IllegalArgumentException("Chat room not found: " + chatRoomID));
-        ChatRoomMember member = chatRoomMemberRepository.findByChatRoomIdAndUserId(chatRoomID, user.getId())
-                .orElseThrow(() -> new IllegalArgumentException("User is not a member of the chat room: " + chatRoomID));
-        if (member.isRemoved()) {
-            throw new IllegalArgumentException("User is removed from the chat room: " + chatRoomID);
-        }
-        return member;
     }
 
     private String trimMessageContent(String content) {

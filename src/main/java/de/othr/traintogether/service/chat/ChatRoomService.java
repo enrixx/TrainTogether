@@ -1,6 +1,9 @@
 package de.othr.traintogether.service.chat;
 
+import de.othr.traintogether.dto.chat.ChatDetailsDto;
+import de.othr.traintogether.dto.chat.ChatMemberDto;
 import de.othr.traintogether.dto.chat.ChatRoomListingDto;
+import de.othr.traintogether.dto.chat.ChatSettingsDto;
 import de.othr.traintogether.mapper.ChatRoomMapper;
 import de.othr.traintogether.model.User;
 import de.othr.traintogether.model.chat.*;
@@ -15,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class ChatRoomService {
@@ -24,22 +28,22 @@ public class ChatRoomService {
     private final ChatRoomMapper chatRoomMapper;
     private final ChatMessageRepository chatMessageRepository;
     private final ChatRoomMemberRepository chatRoomMemberRepository;
+    private final ChatAuthService chatAuthService;
 
-    public ChatRoomService(ChatRoomRepository chatRoomRepository, UserRepository userRepository, ChatRoomMapper chatRoomMapper, ChatMessageRepository chatMessageRepository, ChatRoomMemberRepository chatRoomMemberRepository) {
+    public ChatRoomService(ChatRoomRepository chatRoomRepository, UserRepository userRepository, ChatRoomMapper chatRoomMapper, ChatMessageRepository chatMessageRepository, ChatRoomMemberRepository chatRoomMemberRepository, ChatAuthService chatAuthService) {
         this.chatRoomRepository = chatRoomRepository;
         this.userRepository = userRepository;
         this.chatRoomMapper = chatRoomMapper;
         this.chatMessageRepository = chatMessageRepository;
         this.chatRoomMemberRepository = chatRoomMemberRepository;
+        this.chatAuthService = chatAuthService;
     }
 
     @Transactional
     public void createDm(String userEmail1, String userEmail2) {
         // resolve users (throw if not found)
-        User user1 = userRepository.findByEmail(userEmail1)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userEmail1));
-        User user2 = userRepository.findByEmail(userEmail2)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userEmail2));
+        User user1 = chatAuthService.getUser(userEmail1);
+        User user2 = chatAuthService.getUser(userEmail2);
 
         ChatRoom room = new ChatRoom(ChatRoomType.DM);
         ChatRoomMember member1 = new ChatRoomMember(room, user1, ChatRole.MEMBER);
@@ -52,14 +56,12 @@ public class ChatRoomService {
     @Transactional
     public void createGroup(String name, String pictureUrl, Set<String> userEmails, String ownerEmail, ChatRole memberRole) {
 
-        User owner = userRepository.findByEmail(ownerEmail)
-                .orElseThrow(() -> new IllegalArgumentException("Owner not found: " + ownerEmail));
+        User owner = chatAuthService.getUser(ownerEmail);
         ChatRoom room = new ChatRoom(ChatRoomType.GROUP, name, pictureUrl);
         ChatRoomMember admin = new ChatRoomMember(room, owner, ChatRole.ADMIN);
         admin.setUser(owner);
         for (String userEmail : userEmails) {
-            User user = userRepository.findByEmail(userEmail)
-                    .orElseThrow(() -> new IllegalArgumentException("User not found: " + userEmail));
+            User user = chatAuthService.getUser(userEmail);
             ChatRoomMember member = new ChatRoomMember(room, user, memberRole);
             room.addMember(member);
         }
@@ -73,8 +75,7 @@ public class ChatRoomService {
         if (chatRoom.getType() != ChatRoomType.GROUP) {
             throw new IllegalArgumentException("Cannot add users to a DM chat room");
         }
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userEmail));
+        User user = chatAuthService.getUser(userEmail);
 
         boolean exists = chatRoom.getMembers().stream()
                 .anyMatch(m -> user.getId() != null && user.getId().equals(m.getUser().getId()));
@@ -87,11 +88,7 @@ public class ChatRoomService {
 
     @Transactional
     public void removeUserFromRoom(Long chatRoomId, String userEmail) {
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userEmail));
-        ChatRoomMember member = chatRoomMemberRepository.findByChatRoomIdAndUserId(chatRoomId, user.getId())
-                .orElseThrow(() -> new IllegalArgumentException("User is not a member of the chat room: " + chatRoomId));
-
+        ChatRoomMember member = chatAuthService.getMember(userEmail, chatRoomId);
         member.setRemoved(true);
         chatRoomMemberRepository.save(member);
     }
