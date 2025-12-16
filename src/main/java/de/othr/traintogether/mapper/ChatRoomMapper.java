@@ -1,6 +1,6 @@
 package de.othr.traintogether.mapper;
 
-import de.othr.traintogether.dto.ChatRoomListingDto;
+import de.othr.traintogether.dto.chat.ChatRoomListingDto;
 import de.othr.traintogether.model.chat.ChatMessage;
 import de.othr.traintogether.model.chat.ChatRoom;
 import de.othr.traintogether.model.chat.ChatRoomMember;
@@ -12,7 +12,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Component
 public class ChatRoomMapper {

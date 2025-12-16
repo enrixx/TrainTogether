@@ -1,6 +1,6 @@
 package de.othr.traintogether.service.chat;
 
-import de.othr.traintogether.dto.ChatRoomListingDto;
+import de.othr.traintogether.dto.chat.ChatRoomListingDto;
 import de.othr.traintogether.mapper.ChatRoomMapper;
 import de.othr.traintogether.model.User;
 import de.othr.traintogether.model.chat.*;
