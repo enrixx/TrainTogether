@@ -1,0 +1,25 @@
+<div th:fragment="chatMessages" class="d-flex flex-column h-100" style="min-height: 0">
+    <script th:src="@{/js/chat-scroll-load.js}" defer></script>
+    <div th:if="${!messagePage.messages.isEmpty()}" id="messagesContainer" class="flex-grow-1 overflow-auto pe-3 pt-3"
+         th:attr="data-top-cursor=${messagePage.topCursor},
+              data-top-has-more=${messagePage.topHasMore},
+              data-bottom-cursor=${messagePage.bottomCursor},
+              data-bottom-has-more=${messagePage.bottomHasMore},
+              data-room-id=${messagePage.roomId},
+              data-page-size=${messagePage.pageSize}">
+        <div id="top-sentinel"></div>
+
+        <div th:replace="~{fragments/chat/chat-messages :: chatMessages(messages=${messagePage.messages},
+        lastMessageId=${messagePage.lastMessageId},
+        roomType=${messagePage.roomType})}"></div>
+
+        <div id="bottom-sentinel"></div>
+    </div>
+    <div th:if="${messagePage.messages.isEmpty()}" class="flex-grow-1 d-flex align-items-center justify-content-center">
+        <div class="text-center text-muted">
+            <p class="h6 mb-1" th:text="#{chat.messages.empty.title}">This is the start of your conversation</p>
+            <p class="mb-0" th:text="#{chat.messages.empty.desc}">No messages yet - write something to start the
+                conversation.</p>
+        </div>
+    </div>
+</div>

@@ -46,7 +46,8 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider)
                 .csrf(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/register", "/register/gym-owner", "/login", "/forgot-password", "/reset-password").permitAll()
+                        .requestMatchers("/", "/register", "/register/gym-owner", "/login",
+                                         "/forgot-password", "/reset-password", "/error", "/error/**").permitAll()
                         .requestMatchers("/js/**", "/images/**","/css/**", "/webjars/**","/favicon.ico").permitAll()
                         .anyRequest().authenticated())
                 .httpBasic(AbstractHttpConfigurer::disable)

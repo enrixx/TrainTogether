@@ -1,0 +1,11 @@
+<div th:fragment="chatMessages" th:each="message : ${messages}"
+     th:with="template=${message.mine} ? 'fragments/chat/message-mine' : 'fragments/chat/message-other'">
+
+    <div th:if="${message.id == lastMessageId}"
+         class="text-center text-danger py-3">
+        <div class="flex-grow-1 border-top border-2 border-danger"></div>
+        <span class="fw-semibold" th:text="#{chat.unread.label}">Unread messages</span>
+    </div>
+
+    <div th:replace="~{${template} :: chatMessage(message=${message}, roomType=${roomType})}"></div>
+</div>

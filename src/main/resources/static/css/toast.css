@@ -1,0 +1,8 @@
+.toast-container-fixed {
+    position: fixed;
+    top: 5rem;
+    right: 1rem;
+    z-index: 1080;
+    max-width: calc(100% - 2rem);
+}
+.toast .toast-body { white-space: pre-wrap; }
