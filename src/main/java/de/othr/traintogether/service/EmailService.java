@@ -113,4 +113,44 @@ public class EmailService {
                 ? "Update zu deiner Fitnessstudio-Besitzer-Anfrage"
                 : "Update on Your Gym Owner Request";
     }
+
+    public boolean sendPasswordResetEmail(String toEmail, String firstName, String resetToken, String language) {
+        try {
+            String subject = getPasswordResetSubject(language);
+            String htmlContent = renderPasswordResetTemplate(firstName, resetToken, language);
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(toEmail);
+            helper.setSubject(subject);
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+            logger.info("Password reset email sent successfully to {} in {} language", toEmail, language);
+            return true;
+        } catch (MessagingException e) {
+            logger.error("Failed to send password reset email to {}: {}", toEmail, e.getMessage(), e);
+            return false;
+        } catch (Exception e) {
+            logger.error("Unexpected error sending password reset email to {}: {}", toEmail, e.getMessage(), e);
+            return false;
+        }
+    }
+
+    private String renderPasswordResetTemplate(String firstName, String resetToken, String language) {
+        Context context = new Context();
+        context.setVariable("firstName", firstName);
+        context.setVariable("resetUrl", appUrl + "/reset-password?token=" + resetToken);
+        context.setVariable("email", senderEmail);
+
+        String templateName = "emails/password-reset-" + language;
+        return templateEngine.process(templateName, context);
+    }
+
+    private String getPasswordResetSubject(String language) {
+        return "de".equals(language)
+                ? "🔒 Passwort zurücksetzen - TrainTogether"
+                : "🔒 Reset Your Password - TrainTogether";
+    }
 }

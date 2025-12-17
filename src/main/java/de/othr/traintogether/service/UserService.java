@@ -6,11 +6,13 @@ import de.othr.traintogether.dto.UpdateProfileDto;
 import de.othr.traintogether.dto.UserDto;
 import de.othr.traintogether.model.Authority;
 import de.othr.traintogether.model.GymOwnerRequest;
+import de.othr.traintogether.model.PasswordResetToken;
 import de.othr.traintogether.model.RequestStatus;
 import de.othr.traintogether.model.Role;
 import de.othr.traintogether.model.User;
 import de.othr.traintogether.repository.AuthorityRepository;
 import de.othr.traintogether.repository.GymOwnerRequestRepository;
+import de.othr.traintogether.repository.PasswordResetTokenRepository;
 import de.othr.traintogether.repository.UserRepository;
 import de.othr.traintogether.service.customExceptions.EmailAlreadyRegisteredException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -28,17 +31,20 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final MinioService minioService;
     private final GymOwnerRequestRepository gymOwnerRequestRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
 
     public UserService(UserRepository userRepository,
                        AuthorityRepository authorityRepository,
                        PasswordEncoder passwordEncoder,
                        MinioService minioService,
-                       GymOwnerRequestRepository gymOwnerRequestRepository) {
+                       GymOwnerRequestRepository gymOwnerRequestRepository,
+                       PasswordResetTokenRepository passwordResetTokenRepository) {
         this.userRepository = userRepository;
         this.authorityRepository = authorityRepository;
         this.passwordEncoder = passwordEncoder;
         this.minioService = minioService;
         this.gymOwnerRequestRepository = gymOwnerRequestRepository;
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
     }
 
     // FRONTEND CALLS
@@ -197,5 +203,63 @@ public class UserService {
             user.setProfilePictureUrl(null);
             userRepository.save(user);
         }
+    }
+
+    @Transactional
+    public String createPasswordResetToken(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElse(null);
+
+        if (user == null) {
+            // Don't reveal if email exists or not for security reasons
+            return null;
+        }
+
+        // Delete any existing tokens for this user
+        passwordResetTokenRepository.deleteByUser(user);
+
+        // Create new token
+        String token = UUID.randomUUID().toString();
+        PasswordResetToken resetToken = new PasswordResetToken(token, user);
+        passwordResetTokenRepository.save(resetToken);
+
+        return token;
+    }
+
+    @Transactional(readOnly = true)
+    public User validatePasswordResetToken(String token) {
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
+                .orElse(null);
+
+        if (resetToken == null || resetToken.isExpired() || resetToken.isUsed()) {
+            return null;
+        }
+
+        return resetToken.getUser();
+    }
+
+    @Transactional
+    public boolean resetPassword(String token, String newPassword) {
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
+                .orElse(null);
+
+        if (resetToken == null || resetToken.isExpired() || resetToken.isUsed()) {
+            return false;
+        }
+
+        User user = resetToken.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        // Mark token as used
+        resetToken.setUsed(true);
+        passwordResetTokenRepository.save(resetToken);
+
+        return true;
+    }
+
+    @Transactional
+    public void cleanupExpiredPasswordResetTokens() {
+        passwordResetTokenRepository.deleteByExpiryDateBefore(LocalDateTime.now());
     }
 }

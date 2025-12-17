@@ -1,8 +1,12 @@
 package de.othr.traintogether.controller;
 
+import de.othr.traintogether.dto.ForgotPasswordDto;
 import de.othr.traintogether.dto.GymOwnerRegisterDto;
 import de.othr.traintogether.dto.GymOwnerRequestDto;
 import de.othr.traintogether.dto.RegisterDto;
+import de.othr.traintogether.dto.ResetPasswordDto;
+import de.othr.traintogether.model.User;
+import de.othr.traintogether.service.EmailService;
 import de.othr.traintogether.service.GymOwnerRequestService;
 import de.othr.traintogether.service.UserService;
 import jakarta.validation.Valid;
@@ -15,6 +19,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Locale;
@@ -24,10 +29,12 @@ public class AuthController {
 
     private final UserService userService;
     private final GymOwnerRequestService gymOwnerRequestService;
+    private final EmailService emailService;
 
-    public AuthController(UserService userService, GymOwnerRequestService gymOwnerRequestService) {
+    public AuthController(UserService userService, GymOwnerRequestService gymOwnerRequestService, EmailService emailService) {
         this.userService = userService;
         this.gymOwnerRequestService = gymOwnerRequestService;
+        this.emailService = emailService;
     }
 
     @PreAuthorize("isAnonymous()")
@@ -150,5 +157,94 @@ public class AuthController {
             model.addAttribute("errorMessage", e.getMessage());
             return "gym-owner-request-form";
         }
+    }
+
+    @PreAuthorize("isAnonymous()")
+    @GetMapping("/forgot-password")
+    public String forgotPasswordPage(Model model) {
+        model.addAttribute("forgotPasswordDto", new ForgotPasswordDto());
+        return "forgot-password";
+    }
+
+    @PreAuthorize("isAnonymous()")
+    @PostMapping("/forgot-password")
+    public String processForgotPassword(@Valid @ModelAttribute("forgotPasswordDto") ForgotPasswordDto forgotPasswordDto,
+                                       BindingResult bindingResult,
+                                       Model model,
+                                       RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("forgotPasswordDto", forgotPasswordDto);
+            return "forgot-password";
+        }
+
+        String email = forgotPasswordDto.getEmail();
+        String token = userService.createPasswordResetToken(email);
+
+        // Always show success message (don't reveal if email exists)
+        if (token != null) {
+            var userDto = userService.findUserByEmail(email);
+            if (userDto != null) {
+                Locale currentLocale = LocaleContextHolder.getLocale();
+                String language = currentLocale.getLanguage();
+                String firstName = userDto.getFirstName() != null ? userDto.getFirstName() : "User";
+
+                emailService.sendPasswordResetEmail(email, firstName, token, language);
+            }
+        }
+
+        redirectAttributes.addFlashAttribute("successMessage", "If an account with that email exists, a password reset link has been sent.");
+        return "redirect:/forgot-password";
+    }
+
+    @PreAuthorize("isAnonymous()")
+    @GetMapping("/reset-password")
+    public String resetPasswordPage(@RequestParam("token") String token, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            User user = userService.validatePasswordResetToken(token);
+
+            if (user == null) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Invalid or expired password reset token.");
+                return "redirect:/login";
+            }
+
+            model.addAttribute("resetPasswordDto", new ResetPasswordDto());
+            model.addAttribute("token", token);
+            return "reset-password";
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("errorMessage", "An error occurred while validating the reset token. Please try again.");
+            return "redirect:/login";
+        }
+    }
+
+    @PreAuthorize("isAnonymous()")
+    @PostMapping("/reset-password")
+    public String processResetPassword(@RequestParam("token") String token,
+                                      @Valid @ModelAttribute("resetPasswordDto") ResetPasswordDto resetPasswordDto,
+                                      BindingResult bindingResult,
+                                      Model model,
+                                      RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("resetPasswordDto", resetPasswordDto);
+            model.addAttribute("token", token);
+            return "reset-password";
+        }
+
+        if (!resetPasswordDto.getPassword().equals(resetPasswordDto.getConfirmPassword())) {
+            bindingResult.rejectValue("confirmPassword", "error.password.mismatch");
+            model.addAttribute("resetPasswordDto", resetPasswordDto);
+            model.addAttribute("token", token);
+            return "reset-password";
+        }
+
+        boolean success = userService.resetPassword(token, resetPasswordDto.getPassword());
+
+        if (!success) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Invalid or expired password reset token.");
+            return "redirect:/login";
+        }
+
+        redirectAttributes.addFlashAttribute("successMessage", "Your password has been reset successfully. You can now log in.");
+        return "redirect:/login";
     }
 }
