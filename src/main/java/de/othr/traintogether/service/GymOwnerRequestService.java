@@ -1,11 +1,13 @@
 package de.othr.traintogether.service;
 
 import de.othr.traintogether.model.Authority;
+import de.othr.traintogether.model.Gym;
 import de.othr.traintogether.model.GymOwnerRequest;
 import de.othr.traintogether.model.RequestStatus;
 import de.othr.traintogether.model.User;
 import de.othr.traintogether.repository.AuthorityRepository;
 import de.othr.traintogether.repository.GymOwnerRequestRepository;
+import de.othr.traintogether.repository.GymRepository;
 import de.othr.traintogether.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,15 +28,18 @@ public class GymOwnerRequestService {
     private final UserRepository userRepository;
     private final AuthorityRepository authorityRepository;
     private final EmailService emailService;
+    private final GymRepository gymRepository;
 
     public GymOwnerRequestService(GymOwnerRequestRepository requestRepository,
                                   UserRepository userRepository,
                                   AuthorityRepository authorityRepository,
-                                  EmailService emailService) {
+                                  EmailService emailService,
+                                  GymRepository gymRepository) {
         this.requestRepository = requestRepository;
         this.userRepository = userRepository;
         this.authorityRepository = authorityRepository;
         this.emailService = emailService;
+        this.gymRepository = gymRepository;
     }
 
     @Transactional(readOnly = true)
@@ -89,7 +94,7 @@ public class GymOwnerRequestService {
         boolean emailSent = emailService.sendGymOwnerApprovalEmail(
                 user.getEmail(),
                 user.getFirstName(),
-                request.getGymName(),
+                request.getGym().getName(),
                 language
         );
 
@@ -126,7 +131,7 @@ public class GymOwnerRequestService {
         boolean emailSent = emailService.sendGymOwnerRejectionEmail(
                 request.getUser().getEmail(),
                 request.getUser().getFirstName(),
-                request.getGymName(),
+                request.getGym().getName(),
                 language
         );
 
@@ -179,41 +184,56 @@ public class GymOwnerRequestService {
             logger.info("Added PENDING_GYM_OWNER authority to user: {}", userEmail);
         }
 
-        // Check if user has a rejected request - if so, update it instead of creating new one
+        // Check if user has a previously REJECTED request that they want to resubmit
         GymOwnerRequest request = requestRepository.findByUserIdAndStatus(user.getId(), RequestStatus.REJECTED)
                 .orElse(null);
 
+        Gym gym;
+
         if (request != null) {
-            logger.info("Reusing rejected request for user: {}", userEmail);
-            request.setGymName(gymName);
-            request.setGymAddress(gymAddress);
-            request.setCity(city);
-            request.setPostalCode(postalCode);
-            request.setPhoneNumber(phoneNumber);
-            request.setGymDescription(gymDescription);
+            // User is RESUBMITTING after rejection
+            // Update the existing gym with new details
+            logger.info("User resubmitting after rejection - updating existing gym for user: {}", userEmail);
+
+            gym = request.getGym();
+            gym.setName(gymName);
+            gym.setAddress(gymAddress);
+            gym.setCity(city);
+            gym.setPostalCode(postalCode);
+            gym.setPhoneNumber(phoneNumber);
+            gym.setDescription(gymDescription);
+            gymRepository.save(gym);
+
+            // Update the request back to PENDING status
             request.setRequestMessage(gymDescription);
             request.setStatus(RequestStatus.PENDING);
             request.setRequestedAt(LocalDateTime.now());
-            // Clear previous review data
             request.setReviewedAt(null);
             request.setReviewedBy(null);
         } else {
-            // Creating new request
+            // User is submitting for the FIRST TIME
+            // Create both a new gym and a new request
+            logger.info("First-time submission - creating new gym and request for user: {}", userEmail);
+
+            gym = new Gym();
+            gym.setName(gymName);
+            gym.setAddress(gymAddress);
+            gym.setCity(city);
+            gym.setPostalCode(postalCode);
+            gym.setPhoneNumber(phoneNumber);
+            gym.setDescription(gymDescription);
+            gym.setOwner(user);
+            gymRepository.save(gym);
+
             request = new GymOwnerRequest();
             request.setUser(user);
-            request.setGymName(gymName);
-            request.setGymAddress(gymAddress);
-            request.setCity(city);
-            request.setPostalCode(postalCode);
-            request.setPhoneNumber(phoneNumber);
-            request.setGymDescription(gymDescription);
+            request.setGym(gym);
             request.setRequestMessage(gymDescription);
             request.setStatus(RequestStatus.PENDING);
             request.setRequestedAt(LocalDateTime.now());
         }
 
         requestRepository.save(request);
-
-        logger.info("Gym owner request submitted by user: {}", userEmail);
+        logger.info("Gym owner request submitted successfully by user: {}", userEmail);
     }
 }

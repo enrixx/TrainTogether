@@ -20,25 +20,9 @@ public class GymOwnerRequest {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    //ToDo: add Gym
-
-    @Column(length = 100)
-    private String gymName;
-
-    @Column(length = 200)
-    private String gymAddress;
-
-    @Column(length = 50)
-    private String city;
-
-    @Column(length = 10)
-    private String postalCode;
-
-    @Column(length = 20)
-    private String phoneNumber;
-
-    @Column(length = 1000)
-    private String gymDescription;
+    @ManyToOne
+    @JoinColumn(name = "gym_id")
+    private Gym gym;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

@@ -53,7 +53,7 @@ public class DataInitializer implements CommandLineRunner {
 
         // Pending gym owner
         GymOwnerRegisterDto pendingOwnerDto = new GymOwnerRegisterDto();
-        pendingOwnerDto.setEmail("enricomc11@gmail.com");
+        pendingOwnerDto.setEmail("traintogetherapplication@gmail.com");
         pendingOwnerDto.setPassword("Powner");
         pendingOwnerDto.setUsername("Pending Gym Owner");
         pendingOwnerDto.setFirstName("Mike");

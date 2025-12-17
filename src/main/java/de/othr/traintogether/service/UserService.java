@@ -4,16 +4,8 @@ import de.othr.traintogether.dto.GymOwnerRegisterDto;
 import de.othr.traintogether.dto.RegisterDto;
 import de.othr.traintogether.dto.UpdateProfileDto;
 import de.othr.traintogether.dto.UserDto;
-import de.othr.traintogether.model.Authority;
-import de.othr.traintogether.model.GymOwnerRequest;
-import de.othr.traintogether.model.PasswordResetToken;
-import de.othr.traintogether.model.RequestStatus;
-import de.othr.traintogether.model.Role;
-import de.othr.traintogether.model.User;
-import de.othr.traintogether.repository.AuthorityRepository;
-import de.othr.traintogether.repository.GymOwnerRequestRepository;
-import de.othr.traintogether.repository.PasswordResetTokenRepository;
-import de.othr.traintogether.repository.UserRepository;
+import de.othr.traintogether.model.*;
+import de.othr.traintogether.repository.*;
 import de.othr.traintogether.service.customExceptions.EmailAlreadyRegisteredException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -31,6 +23,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final MinioService minioService;
     private final GymOwnerRequestRepository gymOwnerRequestRepository;
+    private final GymRepository gymRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
 
     public UserService(UserRepository userRepository,
@@ -38,12 +31,14 @@ public class UserService {
                        PasswordEncoder passwordEncoder,
                        MinioService minioService,
                        GymOwnerRequestRepository gymOwnerRequestRepository,
+                       GymRepository gymRepository,
                        PasswordResetTokenRepository passwordResetTokenRepository) {
         this.userRepository = userRepository;
         this.authorityRepository = authorityRepository;
         this.passwordEncoder = passwordEncoder;
         this.minioService = minioService;
         this.gymOwnerRequestRepository = gymOwnerRequestRepository;
+        this.gymRepository = gymRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
     }
 
@@ -111,15 +106,21 @@ public class UserService {
         Authority authorityRole = new Authority(user, Role.PENDING_GYM_OWNER.name());
         authorityRepository.save(authorityRole);
 
-        // Create a gym owner request with gym information
+        // Create the Gym entity with the registration data
+        Gym gym = new Gym();
+        gym.setName(registerDto.getGymName());
+        gym.setAddress(registerDto.getGymAddress());
+        gym.setCity(registerDto.getCity());
+        gym.setPostalCode(registerDto.getPostalCode());
+        gym.setPhoneNumber(registerDto.getPhoneNumber());
+        gym.setDescription(registerDto.getGymDescription());
+        gym.setOwner(user);
+        gym = gymRepository.save(gym);
+
+        // Create a gym owner request linked to the gym
         GymOwnerRequest request = new GymOwnerRequest();
         request.setUser(user);
-        request.setGymName(registerDto.getGymName());
-        request.setGymAddress(registerDto.getGymAddress());
-        request.setCity(registerDto.getCity());
-        request.setPostalCode(registerDto.getPostalCode());
-        request.setPhoneNumber(registerDto.getPhoneNumber());
-        request.setGymDescription(registerDto.getGymDescription());
+        request.setGym(gym);
         request.setRequestMessage(registerDto.getGymDescription());
         request.setStatus(RequestStatus.PENDING);
         request.setRequestedAt(LocalDateTime.now());

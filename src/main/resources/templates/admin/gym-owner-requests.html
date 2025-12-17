@@ -5,7 +5,7 @@
     <title th:text="${title} ?: 'Gym Owner Requests'">Gym Owner Requests</title>
 </head>
 <body>
-<div th:fragment="content">
+<div th:fragment="content" class="overflow-auto h-100">
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 th:text="${filterTitle} ?: 'Gym Owner Requests'">Gym Owner Requests</h2>
@@ -68,18 +68,18 @@
                             <div class="row">
                                 <div class="col-md-8">
                                     <!-- Gym Information -->
-                                    <div th:if="${request.gymName != null}" class="mb-3">
+                                    <div th:if="${request.gym != null}" class="mb-3">
                                         <h6 class="text-primary mb-2">Gym Information:</h6>
                                         <div class="bg-light p-3 rounded">
-                                            <p class="mb-1"><strong>Gym Name:</strong> <span th:text="${request.gymName}">Gym Name</span></p>
-                                            <p class="mb-1"><strong>Address:</strong> <span th:text="${request.gymAddress}">Address</span></p>
-                                            <p class="mb-1"><strong>City:</strong> <span th:text="${request.city}">City</span>, <span th:text="${request.postalCode}">Postal Code</span></p>
-                                            <p class="mb-1" th:if="${request.phoneNumber != null}"><strong>Phone:</strong> <span th:text="${request.phoneNumber}">Phone</span></p>
+                                            <p class="mb-1"><strong>Gym Name:</strong> <span th:text="${request.gym.name}">Gym Name</span></p>
+                                            <p class="mb-1"><strong>Address:</strong> <span th:text="${request.gym.address}">Address</span></p>
+                                            <p class="mb-1"><strong>City:</strong> <span th:text="${request.gym.city}">City</span>, <span th:text="${request.gym.postalCode}">Postal Code</span></p>
+                                            <p class="mb-1" th:if="${request.gym.phoneNumber != null}"><strong>Phone:</strong> <span th:text="${request.gym.phoneNumber}">Phone</span></p>
                                         </div>
                                     </div>
 
                                     <h6 class="text-muted mb-2">Description / Request Message:</h6>
-                                    <p th:text="${request.gymDescription != null ? request.gymDescription : request.requestMessage}">Request message content</p>
+                                    <p th:text="${request.gym != null and request.gym.description != null ? request.gym.description : request.requestMessage}">Request message content</p>
 
                                     <div class="mt-3">
                                         <small class="text-muted">
