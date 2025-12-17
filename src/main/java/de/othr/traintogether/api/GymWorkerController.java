@@ -1,4 +1,4 @@
-package de.othr.traintogether.controller;
+package de.othr.traintogether.api;
 
 import de.othr.traintogether.dto.CreateGymWorkerDto;
 import de.othr.traintogether.model.GymWorker;
