@@ -1,10 +1,6 @@
 package de.othr.traintogether.controller;
 
-import de.othr.traintogether.dto.ForgotPasswordDto;
-import de.othr.traintogether.dto.GymOwnerRegisterDto;
-import de.othr.traintogether.dto.GymOwnerRequestDto;
-import de.othr.traintogether.dto.RegisterDto;
-import de.othr.traintogether.dto.ResetPasswordDto;
+import de.othr.traintogether.dto.*;
 import de.othr.traintogether.model.User;
 import de.othr.traintogether.service.EmailService;
 import de.othr.traintogether.service.GymOwnerRequestService;
@@ -12,6 +8,7 @@ import de.othr.traintogether.service.UserService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -34,11 +31,13 @@ public class AuthController {
     private final UserService userService;
     private final GymOwnerRequestService gymOwnerRequestService;
     private final EmailService emailService;
+    private final MessageSource messageSource;
 
-    public AuthController(UserService userService, GymOwnerRequestService gymOwnerRequestService, EmailService emailService) {
+    public AuthController(UserService userService, GymOwnerRequestService gymOwnerRequestService, EmailService emailService, MessageSource messageSource) {
         this.userService = userService;
         this.gymOwnerRequestService = gymOwnerRequestService;
         this.emailService = emailService;
+        this.messageSource = messageSource;
     }
 
     @PreAuthorize("isAnonymous()")
@@ -86,8 +85,8 @@ public class AuthController {
     @PreAuthorize("isAnonymous()")
     @PostMapping("/register/gym-owner")
     public String registerGymOwnerSubmit(@Valid @ModelAttribute("gymOwnerRegisterDto") GymOwnerRegisterDto registerDto,
-                                        BindingResult bindingResult,
-                                        Model model) {
+                                         BindingResult bindingResult,
+                                         Model model) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("gymOwnerRegisterDto", registerDto);
             return "register-gym-owner";
@@ -100,7 +99,8 @@ public class AuthController {
             return "register-gym-owner";
         }
 
-        try {;
+        try {
+            ;
             userService.registerGymOwner(registerDto);
             return "redirect:/login?registered=gym-owner";
         } catch (Exception e) {
@@ -130,10 +130,10 @@ public class AuthController {
     @PreAuthorize("hasAuthority('USER') or hasAuthority('PENDING_GYM_OWNER')")
     @PostMapping("/gym-owner-request")
     public String submitGymOwnerRequest(@Valid @ModelAttribute("gymOwnerRequestDto") GymOwnerRequestDto requestDto,
-                                       BindingResult bindingResult,
-                                       Authentication authentication,
-                                       Model model,
-                                       RedirectAttributes redirectAttributes) {
+                                        BindingResult bindingResult,
+                                        Authentication authentication,
+                                        Model model,
+                                        RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("gymOwnerRequestDto", requestDto);
             return "gym-owner-request-form";
@@ -142,20 +142,31 @@ public class AuthController {
         try {
             String email = authentication.getName();
             gymOwnerRequestService.submitGymOwnerRequest(
-                email,
-                requestDto.getGymName(),
-                requestDto.getGymAddress(),
-                requestDto.getCity(),
-                requestDto.getPostalCode(),
-                requestDto.getPhoneNumber(),
-                requestDto.getGymDescription()
+                    email,
+                    requestDto.getGymName(),
+                    requestDto.getGymAddress(),
+                    requestDto.getCity(),
+                    requestDto.getPostalCode(),
+                    requestDto.getPhoneNumber(),
+                    requestDto.getGymDescription()
             );
 
-            redirectAttributes.addFlashAttribute("successMessage", "Your gym owner request has been submitted successfully! We will review it soon.");
+            redirectAttributes.addFlashAttribute("successMessage",
+                    messageSource.getMessage("gym.owner.request.success", null, LocaleContextHolder.getLocale()));
             return "redirect:/home";
         } catch (RuntimeException e) {
             model.addAttribute("gymOwnerRequestDto", requestDto);
-            model.addAttribute("errorMessage", e.getMessage());
+            String errorKey = null;
+            if (e.getMessage().contains("already have a pending")) {
+                errorKey = "gym.owner.request.error.pending";
+            } else if (e.getMessage().contains("already a gym owner")) {
+                errorKey = "gym.owner.request.error.already_owner";
+            }
+
+            String errorMessage = errorKey != null
+                    ? messageSource.getMessage(errorKey, null, LocaleContextHolder.getLocale())
+                    : e.getMessage();
+            model.addAttribute("errorMessage", errorMessage);
             return "gym-owner-request-form";
         }
     }
@@ -170,9 +181,9 @@ public class AuthController {
     @PreAuthorize("isAnonymous()")
     @PostMapping("/forgot-password")
     public String processForgotPassword(@Valid @ModelAttribute("forgotPasswordDto") ForgotPasswordDto forgotPasswordDto,
-                                       BindingResult bindingResult,
-                                       Model model,
-                                       RedirectAttributes redirectAttributes) {
+                                        BindingResult bindingResult,
+                                        Model model,
+                                        RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("forgotPasswordDto", forgotPasswordDto);
             return "forgot-password";
@@ -221,10 +232,10 @@ public class AuthController {
     @PreAuthorize("isAnonymous()")
     @PostMapping("/reset-password")
     public String processResetPassword(@RequestParam("token") String token,
-                                      @Valid @ModelAttribute("resetPasswordDto") ResetPasswordDto resetPasswordDto,
-                                      BindingResult bindingResult,
-                                      Model model,
-                                      RedirectAttributes redirectAttributes) {
+                                       @Valid @ModelAttribute("resetPasswordDto") ResetPasswordDto resetPasswordDto,
+                                       BindingResult bindingResult,
+                                       Model model,
+                                       RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("resetPasswordDto", resetPasswordDto);
             model.addAttribute("token", token);

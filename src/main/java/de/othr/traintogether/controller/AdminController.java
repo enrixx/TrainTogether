@@ -2,6 +2,8 @@ package de.othr.traintogether.controller;
 
 import de.othr.traintogether.model.GymOwnerRequest;
 import de.othr.traintogether.service.GymOwnerRequestService;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -17,9 +19,11 @@ import java.util.List;
 public class AdminController {
 
     private final GymOwnerRequestService gymOwnerRequestService;
+    private final MessageSource messageSource;
 
-    public AdminController(GymOwnerRequestService gymOwnerRequestService) {
+    public AdminController(GymOwnerRequestService gymOwnerRequestService, MessageSource messageSource) {
         this.gymOwnerRequestService = gymOwnerRequestService;
+        this.messageSource = messageSource;
     }
 
     @GetMapping("/dashboard")
@@ -41,10 +45,10 @@ public class AdminController {
 
         if ("pending".equals(filter)) {
             requests = gymOwnerRequestService.getPendingRequests();
-            model.addAttribute("filterTitle", "Pending Requests");
+            model.addAttribute("filterTitle", messageSource.getMessage("admin.requests.filter.title.pending", null, LocaleContextHolder.getLocale()));
         } else {
             requests = gymOwnerRequestService.getAllRequests();
-            model.addAttribute("filterTitle", "All Requests");
+            model.addAttribute("filterTitle", messageSource.getMessage("admin.requests.filter.title.all", null, LocaleContextHolder.getLocale()));
         }
 
         model.addAttribute("title", "Gym Owner Requests");
@@ -63,12 +67,15 @@ public class AdminController {
             boolean emailSent = gymOwnerRequestService.approveRequest(id, adminEmail);
 
             if (emailSent) {
-                redirectAttributes.addFlashAttribute("successMessage", "Request approved successfully! Notification email sent.");
+                redirectAttributes.addFlashAttribute("successMessage",
+                    messageSource.getMessage("admin.requests.approve.success", null, LocaleContextHolder.getLocale()));
             } else {
-                redirectAttributes.addFlashAttribute("warningMessage", "Request approved successfully, but notification email could not be sent. Please check your email configuration.");
+                redirectAttributes.addFlashAttribute("warningMessage",
+                    messageSource.getMessage("admin.requests.approve.warning", null, LocaleContextHolder.getLocale()));
             }
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Failed to approve request: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage",
+                messageSource.getMessage("admin.requests.approve.error", new Object[]{e.getMessage()}, LocaleContextHolder.getLocale()));
         }
 
         return "redirect:/admin/gym-owner-requests?filter=pending";
@@ -83,12 +90,15 @@ public class AdminController {
             boolean emailSent = gymOwnerRequestService.rejectRequest(id, adminEmail);
 
             if (emailSent) {
-                redirectAttributes.addFlashAttribute("successMessage", "Request rejected successfully! Notification email sent.");
+                redirectAttributes.addFlashAttribute("successMessage",
+                    messageSource.getMessage("admin.requests.reject.success", null, LocaleContextHolder.getLocale()));
             } else {
-                redirectAttributes.addFlashAttribute("warningMessage", "Request rejected successfully, but notification email could not be sent. Please check your email configuration.");
+                redirectAttributes.addFlashAttribute("warningMessage",
+                    messageSource.getMessage("admin.requests.reject.warning", null, LocaleContextHolder.getLocale()));
             }
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Failed to reject request: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage",
+                messageSource.getMessage("admin.requests.reject.error", new Object[]{e.getMessage()}, LocaleContextHolder.getLocale()));
         }
 
         return "redirect:/admin/gym-owner-requests?filter=pending";
