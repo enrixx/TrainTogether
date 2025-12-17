@@ -58,6 +58,7 @@ public class GymOwnerRequestService {
                 .orElseThrow(() -> new RuntimeException("Request not found"));
     }
 
+    // ToDo: Approve and decline refactor
     @Transactional
     public boolean approveRequest(Long requestId, String adminEmail) {
         GymOwnerRequest request = requestRepository.findById(requestId)
@@ -88,9 +89,8 @@ public class GymOwnerRequestService {
 
         requestRepository.save(request);
 
-        // Send approval email using session locale
-        Locale currentLocale = LocaleContextHolder.getLocale();
-        String language = currentLocale.getLanguage();
+        // Send email in the language the user used when submitting the request; default is english
+        String language = request.getRequestLanguage() != null ? request.getRequestLanguage() : "en";
         boolean emailSent = emailService.sendGymOwnerApprovalEmail(
                 user.getEmail(),
                 user.getFirstName(),
@@ -125,9 +125,8 @@ public class GymOwnerRequestService {
 
         requestRepository.save(request);
 
-        // Send rejection email using session locale
-        Locale currentLocale = LocaleContextHolder.getLocale();
-        String language = currentLocale.getLanguage();
+        // Send email in the language the user used when submitting the request; default is english
+        String language = request.getRequestLanguage() != null ? request.getRequestLanguage() : "en";
         boolean emailSent = emailService.sendGymOwnerRejectionEmail(
                 request.getUser().getEmail(),
                 request.getUser().getFirstName(),
@@ -188,6 +187,10 @@ public class GymOwnerRequestService {
         GymOwnerRequest request = requestRepository.findByUserIdAndStatus(user.getId(), RequestStatus.REJECTED)
                 .orElse(null);
 
+        // Get the language the user is currently using to submit the request
+        Locale currentLocale = LocaleContextHolder.getLocale();
+        String language = currentLocale.getLanguage();
+
         Gym gym;
 
         if (request != null) {
@@ -206,6 +209,7 @@ public class GymOwnerRequestService {
 
             // Update the request back to PENDING status
             request.setRequestMessage(gymDescription);
+            request.setRequestLanguage(language); // Store the language used for this submission
             request.setStatus(RequestStatus.PENDING);
             request.setRequestedAt(LocalDateTime.now());
             request.setReviewedAt(null);
@@ -229,6 +233,7 @@ public class GymOwnerRequestService {
             request.setUser(user);
             request.setGym(gym);
             request.setRequestMessage(gymDescription);
+            request.setRequestLanguage(language); // Store the language used for this submission
             request.setStatus(RequestStatus.PENDING);
             request.setRequestedAt(LocalDateTime.now());
         }

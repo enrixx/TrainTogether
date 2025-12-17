@@ -10,6 +10,8 @@ import de.othr.traintogether.service.EmailService;
 import de.othr.traintogether.service.GymOwnerRequestService;
 import de.othr.traintogether.service.UserService;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -26,6 +28,8 @@ import java.util.Locale;
 
 @Controller
 public class AuthController {
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     private final UserService userService;
     private final GymOwnerRequestService gymOwnerRequestService;
@@ -96,11 +100,8 @@ public class AuthController {
             return "register-gym-owner";
         }
 
-        try {
-            // Get language from current session locale (set by language selector in UI)
-            Locale currentLocale = LocaleContextHolder.getLocale();
-            String language = currentLocale.getLanguage();
-            userService.registerGymOwner(registerDto, language);
+        try {;
+            userService.registerGymOwner(registerDto);
             return "redirect:/login?registered=gym-owner";
         } catch (Exception e) {
             model.addAttribute("gymOwnerRegisterDto", registerDto);
@@ -211,7 +212,7 @@ public class AuthController {
             model.addAttribute("token", token);
             return "reset-password";
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error validating password reset token: {}", token, e);
             redirectAttributes.addFlashAttribute("errorMessage", "An error occurred while validating the reset token. Please try again.");
             return "redirect:/login";
         }

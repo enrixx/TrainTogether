@@ -7,7 +7,7 @@
 <body>
 <div th:fragment="content" class="overflow-auto h-100">
     <div class="container mt-4">
-        <h2>Admin Dashboard</h2>
+        <h2 th:text="#{admin.dashboard.title}">Admin Dashboard</h2>
 
         <!-- Success Message -->
         <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
@@ -32,7 +32,7 @@
             <div class="col-md-4 mb-3">
                 <div class="card bg-warning text-white">
                     <div class="card-body">
-                        <h5 class="card-title">Pending Requests</h5>
+                        <h5 class="card-title" th:text="#{admin.dashboard.pending.requests}">Pending Requests</h5>
                         <h2 class="mb-0" th:text="${pendingCount}">0</h2>
                     </div>
                 </div>
@@ -40,7 +40,7 @@
             <div class="col-md-4 mb-3">
                 <div class="card bg-info text-white">
                     <div class="card-body">
-                        <h5 class="card-title">Total Requests</h5>
+                        <h5 class="card-title" th:text="#{admin.dashboard.total.requests}">Total Requests</h5>
                         <h2 class="mb-0" th:text="${allRequests.size()}">0</h2>
                     </div>
                 </div>
@@ -52,14 +52,14 @@
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0">Quick Actions</h5>
+                        <h5 class="mb-0" th:text="#{admin.dashboard.quick.actions}">Quick Actions</h5>
                     </div>
                     <div class="card-body">
                         <a th:href="@{/admin/gym-owner-requests(filter='pending')}" class="btn btn-primary me-2">
-                            View Pending Requests
+                            <span th:text="#{admin.dashboard.view.pending}">View Pending Requests</span>
                             <span th:if="${pendingCount > 0}" class="badge bg-danger ms-1" th:text="${pendingCount}">0</span>
                         </a>
-                        <a th:href="@{/admin/gym-owner-requests}" class="btn btn-secondary">View All Requests</a>
+                        <a th:href="@{/admin/gym-owner-requests}" class="btn btn-secondary" th:text="#{admin.dashboard.view.all}">View All Requests</a>
                     </div>
                 </div>
             </div>
@@ -70,21 +70,21 @@
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Recent Pending Requests</h5>
-                        <a th:href="@{/admin/gym-owner-requests(filter='pending')}" class="btn btn-sm btn-outline-primary">View All</a>
+                        <h5 class="mb-0" th:text="#{admin.dashboard.recent.pending}">Recent Pending Requests</h5>
+                        <a th:href="@{/admin/gym-owner-requests(filter='pending')}" class="btn btn-sm btn-outline-primary" th:text="#{admin.dashboard.view.all}">View All</a>
                     </div>
                     <div class="card-body">
                         <div th:if="${pendingRequests.isEmpty()}" class="text-center text-muted py-4">
-                            <p>No pending requests at the moment.</p>
+                            <p th:text="#{admin.dashboard.no.pending}">No pending requests at the moment.</p>
                         </div>
                         <div th:unless="${pendingRequests.isEmpty()}" class="table-responsive">
                             <table class="table table-hover">
                                 <thead>
                                     <tr>
-                                        <th>User</th>
-                                        <th>Email</th>
-                                        <th>Requested Date</th>
-                                        <th>Actions</th>
+                                        <th th:text="#{admin.dashboard.table.user}">User</th>
+                                        <th th:text="#{admin.dashboard.table.email}">Email</th>
+                                        <th th:text="#{admin.dashboard.table.requested}">Requested Date</th>
+                                        <th th:text="#{admin.dashboard.table.actions}">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -95,7 +95,7 @@
                                         <td th:text="${request.user.email}">user@example.com</td>
                                         <td th:text="${#temporals.format(request.requestedAt, 'dd MMM yyyy HH:mm')}">Date</td>
                                         <td>
-                                            <a th:href="@{/admin/gym-owner-requests(filter='pending')}" class="btn btn-sm btn-info">View Details</a>
+                                            <a th:href="@{/admin/gym-owner-requests(filter='pending')}" class="btn btn-sm btn-info" th:text="#{admin.dashboard.view.details}">View Details</a>
                                         </td>
                                     </tr>
                                 </tbody>

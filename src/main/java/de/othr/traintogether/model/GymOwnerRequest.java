@@ -40,6 +40,9 @@ public class GymOwnerRequest {
     @Column(length = 1000)
     private String requestMessage;
 
+    @Column(length = 10)
+    private String requestLanguage;
+
     public GymOwnerRequest() {
     }
 

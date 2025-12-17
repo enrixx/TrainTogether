@@ -37,15 +37,15 @@
 
     <div class="form-floating mb-3">
         <input type="text" th:field="*{firstName}" id="registerFirstName" class="form-control"
-               placeholder="First Name" required>
-        <label for="registerFirstName">First Name</label>
+               th:placeholder="#{auth.firstname}" required>
+        <label for="registerFirstName" th:text="#{auth.firstname}">First Name</label>
         <div class="text-danger" th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}"></div>
     </div>
 
     <div class="form-floating mb-3">
         <input type="text" th:field="*{lastName}" id="registerLastName" class="form-control"
-               placeholder="Last Name" required>
-        <label for="registerLastName">Last Name</label>
+               th:placeholder="#{auth.lastname}" required>
+        <label for="registerLastName" th:text="#{auth.lastname}">Last Name</label>
         <div class="text-danger" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}"></div>
     </div>
     <button class="btn btn-primary w-100 py-2 mb-2" type="submit" th:text="#{auth.register}">Register</button>

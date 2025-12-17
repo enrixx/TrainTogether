@@ -7,12 +7,14 @@ import de.othr.traintogether.dto.UserDto;
 import de.othr.traintogether.model.*;
 import de.othr.traintogether.repository.*;
 import de.othr.traintogether.service.customExceptions.EmailAlreadyRegisteredException;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -76,11 +78,6 @@ public class UserService {
 
     @Transactional
     public void registerGymOwner(GymOwnerRegisterDto registerDto) {
-        registerGymOwner(registerDto, "en"); // Language parameter ignored, keeping method signature for compatibility
-    }
-
-    @Transactional
-    public void registerGymOwner(GymOwnerRegisterDto registerDto, String language) {
         String email = registerDto.getEmail();
         String rawPassword = registerDto.getPassword();
         String userName = registerDto.getUsername();
@@ -117,11 +114,16 @@ public class UserService {
         gym.setOwner(user);
         gym = gymRepository.save(gym);
 
+        // Get the language the user is currently using for registration
+        Locale currentLocale = LocaleContextHolder.getLocale();
+        String language = currentLocale.getLanguage();
+
         // Create a gym owner request linked to the gym
         GymOwnerRequest request = new GymOwnerRequest();
         request.setUser(user);
         request.setGym(gym);
         request.setRequestMessage(registerDto.getGymDescription());
+        request.setRequestLanguage(language); // Store the language used during registration
         request.setStatus(RequestStatus.PENDING);
         request.setRequestedAt(LocalDateTime.now());
 
