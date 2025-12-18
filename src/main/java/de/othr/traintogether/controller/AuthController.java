@@ -194,7 +194,7 @@ public class AuthController {
 
         // Always show success message (don't reveal if email exists)
         if (token != null) {
-            var userDto = userService.findUserByEmail(email);
+            var userDto = userService.findUserDTOByEmail(email);
             if (userDto != null) {
                 Locale currentLocale = LocaleContextHolder.getLocale();
                 String language = currentLocale.getLanguage();

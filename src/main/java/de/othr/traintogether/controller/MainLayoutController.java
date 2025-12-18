@@ -33,7 +33,7 @@ public class MainLayoutController {
 
         if (authentication != null && authentication.isAuthenticated()) {
             String email = authentication.getName();
-            UserDto user = userService.findUserByEmail(email);
+            UserDto user = userService.findUserDTOByEmail(email);
             if (user != null) {
                 model.addAttribute("currentUser", user);
 
