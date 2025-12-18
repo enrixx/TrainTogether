@@ -5,20 +5,21 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.i18n.CookieLocaleResolver;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
-import org.springframework.web.servlet.i18n.SessionLocaleResolver;
 
 import java.util.Locale;
 
 @Configuration
 public class LocaleConfig implements WebMvcConfigurer {
 
-    // 1. Determine the default locale (English)
+    // 1. Determine the default locale (English) and store in cookie
     @Bean
     public LocaleResolver localeResolver() {
-        SessionLocaleResolver slr = new SessionLocaleResolver();
-        slr.setDefaultLocale(Locale.ENGLISH);
-        return slr;
+        CookieLocaleResolver clr = new CookieLocaleResolver("language");
+        clr.setDefaultLocale(Locale.ENGLISH);
+        clr.setCookieMaxAge(java.time.Duration.ofDays(1));
+        return clr;
     }
 
     // 2. Add an interceptor to look for the 'lang' URL parameter

@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::content})}">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:replace="~{layout :: layout(~{::content})}">
 <head>
     <meta charset="UTF-8">
-    <title th:text="${title} ?: 'Profile'">Profile</title>
+    <title th:text="${title} ?: #{profile.title}">Profile</title>
 </head>
 <body>
-<div th:fragment="content">
+<div th:fragment="content" class="overflow-auto h-100">
     <div class="container mt-4">
-        <h2>Profil</h2>
+        <h2 th:text="#{profile.title}">Profile</h2>
 
         <!-- Success Message -->
         <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
@@ -26,7 +26,7 @@
             <div class="col-md-12 mb-4">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0">Profile Picture</h5>
+                        <h5 class="mb-0" th:text="#{profile.picture.title}">Profile Picture</h5>
                     </div>
                     <div class="card-body text-center">
                         <div class="mb-3">
@@ -50,16 +50,16 @@
                                        name="profilePicture"
                                        accept="image/*"
                                        required>
-                                <small class="text-muted">Max size: 5MB. Allowed formats: JPG, PNG, GIF</small>
+                                <small class="text-muted" th:text="#{profile.picture.maxinfo}">Max size: 5MB. Allowed formats: JPG, PNG, GIF</small>
                             </div>
-                            <button type="submit" class="btn btn-primary">Upload Picture</button>
+                            <button type="submit" class="btn btn-primary" th:text="#{profile.picture.upload}">Upload Picture</button>
                         </form>
 
                         <form th:if="${user.profilePictureUrl != null and !#strings.isEmpty(user.profilePictureUrl)}"
                               th:action="@{/profile/delete-picture}"
                               method="post"
-                              onsubmit="return confirm('Are you sure you want to delete your profile picture?');">
-                            <button type="submit" class="btn btn-danger btn-sm">Delete Picture</button>
+                              th:attr="onsubmit='return confirm(\'' + #{profile.picture.delete} + '\');'">
+                            <button type="submit" class="btn btn-danger btn-sm" th:text="#{profile.picture.delete}">Delete Picture</button>
                         </form>
                     </div>
                 </div>
@@ -71,44 +71,44 @@
             <div class="col-md-6 mb-4">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0">Profile Information</h5>
+                        <h5 class="mb-0" th:text="#{profile.info.title}">Profile Information</h5>
                     </div>
                     <div class="card-body">
                         <form th:action="@{/profile/update}" th:object="${updateProfileDto}" method="post">
                             <div class="mb-3">
-                                <label for="email" class="form-label">Email</label>
+                                <label for="email" class="form-label" th:text="#{profile.label.email}">Email</label>
                                 <input type="email"
                                        class="form-control"
                                        th:class="${#fields.hasErrors('email')} ? 'form-control is-invalid' : 'form-control'"
                                        id="email"
                                        th:field="*{email}"
-                                       placeholder="Enter your email">
+                                       th:placeholder="#{profile.label.email}">
                                 <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">
                                     Email error
                                 </div>
                             </div>
 
                             <div class="mb-3">
-                                <label for="username" class="form-label">Username</label>
+                                <label for="username" class="form-label" th:text="#{profile.label.username}">Username</label>
                                 <input type="text"
                                        class="form-control"
                                        th:class="${#fields.hasErrors('username')} ? 'form-control is-invalid' : 'form-control'"
                                        id="username"
                                        th:field="*{username}"
-                                       placeholder="Enter your username">
+                                       th:placeholder="#{profile.label.username}">
                                 <div class="invalid-feedback" th:if="${#fields.hasErrors('username')}" th:errors="*{username}">
                                     Username error
                                 </div>
                             </div>
 
                             <div class="mb-3">
-                                <label for="firstName" class="form-label">First Name</label>
+                                <label for="firstName" class="form-label" th:text="#{auth.firstname}">First Name</label>
                                 <input type="text"
                                        class="form-control"
                                        th:class="${#fields.hasErrors('firstName')} ? 'form-control is-invalid' : 'form-control'"
                                        id="firstName"
                                        th:field="*{firstName}"
-                                       placeholder="Enter your first name"
+                                       th:placeholder="#{auth.firstname}"
                                        required>
                                 <div class="invalid-feedback" th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}">
                                     First name error
@@ -116,13 +116,13 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="lastName" class="form-label">Last Name</label>
+                                <label for="lastName" class="form-label" th:text="#{auth.lastname}">Last Name</label>
                                 <input type="text"
                                        class="form-control"
                                        th:class="${#fields.hasErrors('lastName')} ? 'form-control is-invalid' : 'form-control'"
                                        id="lastName"
                                        th:field="*{lastName}"
-                                       placeholder="Enter your last name"
+                                       th:placeholder="#{auth.lastname}"
                                        required>
                                 <div class="invalid-feedback" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}">
                                     Last name error
@@ -130,11 +130,11 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Member Since</label>
+                                <label class="form-label" th:text="#{profile.member.since}">Member Since</label>
                                 <p class="form-control-plaintext" th:text="${#temporals.format(user.createdAt, 'dd.MM.yyyy HH:mm')}">01.01.2024</p>
                             </div>
 
-                            <button type="submit" class="btn btn-primary w-100">Update Profile</button>
+                            <button type="submit" class="btn btn-primary w-100" th:text="#{profile.update.button}">Update Profile</button>
                         </form>
                     </div>
                 </div>
@@ -144,7 +144,7 @@
             <div class="col-md-6 mb-4">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0">Change Password</h5>
+                        <h5 class="mb-0" th:text="#{profile.change.password.title}">Change Password</h5>
                     </div>
                     <div class="card-body">
                         <!-- Password Error Message -->
@@ -155,39 +155,56 @@
 
                         <form th:action="@{/profile/update-password}" th:object="${updateProfileDto}" method="post">
                             <div class="mb-3">
-                                <label for="currentPassword" class="form-label">Current Password</label>
+                                <label for="currentPassword" class="form-label" th:text="#{profile.change.password.current}">Current Password</label>
                                 <input type="password"
                                        class="form-control"
                                        id="currentPassword"
                                        th:field="*{currentPassword}"
-                                       placeholder="Enter current password"
+                                       th:placeholder="#{profile.change.password.current}"
                                        required>
                             </div>
 
                             <div class="mb-3">
-                                <label for="newPassword" class="form-label">New Password</label>
+                                <label for="newPassword" class="form-label" th:text="#{profile.change.password.new}">New Password</label>
                                 <input type="password"
                                        class="form-control"
                                        id="newPassword"
                                        th:field="*{newPassword}"
-                                       placeholder="Enter new password (min. 6 characters)"
+                                       th:placeholder="|#{profile.change.password.new} (min. 6 characters)|"
                                        minlength="6"
                                        required>
                             </div>
 
                             <div class="mb-3">
-                                <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                                <label for="confirmPassword" class="form-label" th:text="#{profile.change.password.confirm}">Confirm New Password</label>
                                 <input type="password"
                                        class="form-control"
                                        id="confirmPassword"
                                        th:field="*{confirmPassword}"
-                                       placeholder="Confirm new password"
+                                       th:placeholder="#{profile.change.password.confirm}"
                                        minlength="6"
                                        required>
                             </div>
 
-                            <button type="submit" class="btn btn-warning w-100">Change Password</button>
+                            <button type="submit" class="btn btn-warning w-100" th:text="#{profile.change.password.button}">Change Password</button>
                         </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gym Owner Request Section (only for regular users without any request) -->
+        <div class="row" sec:authorize="hasAuthority('USER')">
+            <div class="col-md-12 mb-4">
+                <div class="card border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0" th:text="#{gym.owner.request.cta.title}">Are you a gym owner?</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3" th:text="#{gym.owner.request.cta.message}">Apply to register your gym on TrainTogether and reach more customers!</p>
+                        <div class="text-center">
+                            <a th:href="@{/gym-owner-request}" class="btn btn-primary btn-lg" th:text="#{gym.owner.request.cta.button}">Apply for Gym Owner Role</a>
+                        </div>
                     </div>
                 </div>
             </div>
