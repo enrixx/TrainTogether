@@ -10,6 +10,7 @@
     <div class="collapse show" th:id="@{collapseChats{section}(section=${title.replaceAll(' ', '')})}">
         <ul class="list-unstyled mb-0">
             <li th:each="chat,iterStat : ${chats}"
+                th:id="'message-' + ${chat.id}"
                 th:class="${iterStat.last} ? 'p-2 border-bottom-0' : 'p-2 border-bottom'">
                 <div class="d-flex flex-row gap-2">
                     <a th:href="@{/chat/{id}(id=${chat.id})}"
@@ -50,15 +51,16 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end text-small">
                             <li th:if="${chat.roomType == 'GROUP'}">
-                                <a class="dropdown-item" th:href="@{/chat/{id}/settings(id=${chat.id})}" th:text="#{chat.settings}">Settings</a>
+                                <a class="dropdown-item" th:href="@{/chat/{id}/settings(id=${chat.id})}"
+                                   th:text="#{chat.settings}">Settings</a>
                             </li>
                             <li th:if="${chat.roomType == 'GROUP'}">
                                 <hr class="dropdown-divider">
                             </li>
                             <li>
-                                <!-- TODO: does not update -->
                                 <button class="dropdown-item"
-                                        th:attr="hx-delete=@{/chat/{id}/members/me(id=${chat.id})}, hx-confirm='#{chat.leave_confirm}'">
+                                        th:attr="data-delete-url=@{/chat/{id}/members/me(id=${chat.id})}, data-confirm=#{chat.leave_confirm}, data-target=|message-${chat.id}|"
+                                        th:onclick="|fetchDelete(this.dataset.deleteUrl, this.dataset.confirm, this.dataset.target)|">
                                     <span th:if="${chat.roomType == 'DM'}" th:text="#{chat.remove}">Remove</span>
                                     <span th:if="${chat.roomType == 'GROUP'}" th:text="#{chat.leave_group}">Leave</span>
                                 </button>
