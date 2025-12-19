@@ -27,6 +27,10 @@ public class FriendshipService {
     }
 
     public Friendship sendRequest(User sender, String receiverIdentifier) {
+        return sendRequest(sender, receiverIdentifier, false);
+    }
+
+    public Friendship sendRequest(User sender, String receiverIdentifier, boolean unblockIfBlocked) {
         User receiver = userService.getUserByEmailOrUsername(receiverIdentifier);
 
         if (sender.getId().equals(receiver.getId())) {
@@ -37,15 +41,18 @@ public class FriendshipService {
         if (existing.isPresent()) {
             Friendship friendship = existing.get();
             if (friendship.getStatus() == FriendshipStatus.BLOCKED) {
-                // If the sender is the one who blocked, they can unblock by sending request?
-                // Or we just say "Cannot send request".
-                // If sender is the one blocked (requester != sender), then definitely cannot.
-                if (!friendship.getRequester().getId().equals(sender.getId())) {
-                     throw new IllegalStateException("You are blocked by this user");
+                if (friendship.getRequester().getId().equals(sender.getId())) {
+                    if (unblockIfBlocked) {
+                        friendship.setStatus(FriendshipStatus.PENDING);
+                        friendship.setRequester(sender);
+                        friendship.setAddressee(receiver);
+                        return friendshipRepository.save(friendship);
+                    }
+                    throw new IllegalStateException("You have blocked this user");
+                } else {
+                    // Shadow ban: If blocked by other, return fake friendship and dont save
+                    return new Friendship(sender, receiver, FriendshipStatus.PENDING);
                 }
-                // If sender is the blocker, maybe we allow them to re-friend?
-                // For now, let's just say "Cannot send request" to keep it simple as per requirements "cannot if you are blocked".
-                throw new IllegalStateException("Cannot send request");
             }
             if (friendship.getStatus() == FriendshipStatus.ACCEPTED) {
                 throw new IllegalStateException("Already friends");
@@ -62,6 +69,30 @@ public class FriendshipService {
 
         Friendship friendship = new Friendship(sender, receiver, FriendshipStatus.PENDING);
         return friendshipRepository.save(friendship);
+    }
+
+    public void unblockUser(User unblocker, Long userIdToUnblock) {
+        User toUnblock = userRepository.findById(userIdToUnblock)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        Friendship friendship = friendshipRepository.findBetweenUsers(unblocker, toUnblock)
+                .orElseThrow(() -> new IllegalArgumentException("No relationship found"));
+
+        if (friendship.getStatus() != FriendshipStatus.BLOCKED) {
+            throw new IllegalStateException("User is not blocked");
+        }
+
+        if (!friendship.getRequester().getId().equals(unblocker.getId())) {
+            throw new IllegalStateException("You cannot unblock a user who has blocked you");
+        }
+
+        friendshipRepository.delete(friendship);
+    }
+
+    public List<User> getBlockedUsers(User user) {
+        return friendshipRepository.findByRequesterAndStatus(user, FriendshipStatus.BLOCKED).stream()
+                .map(Friendship::getAddressee)
+                .collect(Collectors.toList());
     }
 
     public void acceptRequest(Long friendshipId, User user) {

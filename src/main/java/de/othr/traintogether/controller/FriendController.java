@@ -32,20 +32,44 @@ public class FriendController {
         User user = userService.getUserByEmail(authentication.getName());
         List<User> friends = friendshipService.getFriends(user);
         List<Friendship> pendingRequests = friendshipService.getPendingRequests(user);
+        List<User> blockedUsers = friendshipService.getBlockedUsers(user);
 
         model.addAttribute("friends", friends);
         model.addAttribute("pendingRequests", pendingRequests);
+        model.addAttribute("blockedUsers", blockedUsers);
         return "friends";
     }
 
-    @PostMapping("/request")
-    public String sendRequest(@RequestParam("identifier") String identifier,
+    @PostMapping("/unblock")
+    public String unblockUser(@RequestParam("userId") Long userId,
                               Authentication authentication,
                               RedirectAttributes redirectAttributes) {
         User user = userService.getUserByEmail(authentication.getName());
         try {
-            friendshipService.sendRequest(user, identifier);
+            friendshipService.unblockUser(user, userId);
+            redirectAttributes.addFlashAttribute("successMessage", "User unblocked successfully");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/friends";
+    }
+
+    @PostMapping("/request")
+    public String sendRequest(@RequestParam("identifier") String identifier,
+                              @RequestParam(value = "unblock", required = false, defaultValue = "false") boolean unblock,
+                              Authentication authentication,
+                              RedirectAttributes redirectAttributes) {
+        User user = userService.getUserByEmail(authentication.getName());
+        try {
+            friendshipService.sendRequest(user, identifier, unblock);
             redirectAttributes.addFlashAttribute("successMessage", "Friend request sent to " + identifier);
+        } catch (IllegalStateException e) {
+            if (e.getMessage().equals("You have blocked this user")) {
+                redirectAttributes.addFlashAttribute("confirmUnblockIdentifier", identifier);
+                redirectAttributes.addFlashAttribute("errorMessage", "You have blocked this user. Do you want to unblock and add them?");
+            } else {
+                redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            }
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
