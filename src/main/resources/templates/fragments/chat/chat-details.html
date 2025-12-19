@@ -1,23 +1,22 @@
-<div th:fragment="chatDetails" class="col-lg-4 col-md-5">
+<div th:fragment="chatDetails(chatDetails)" class="col-lg-4 col-md-5">
     <div class="card">
         <div class="card-body text-center">
-            <img th:src="@{/images/default-profile.png}" alt="avatar" class="rounded-circle mb-3" width="120" height="120">
-            <h4 class="card-title mb-1" th:text="${chatName ?: 'Sample Group'}">Sample Group</h4>
-            <p class="text-muted mb-2" th:text="${chatSubtitle ?: 'Group · 12 members'}">Group · 12 members</p>
-            <p class="small text-muted">This area shows the main chat information. Replace the static fields with your DTOs when ready.</p>
+            <img th:src="${chatDetails.pictureUrl}" alt="avatar" class="rounded-circle mb-3" width="120" height="120">
+            <h4 class="card-title mb-1" th:text="${chatDetails.name}">Sample Group</h4>
+            <p class="text-muted mb-2" th:text="|${#strings.toLowerCase(chatDetails.type)} - ${chatDetails.memberCount} #{chat.members.suffix}|">Group 0 members</p>
         </div>
         <ul class="list-group list-group-flush">
             <li class="list-group-item d-flex justify-content-between align-items-center">
-                Type
-                <span class="badge bg-secondary rounded-pill" th:text="${chatType ?: 'GROUP'}">GROUP</span>
+                <span th:text="#{chat.type.label}">Type</span>
+                <span class="badge bg-secondary rounded-pill" th:text="${chatDetails.type}">GROUP</span>
             </li>
             <li class="list-group-item d-flex justify-content-between align-items-center">
-                Created
-                <span class="text-muted">2025-01-01</span>
+                <span th:text="#{chat.created.label}">Created</span>
+                <span class="text-muted" th:text="${chatDetails.createdAt}">00-00-0000</span>
             </li>
-            <li class="list-group-item">
-                <strong>Description</strong>
-                <p class="mb-0 text-muted small">This is a static description placeholder for the chat. Replace with real content later.</p>
+            <li th:if="${!#strings.isEmpty(chatDetails.description)}" class="list-group-item">
+                <strong th:text="#{chat.description.label}">Description</strong>
+                <p class="mb-0 text-muted small" th:text="${chatDetails.description}">Description</p>
             </li>
         </ul>
     </div>

@@ -8,14 +8,13 @@
 
 <body>
 <div th:fragment="content" class="container-fluid h-100 d-flex flex-column p-3 overflow-auto">
-    <div class="row g-3">
+    <div class="row g-3" th:with="template=${chatSettings.canEdit} ? 'fragments/chat/chat-details-edit' : 'fragments/chat/chat-details'">
         <div class="col-12">
             <a th:href="@{/chat}" class="btn btn-sm btn-secondary mb-2">&larr; <span th:text="#{nav.chat}">Chat</span></a>
             <h2 class="mb-0" th:text="#{chat.settings}">Chat Settings</h2>
         </div>
 
-        <div th:replace="~{fragments/chat/chat-details :: chatDetails}"></div>
-        <div th:replace="~{fragments/chat/chat-details-edit :: chatDetailsEdit}"></div>
+        <div th:replace="~{${template} :: chatDetails(chatDetails=${chatSettings.chatDetails})}"></div>
 
         <div class="col-lg-8 col-md-7">
             <div class="card">

@@ -2,6 +2,7 @@ package de.othr.traintogether.service.chat;
 
 import de.othr.traintogether.model.User;
 import de.othr.traintogether.model.chat.ChatMessage;
+import de.othr.traintogether.model.chat.ChatRole;
 import de.othr.traintogether.model.chat.ChatRoomMember;
 import de.othr.traintogether.repository.UserRepository;
 import de.othr.traintogether.repository.chat.ChatMessageRepository;
@@ -25,6 +26,15 @@ public class ChatAuthService {
         this.chatRoomMemberRepository = chatRoomMemberRepository;
         this.chatRoomRepository = chatRoomRepository;
         this.chatMessageRepository = chatMessageRepository;
+    }
+
+    public ChatRoomMember getAdminMember(String userEmail, Long chatRoomId) {
+
+        ChatRoomMember member = getActiveMember(userEmail, chatRoomId);
+        if (member == null || member.getRole() != ChatRole.ADMIN) {
+            throw new IllegalArgumentException("User is not admin of the chat room: " + chatRoomId);
+        }
+        return member;
     }
 
 

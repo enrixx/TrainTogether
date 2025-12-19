@@ -11,8 +11,10 @@ import de.othr.traintogether.repository.UserRepository;
 import de.othr.traintogether.repository.chat.ChatMessageRepository;
 import de.othr.traintogether.repository.chat.ChatRoomMemberRepository;
 import de.othr.traintogether.repository.chat.ChatRoomRepository;
+import de.othr.traintogether.service.MinioService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,14 +31,16 @@ public class ChatRoomService {
     private final ChatMessageRepository chatMessageRepository;
     private final ChatRoomMemberRepository chatRoomMemberRepository;
     private final ChatAuthService chatAuthService;
+    private final MinioService minioService;
 
-    public ChatRoomService(ChatRoomRepository chatRoomRepository, UserRepository userRepository, ChatRoomMapper chatRoomMapper, ChatMessageRepository chatMessageRepository, ChatRoomMemberRepository chatRoomMemberRepository, ChatAuthService chatAuthService) {
+    public ChatRoomService(ChatRoomRepository chatRoomRepository, UserRepository userRepository, ChatRoomMapper chatRoomMapper, ChatMessageRepository chatMessageRepository, ChatRoomMemberRepository chatRoomMemberRepository, ChatAuthService chatAuthService, MinioService minioService) {
         this.chatRoomRepository = chatRoomRepository;
         this.userRepository = userRepository;
         this.chatRoomMapper = chatRoomMapper;
         this.chatMessageRepository = chatMessageRepository;
         this.chatRoomMemberRepository = chatRoomMemberRepository;
         this.chatAuthService = chatAuthService;
+        this.minioService = minioService;
     }
 
     @Transactional
@@ -59,7 +63,7 @@ public class ChatRoomService {
         User owner = chatAuthService.getUser(ownerEmail);
         ChatRoom room = new ChatRoom(ChatRoomType.GROUP, name, pictureUrl);
         ChatRoomMember admin = new ChatRoomMember(room, owner, ChatRole.ADMIN);
-        admin.setUser(owner);
+        room.addMember(admin);
         for (String userEmail : userEmails) {
             User user = chatAuthService.getUser(userEmail);
             ChatRoomMember member = new ChatRoomMember(room, user, memberRole);
@@ -91,6 +95,47 @@ public class ChatRoomService {
         ChatRoomMember member = chatAuthService.getMember(userEmail, chatRoomId);
         member.setRemoved(true);
         chatRoomMemberRepository.save(member);
+    }
+
+    @Transactional
+    public String uploadGroupPicture(String email, Long chatRoomId, MultipartFile file) {
+
+        ChatRoomMember member = chatAuthService.getAdminMember(email, chatRoomId);
+        ChatRoom room = member.getChatRoom();
+        String presentPictureUrl = room.getPictureUrl();
+
+        // Delete old profile picture if exists
+        if (presentPictureUrl != null && !presentPictureUrl.isEmpty()) {
+            minioService.deleteGroupPicture(presentPictureUrl);
+        }
+
+        // Upload new profile picture
+        String pictureUrl = minioService.uploadGroupPicture(file, room.getId());
+        room.setPictureUrl(pictureUrl);
+        chatRoomRepository.save(room);
+
+        return pictureUrl;
+    }
+
+    @Transactional
+    public void deleteGroupPicture(String email, Long chatRoomId) {
+        ChatRoomMember member = chatAuthService.getAdminMember(email, chatRoomId);
+        ChatRoom room = member.getChatRoom();
+        String pictureUrl = room.getPictureUrl();
+
+        if (pictureUrl != null && !pictureUrl.isEmpty()) {
+            minioService.deleteGroupPicture(pictureUrl);
+            room.setPictureUrl(null);
+            chatRoomRepository.save(room);
+        }
+    }
+
+    public void updateChatDetails(String email, Long chatRoomId, ChatDetailsDto chatDetailsDto) {
+        ChatRoomMember member = chatAuthService.getAdminMember(email, chatRoomId);
+        ChatRoom room = member.getChatRoom();
+        room.setName(chatDetailsDto.getName());
+        room.setDescription(chatDetailsDto.getDescription());
+        chatRoomRepository.save(room);
     }
 
     @Transactional(readOnly = true)

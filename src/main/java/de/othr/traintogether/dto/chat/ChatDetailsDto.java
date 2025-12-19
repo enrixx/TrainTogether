@@ -2,13 +2,13 @@ package de.othr.traintogether.dto.chat;
 
 import de.othr.traintogether.model.chat.ChatRoom;
 import de.othr.traintogether.model.chat.ChatRoomType;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
-import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 
 @Getter
@@ -18,28 +18,24 @@ import java.time.Instant;
 @Builder
 public class ChatDetailsDto {
 
-    @NotNull
     private Long chatId;
 
-    @NotNull
     private ChatRoomType type;
 
     @NotBlank
     @Size(max = 50)
     private String name;
 
-    @Size(max = 512)
     private String pictureUrl;
 
-    @NotNull
-    private Instant createdAt;
+    private String createdAt;
 
-    @NotBlank
     @Size(max = 255)
     private String description;
 
-    @Min(0)
     private int memberCount;
+
+    private boolean hasPicture;
 
     public static ChatDetailsDto fromEntity(@NotNull ChatRoom room) {
         if (room == null) throw new IllegalArgumentException("room must not be null");
@@ -51,12 +47,24 @@ public class ChatDetailsDto {
             count = 0;
         }
 
+        String pic = room.getPictureUrl();
+        boolean hasPicture = true;
+        if (pic == null || pic.isBlank()) {
+            pic = "/images/default-profile.png";
+            hasPicture = false;
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+                .withZone(ZoneId.systemDefault());
+        String created = room.getCreatedAt() != null ? formatter.format(room.getCreatedAt()) : "";
+
         return ChatDetailsDto.builder()
                 .chatId(room.getId())
                 .type(room.getType())
                 .name(room.getName())
-                .pictureUrl(room.getPictureUrl())
-                .createdAt(room.getCreatedAt())
+                .pictureUrl(pic)
+                .hasPicture(hasPicture)
+                .createdAt(created)
                 .description(room.getDescription())
                 .memberCount(count)
                 .build();

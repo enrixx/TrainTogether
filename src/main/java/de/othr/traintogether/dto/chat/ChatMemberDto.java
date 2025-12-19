@@ -41,13 +41,17 @@ public class ChatMemberDto {
                 : member.getUser().getUsername();
 
         String role = member.getRole().name();
-        String picture = member.getUser().getProfilePictureUrl();
+
+        String pic = member.getUser().getProfilePictureUrl();
+        if (pic == null || pic.isBlank()) {
+            pic = "/images/default-profile.png";
+        }
 
         return ChatMemberDto.builder()
                 .id(member.getId())
                 .displayName(name)
                 .role(role)
-                .pictureUrl(picture)
+                .pictureUrl(pic)
                 .build();
     }
 }
