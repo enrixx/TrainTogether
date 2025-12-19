@@ -147,20 +147,6 @@ public class ChatController {
         }
     }
 
-    @DeleteMapping("/{chatId}/members/{memberEmail}")
-    public ResponseEntity<Void> kickMember(@PathVariable("chatId") Long chatId,
-                                           @PathVariable("memberEmail") String userEmail) {
-        try {
-            // optional: zusätzliche Berechtigungsprüfung (z.B. Owner==principal) hier einbauen
-            chatRoomService.removeUserFromRoom(chatId, userEmail);
-            return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(500).build();
-        }
-    }
-
     //---------------------Settings-------------------------//
 
     @GetMapping("/{chatId}/settings")
@@ -181,7 +167,7 @@ public class ChatController {
                                        RedirectAttributes redirectAttributes) {
         try {
             String email = principal.getName();
-            chatRoomService.uploadGroupPicture(email,chatId, file);
+            chatRoomService.uploadGroupPicture(email, chatId, file);
             redirectAttributes.addFlashAttribute("successMessage", "Group picture uploaded successfully!");
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
@@ -223,5 +209,22 @@ public class ChatController {
             return "redirect:/chat/" + chatId + "/settings";
         }
         return "redirect:/chat/" + chatId + "/settings";
+    }
+
+    @DeleteMapping("/{chatId}/members/{memberEmail}")
+    public ResponseEntity<Void> kickMember(@PathVariable("chatId") Long chatId,
+                                           @PathVariable("memberEmail") String userEmail,
+                                           Principal principal) {
+        try {
+            if (!chatRoomService.isUserAdmin(principal.getName(), chatId)) {
+                return ResponseEntity.noContent().build();
+            }
+            chatRoomService.removeUserFromRoom(chatId, userEmail);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
     }
 }

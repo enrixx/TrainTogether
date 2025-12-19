@@ -20,6 +20,9 @@ public class ChatMemberDto {
     @NotNull
     private Long id;
 
+    @NotNull
+    private String email;
+
     @NotBlank
     @Size(max = 20)
     private String displayName;
@@ -49,6 +52,7 @@ public class ChatMemberDto {
 
         return ChatMemberDto.builder()
                 .id(member.getId())
+                .email(member.getUser().getEmail())
                 .displayName(name)
                 .role(role)
                 .pictureUrl(pic)

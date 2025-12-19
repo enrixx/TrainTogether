@@ -130,12 +130,24 @@ public class ChatRoomService {
         }
     }
 
+    @Transactional
     public void updateChatDetails(String email, Long chatRoomId, ChatDetailsDto chatDetailsDto) {
         ChatRoomMember member = chatAuthService.getAdminMember(email, chatRoomId);
         ChatRoom room = member.getChatRoom();
         room.setName(chatDetailsDto.getName());
         room.setDescription(chatDetailsDto.getDescription());
         chatRoomRepository.save(room);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isUserAdmin(String email, Long chatRoomId){
+        try {
+            ChatRoomMember member = chatAuthService.getAdminMember(email, chatRoomId);
+            return true;
+        }
+        catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 
     @Transactional(readOnly = true)
@@ -156,7 +168,11 @@ public class ChatRoomService {
         ChatRoomMember member = chatAuthService.getActiveMember(userEmail, chatRoomId);
         ChatDetailsDto chatDetailsDto = ChatDetailsDto.fromEntity(member.getChatRoom());
         List<ChatMemberDto> chatMemberDtos = member.getChatRoom().getMembers().stream()
+                .filter(m -> !m.isRemoved())
                 .map(ChatMemberDto::fromEntity)
+                .sorted(java.util.Comparator
+                        .comparingInt((ChatMemberDto d) -> d.getRole().equals("ADMIN") ? 0 : 1)
+                        .thenComparing(d -> d.getDisplayName() == null ? "" : d.getDisplayName(), String.CASE_INSENSITIVE_ORDER))
                 .collect(Collectors.toList());
         return new ChatSettingsDto(
                 member.getRole() == ChatRole.ADMIN,
