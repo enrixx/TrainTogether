@@ -133,7 +133,7 @@ public class ProfileController {
     }
 
     @PostMapping("/upload-picture")
-    public String uploadProfilePicture(@RequestParam("profilePicture") MultipartFile file,
+    public String uploadProfilePicture(@RequestParam("picture") MultipartFile file,
                                       Authentication authentication,
                                       RedirectAttributes redirectAttributes) {
         try {

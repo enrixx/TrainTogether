@@ -1,0 +1,19 @@
+<form th:fragment="upload(endpointUrl)" th:action="${endpointUrl}" method="post" enctype="multipart/form-data" class="mb-2">
+    <div class="mb-3">
+        <input type="file"
+               class="form-control"
+               id="picture"
+               name="picture"
+               accept="image/*"
+               required>
+        <small class="text-muted" th:text="#{edit.max_size_info}">Max size: 5MB. Allowed formats: JPG, PNG, GIF</small>
+    </div>
+    <button type="submit" class="btn btn-primary" th:text="#{edit.upload_picture}">Upload Picture</button>
+</form>
+
+<form th:fragment="delete(endpointUrl, pictureUrl)" th:if="${pictureUrl != null and !#strings.isEmpty(pictureUrl)}"
+      th:action="${endpointUrl}"
+      method="post"
+      th:onsubmit="|return confirm('#{common.delete_confirm}')|">
+    <button type="submit" class="btn btn-danger btn-sm" th:text="#{edit.delete_picture}">Delete Picture</button>
+</form>
