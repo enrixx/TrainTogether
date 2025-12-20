@@ -15,7 +15,6 @@ import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import java.security.Principal;
-import java.util.Optional;
 
 
 @Controller
@@ -65,7 +64,7 @@ public class ChatController {
             model.addAttribute("sendError", e.getMessage());
             return "chat";
         } catch (Exception e) {
-            model.addAttribute("sendError", "Interner Fehler");
+            model.addAttribute("sendError", "Internal error");
             return "chat";
         }
         return "chat";
@@ -84,7 +83,7 @@ public class ChatController {
             model.addAttribute("sendError", e.getMessage());
             return "redirect:/chat/" + chatId;
         } catch (Exception e) {
-            model.addAttribute("sendError", "Interner Fehler");
+            model.addAttribute("sendError", "Internal error");
             return "redirect:/chat/" + chatId;
         }
         return "redirect:/chat/" + chatId;
@@ -161,10 +160,10 @@ public class ChatController {
 
 
     @PostMapping("/{chatId}/settings/upload-picture")
-    public String uploadProfilePicture(@PathVariable("chatId") Long chatId,
-                                       @RequestParam("picture") MultipartFile file,
-                                       Principal principal,
-                                       RedirectAttributes redirectAttributes) {
+    public String uploadGroupPicture(@PathVariable("chatId") Long chatId,
+                                     @RequestParam("picture") MultipartFile file,
+                                     Principal principal,
+                                     RedirectAttributes redirectAttributes) {
         try {
             String email = principal.getName();
             chatRoomService.uploadGroupPicture(email, chatId, file);
@@ -178,9 +177,9 @@ public class ChatController {
     }
 
     @PostMapping("/{chatId}/settings/delete-picture")
-    public String deleteProfilePicture(@PathVariable("chatId") Long chatId,
-                                       Principal principal,
-                                       RedirectAttributes redirectAttributes) {
+    public String deleteGroupPicture(@PathVariable("chatId") Long chatId,
+                                     Principal principal,
+                                     RedirectAttributes redirectAttributes) {
         try {
             String email = principal.getName();
             chatRoomService.deleteGroupPicture(email, chatId);
@@ -205,7 +204,7 @@ public class ChatController {
             model.addAttribute("sendError", e.getMessage());
             return "redirect:/chat/" + chatId + "/settings";
         } catch (Exception e) {
-            model.addAttribute("sendError", "Interner Fehler");
+            model.addAttribute("sendError", "Internal error");
             return "redirect:/chat/" + chatId + "/settings";
         }
         return "redirect:/chat/" + chatId + "/settings";
@@ -217,7 +216,7 @@ public class ChatController {
                                            Principal principal) {
         try {
             if (!chatRoomService.isUserAdmin(principal.getName(), chatId)) {
-                return ResponseEntity.noContent().build();
+                return ResponseEntity.status(403).build();
             }
             chatRoomService.removeUserFromRoom(chatId, userEmail);
             return ResponseEntity.noContent().build();

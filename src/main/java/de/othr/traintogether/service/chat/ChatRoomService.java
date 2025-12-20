@@ -119,12 +119,12 @@ public class ChatRoomService {
         ChatRoom room = member.getChatRoom();
         String presentPictureUrl = room.getPictureUrl();
 
-        // Delete old profile picture if exists
+        // Delete old group picture if exists
         if (presentPictureUrl != null && !presentPictureUrl.isEmpty()) {
             minioService.deleteGroupPicture(presentPictureUrl);
         }
 
-        // Upload new profile picture
+        // Upload new group picture
         String pictureUrl = minioService.uploadGroupPicture(file, room.getId());
         room.setPictureUrl(pictureUrl);
         chatRoomRepository.save(room);

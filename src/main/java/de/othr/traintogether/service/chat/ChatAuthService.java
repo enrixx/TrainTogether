@@ -31,7 +31,7 @@ public class ChatAuthService {
     public ChatRoomMember getAdminMember(String userEmail, Long chatRoomId) {
 
         ChatRoomMember member = getActiveMember(userEmail, chatRoomId);
-        if (member == null || member.getRole() != ChatRole.ADMIN) {
+        if (!ChatRole.ADMIN.equals(member.getRole())) {
             throw new IllegalArgumentException("User is not admin of the chat room: " + chatRoomId);
         }
         return member;
