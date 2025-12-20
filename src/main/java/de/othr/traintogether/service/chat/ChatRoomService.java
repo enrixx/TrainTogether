@@ -38,12 +38,7 @@ public class ChatRoomService {
         User user2 = userRepository.findByEmail(userEmail2)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userEmail2));
 
-        ChatRoom room = new ChatRoom(ChatRoomType.DM);
-        ChatRoomMember member1 = new ChatRoomMember(room, user1, ChatRole.MEMBER);
-        ChatRoomMember member2 = new ChatRoomMember(room, user2, ChatRole.MEMBER);
-        room.addMember(member1);
-        room.addMember(member2);
-        chatRoomRepository.save(room);
+        createChatRoom(user1, user2);
     }
 
     @Transactional
@@ -139,5 +134,42 @@ public class ChatRoomService {
             }
         }
         return result;
+    }
+
+    @Transactional
+    public Long getOrCreateDm(User user1, User user2) {
+        // Lock users in consistent order to prevent deadlocks
+        if (user1.getId() < user2.getId()) {
+            userRepository.findByIdWithLock(user1.getId());
+            userRepository.findByIdWithLock(user2.getId());
+        } else {
+            userRepository.findByIdWithLock(user2.getId());
+            userRepository.findByIdWithLock(user1.getId());
+        }
+
+        // Check if DM exists
+        List<ChatRoom> user1Dms = chatRoomRepository.findByUserAndType(user1, ChatRoomType.DM);
+
+        for (ChatRoom room : user1Dms) {
+            boolean isUser2Member = room.getMembers().stream()
+                    .anyMatch(m -> m.getUser().getId().equals(user2.getId()));
+            if (isUser2Member) {
+                return room.getId();
+            }
+        }
+
+        ChatRoom room = createChatRoom(user1, user2);
+
+        return room.getId();
+    }
+
+    private ChatRoom createChatRoom(User user1, User user2) {
+        ChatRoom room = new ChatRoom(ChatRoomType.DM);
+        ChatRoomMember member1 = new ChatRoomMember(room, user1, ChatRole.MEMBER);
+        ChatRoomMember member2 = new ChatRoomMember(room, user2, ChatRole.MEMBER);
+        room.addMember(member1);
+        room.addMember(member2);
+        chatRoomRepository.save(room);
+        return room;
     }
 }

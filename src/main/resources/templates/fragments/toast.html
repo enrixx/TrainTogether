@@ -1,6 +1,6 @@
 <div th:fragment="toasts" xmlns:th="http://www.thymeleaf.org">
     <link rel="stylesheet" th:href="@{/css/toast.css}" />
-    <div class="toast-container-fixed" th:if="${sendError != null or error != null or success != null or info != null}">
+    <div class="toast-container-fixed" th:if="${sendError != null or error != null or success != null or info != null or warning != null}">
         <div class="toast align-items-center text-bg-danger border-0 mb-2" role="alert" aria-live="assertive" aria-atomic="true"
              th:if="${sendError != null or error != null}">
             <div class="d-flex">
@@ -21,6 +21,14 @@
              th:if="${info != null}">
             <div class="d-flex">
                 <div class="toast-body overflow-auto" th:text="${info}">Info message</div>
+                <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+
+        <div class="toast align-items-center text-bg-warning border-0 mb-2" role="alert" aria-live="polite" aria-atomic="true"
+             th:if="${warning != null}">
+            <div class="d-flex">
+                <div class="toast-body overflow-auto" th:text="${warning}">Warning message</div>
                 <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
         </div>

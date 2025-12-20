@@ -136,7 +136,7 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public UserDto findUserByEmail(String email) {
+    public UserDto findUserDTOByEmail(String email) {
         return userRepository.findByEmail(email)
                 .map(UserDto::new)
                 .orElse(null);
@@ -264,5 +264,21 @@ public class UserService {
     @Transactional
     public void cleanupExpiredPasswordResetTokens() {
         passwordResetTokenRepository.deleteByExpiryDateBefore(LocalDateTime.now());
+    }
+
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    public User getUserByEmailOrUsername(String identifier) {
+        return userRepository.findByEmail(identifier)
+                .or(() -> userRepository.findByUsername(identifier))
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    public User getUserById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
     }
 }

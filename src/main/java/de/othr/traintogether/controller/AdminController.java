@@ -67,14 +67,14 @@ public class AdminController {
             boolean emailSent = gymOwnerRequestService.approveRequest(id, adminEmail);
 
             if (emailSent) {
-                redirectAttributes.addFlashAttribute("successMessage",
+                redirectAttributes.addFlashAttribute("success",
                     messageSource.getMessage("admin.requests.approve.success", null, LocaleContextHolder.getLocale()));
             } else {
-                redirectAttributes.addFlashAttribute("warningMessage",
+                redirectAttributes.addFlashAttribute("warning",
                     messageSource.getMessage("admin.requests.approve.warning", null, LocaleContextHolder.getLocale()));
             }
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage",
+            redirectAttributes.addFlashAttribute("error",
                 messageSource.getMessage("admin.requests.approve.error", new Object[]{e.getMessage()}, LocaleContextHolder.getLocale()));
         }
 
@@ -90,14 +90,14 @@ public class AdminController {
             boolean emailSent = gymOwnerRequestService.rejectRequest(id, adminEmail);
 
             if (emailSent) {
-                redirectAttributes.addFlashAttribute("successMessage",
+                redirectAttributes.addFlashAttribute("success",
                     messageSource.getMessage("admin.requests.reject.success", null, LocaleContextHolder.getLocale()));
             } else {
-                redirectAttributes.addFlashAttribute("warningMessage",
+                redirectAttributes.addFlashAttribute("warning",
                     messageSource.getMessage("admin.requests.reject.warning", null, LocaleContextHolder.getLocale()));
             }
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage",
+            redirectAttributes.addFlashAttribute("error",
                 messageSource.getMessage("admin.requests.reject.error", new Object[]{e.getMessage()}, LocaleContextHolder.getLocale()));
         }
 
