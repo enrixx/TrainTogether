@@ -5,6 +5,8 @@ import de.othr.traintogether.model.User;
 import de.othr.traintogether.service.FriendshipService;
 import de.othr.traintogether.service.UserService;
 import de.othr.traintogether.service.chat.ChatRoomService;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,11 +22,13 @@ public class FriendController {
     private final FriendshipService friendshipService;
     private final UserService userService;
     private final ChatRoomService chatRoomService;
+    private final MessageSource messageSource;
 
-    public FriendController(FriendshipService friendshipService, UserService userService, ChatRoomService chatRoomService) {
+    public FriendController(FriendshipService friendshipService, UserService userService, ChatRoomService chatRoomService, MessageSource messageSource) {
         this.friendshipService = friendshipService;
         this.userService = userService;
         this.chatRoomService = chatRoomService;
+        this.messageSource = messageSource;
     }
 
     @GetMapping
@@ -47,9 +51,9 @@ public class FriendController {
         User user = userService.getUserByEmail(authentication.getName());
         try {
             friendshipService.unblockUser(user, userId);
-            redirectAttributes.addFlashAttribute("successMessage", "User unblocked successfully");
+            redirectAttributes.addFlashAttribute("success", messageSource.getMessage("friends.action.unblock.success", null, LocaleContextHolder.getLocale()));
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/friends";
     }
@@ -62,16 +66,16 @@ public class FriendController {
         User user = userService.getUserByEmail(authentication.getName());
         try {
             friendshipService.sendRequest(user, identifier, unblock);
-            redirectAttributes.addFlashAttribute("successMessage", "Friend request sent to " + identifier);
+            redirectAttributes.addFlashAttribute("success", messageSource.getMessage("friends.action.request.success", new Object[]{identifier}, LocaleContextHolder.getLocale()));
         } catch (IllegalStateException e) {
             if (e.getMessage().equals("You have blocked this user")) {
                 redirectAttributes.addFlashAttribute("confirmUnblockIdentifier", identifier);
-                redirectAttributes.addFlashAttribute("errorMessage", "You have blocked this user. Do you want to unblock and add them?");
+                redirectAttributes.addFlashAttribute("errorMessage", messageSource.getMessage("friends.error.blocked", null, LocaleContextHolder.getLocale()));
             } else {
-                redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+                redirectAttributes.addFlashAttribute("error", e.getMessage());
             }
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/friends";
     }
@@ -81,9 +85,9 @@ public class FriendController {
         User user = userService.getUserByEmail(authentication.getName());
         try {
             friendshipService.acceptRequest(id, user);
-            redirectAttributes.addFlashAttribute("successMessage", "Friend request accepted");
+            redirectAttributes.addFlashAttribute("success", messageSource.getMessage("friends.action.accept.success", null, LocaleContextHolder.getLocale()));
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/friends";
     }
@@ -93,9 +97,9 @@ public class FriendController {
         User user = userService.getUserByEmail(authentication.getName());
         try {
             friendshipService.declineRequest(id, user);
-            redirectAttributes.addFlashAttribute("successMessage", "Friend request declined");
+            redirectAttributes.addFlashAttribute("success", messageSource.getMessage("friends.action.decline.success", null, LocaleContextHolder.getLocale()));
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/friends";
     }
@@ -105,9 +109,9 @@ public class FriendController {
         User user = userService.getUserByEmail(authentication.getName());
         try {
             friendshipService.blockUser(user, userId);
-            redirectAttributes.addFlashAttribute("successMessage", "User blocked");
+            redirectAttributes.addFlashAttribute("success", messageSource.getMessage("friends.action.block.success", null, LocaleContextHolder.getLocale()));
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/friends";
     }
@@ -117,9 +121,9 @@ public class FriendController {
         User user = userService.getUserByEmail(authentication.getName());
         try {
             friendshipService.removeFriend(user, friendId);
-            redirectAttributes.addFlashAttribute("successMessage", "Friend removed");
+            redirectAttributes.addFlashAttribute("success", messageSource.getMessage("friends.action.remove.success", null, LocaleContextHolder.getLocale()));
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/friends";
     }
@@ -130,7 +134,7 @@ public class FriendController {
         User friend = userService.getUserById(friendId);
 
         if (!friendshipService.areFriends(user, friend)) {
-            redirectAttributes.addFlashAttribute("errorMessage", "You are not friends with this user.");
+            redirectAttributes.addFlashAttribute("error", messageSource.getMessage("friends.error.not.friends", null, LocaleContextHolder.getLocale()));
             return "redirect:/friends";
         }
 
