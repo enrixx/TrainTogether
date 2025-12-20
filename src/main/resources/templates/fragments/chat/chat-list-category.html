@@ -50,11 +50,11 @@
                             </svg>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end text-small">
-                            <li th:if="${chat.roomType == 'GROUP'}">
+                            <li th:if="${chat.roomType == 'GROUP' || chat.roomType == 'READ_ONLY'}">
                                 <a class="dropdown-item" th:href="@{/chat/{id}/settings(id=${chat.id})}"
                                    th:text="#{chat.settings}">Settings</a>
                             </li>
-                            <li th:if="${chat.roomType == 'GROUP'}">
+                            <li th:if="${chat.roomType == 'GROUP' || chat.roomType == 'READ_ONLY'}">
                                 <hr class="dropdown-divider">
                             </li>
                             <li>
@@ -62,7 +62,7 @@
                                         th:attr="data-delete-url=@{/chat/{id}/members/me(id=${chat.id})}, data-confirm=#{chat.leave_confirm}, data-target=|message-${chat.id}|"
                                         th:onclick="|fetchDelete(this.dataset.deleteUrl, this.dataset.confirm, this.dataset.target)|">
                                     <span th:if="${chat.roomType == 'DM'}" th:text="#{chat.remove}">Remove</span>
-                                    <span th:if="${chat.roomType == 'GROUP'}" th:text="#{chat.leave_group}">Leave</span>
+                                    <span th:if="${chat.roomType == 'GROUP' || chat.roomType == 'READ_ONLY'}" th:text="#{chat.leave_group}">Leave</span>
                                 </button>
                             </li>
                         </ul>

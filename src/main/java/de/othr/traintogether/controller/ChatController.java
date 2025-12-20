@@ -37,8 +37,8 @@ public class ChatController {
     public void populateCommon(Model model, Principal principal) {
         if (principal != null) {
             String userEmail = principal.getName();
-            model.addAttribute("courses", chatRoomService.findGroupsByUser(userEmail, Optional.of(false)));
-            model.addAttribute("groups", chatRoomService.findGroupsByUser(userEmail, Optional.of(true)));
+            model.addAttribute("courses", chatRoomService.findRedOnlyGroupsByUser(userEmail));
+            model.addAttribute("groups", chatRoomService.findGroupsByUser(userEmail));
             model.addAttribute("dms", chatRoomService.findDmByUser(userEmail));
             model.addAttribute("sendChatMessageDto", new SendChatMessageDto());
             model.addAttribute("title", "Chat");

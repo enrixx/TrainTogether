@@ -57,11 +57,11 @@ public class DataInitializer implements CommandLineRunner {
         chatRoomService.createDm("user@u", "admin@a");
         chatRoomService.createDm("user@u", "owner@o");
         java.util.HashSet<String> members = new java.util.HashSet<>(Set.of("user@u", "owner@o", "worker@w"));
-        chatRoomService.createGroup("Test Group", null, members, "admin@a", ChatRole.MEMBER);
-        chatRoomService.createGroup(" Read only Test Group", null, members, "admin@a", ChatRole.READ_ONLY);
+        chatRoomService.createGroup("Test Group", null, members, "admin@a");
+        chatRoomService.createReadOnlyGroup(" Read only Test Group", null, members, "admin@a");
 
         Long dm2 = chatRoomService.findDmByUser("user@u").getFirst().getId();
-        Long group = chatRoomService.findGroupsByUser("user@u", Optional.of(true)).getFirst().getId();
+        Long group = chatRoomService.findGroupsByUser("user@u").getFirst().getId();
 
         chatMessageService.sendMessage("admin@a", dm2, new SendChatMessageDto("Hi User, kurze Nachricht vom Seeder."));
 
