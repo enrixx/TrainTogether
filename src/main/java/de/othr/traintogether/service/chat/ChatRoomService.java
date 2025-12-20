@@ -44,12 +44,31 @@ public class ChatRoomService {
     }
 
     @Transactional
-    public void createDm(String userEmail1, String userEmail2) {
+    public Long createDm(String userEmail1, String userEmail2) {
         // resolve users (throw if not found)
         User user1 = chatAuthService.getUser(userEmail1);
         User user2 = chatAuthService.getUser(userEmail2);
 
-        createChatRoom(user1, user2);
+        // Try to find existing DM
+        Optional<ChatRoom> existing = chatRoomRepository.findDmBetweenUsers(user1.getId(), user2.getId());
+
+        if (existing.isPresent()) {
+            for (ChatRoomMember m : existing.get().getMembers()) {
+                if (m.isRemoved()) {
+                    m.setRemoved(false);
+                    chatRoomMemberRepository.save(m);
+                }
+            }
+            return existing.get().getId();
+        }
+
+        ChatRoom room = new ChatRoom(ChatRoomType.DM);
+        ChatRoomMember member1 = new ChatRoomMember(room, user1, ChatRole.MEMBER);
+        ChatRoomMember member2 = new ChatRoomMember(room, user2, ChatRole.MEMBER);
+        room.addMember(member1);
+        room.addMember(member2);
+        chatRoomRepository.save(room);
+        return room.getId();
     }
 
     @Transactional
@@ -226,40 +245,4 @@ public class ChatRoomService {
         return result;
     }
 
-    @Transactional
-    public Long getOrCreateDm(User user1, User user2) {
-        // Lock users in consistent order to prevent deadlocks
-        if (user1.getId() < user2.getId()) {
-            userRepository.findByIdWithLock(user1.getId());
-            userRepository.findByIdWithLock(user2.getId());
-        } else {
-            userRepository.findByIdWithLock(user2.getId());
-            userRepository.findByIdWithLock(user1.getId());
-        }
-
-        // Check if DM exists
-        List<ChatRoom> user1Dms = chatRoomRepository.findByUserAndType(user1, ChatRoomType.DM);
-
-        for (ChatRoom room : user1Dms) {
-            boolean isUser2Member = room.getMembers().stream()
-                    .anyMatch(m -> m.getUser().getId().equals(user2.getId()));
-            if (isUser2Member) {
-                return room.getId();
-            }
-        }
-
-        ChatRoom room = createChatRoom(user1, user2);
-
-        return room.getId();
-    }
-
-    private ChatRoom createChatRoom(User user1, User user2) {
-        ChatRoom room = new ChatRoom(ChatRoomType.DM);
-        ChatRoomMember member1 = new ChatRoomMember(room, user1, ChatRole.MEMBER);
-        ChatRoomMember member2 = new ChatRoomMember(room, user2, ChatRole.MEMBER);
-        room.addMember(member1);
-        room.addMember(member2);
-        chatRoomRepository.save(room);
-        return room;
-    }
 }
