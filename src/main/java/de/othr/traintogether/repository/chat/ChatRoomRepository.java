@@ -15,7 +15,7 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     @Query("select r from ChatRoom r join r.members m where m.user = :user and r.type = :type")
     List<ChatRoom> findByUserAndType(@Param("user") User user, @Param("type") ChatRoomType type);
 
-    // Find a DM room that contains both users (order-specific query). We will call it for both orders.
+    // Find a DM room that contains both users
     @Query("select r from ChatRoom r join r.members m1 join r.members m2 " +
             "where r.type = de.othr.traintogether.model.chat.ChatRoomType.DM " +
             "and m1.user.id = :userId1 and m2.user.id = :userId2")
