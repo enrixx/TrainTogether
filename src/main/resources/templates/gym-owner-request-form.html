@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::content})}">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title} ?: 'Gym Owner Request'">Gym Owner Request</title>
+</head>
+<body>
+
+<div th:fragment="content" class="overflow-auto h-100">
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="mb-0" th:text="#{gym.owner.request.form.title}">Request Gym Owner Role</h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- Error Message -->
+                        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <span th:text="${errorMessage}"></span>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        <p class="text-muted" th:text="#{gym.owner.request.form.description}">
+                            Submit a request to become a gym owner. An admin will review your request and you will be notified once it's approved.
+                        </p>
+                        <form th:action="@{/gym-owner-request}" th:object="${gymOwnerRequestDto}" method="post">
+                            <div class="mb-3">
+                                <label for="gymName" class="form-label" th:text="#{gym.owner.request.form.gymname.label}">Gym Name *</label>
+                                <input type="text"
+                                       class="form-control"
+                                       th:class="${#fields.hasErrors('gymName')} ? 'form-control is-invalid' : 'form-control'"
+                                       id="gymName"
+                                       th:field="*{gymName}"
+                                       th:placeholder="#{gym.owner.request.form.gymname.placeholder}">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('gymName')}" th:errors="*{gymName}">
+                                    Gym name error
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="gymAddress" class="form-label" th:text="#{gym.owner.request.form.address.label}">Gym Address *</label>
+                                <input type="text"
+                                       class="form-control"
+                                       th:class="${#fields.hasErrors('gymAddress')} ? 'form-control is-invalid' : 'form-control'"
+                                       id="gymAddress"
+                                       th:field="*{gymAddress}"
+                                       th:placeholder="#{gym.owner.request.form.address.placeholder}">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('gymAddress')}" th:errors="*{gymAddress}">
+                                    Address error
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-8">
+                                    <label for="city" class="form-label" th:text="#{gym.owner.request.form.city.label}">City *</label>
+                                    <input type="text"
+                                           class="form-control"
+                                           th:class="${#fields.hasErrors('city')} ? 'form-control is-invalid' : 'form-control'"
+                                           id="city"
+                                           th:field="*{city}"
+                                           th:placeholder="#{gym.owner.request.form.city.placeholder}">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('city')}" th:errors="*{city}">
+                                        City error
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="postalCode" class="form-label" th:text="#{gym.owner.request.form.postalcode.label}">Postal Code *</label>
+                                    <input type="text"
+                                           class="form-control"
+                                           th:class="${#fields.hasErrors('postalCode')} ? 'form-control is-invalid' : 'form-control'"
+                                           id="postalCode"
+                                           th:field="*{postalCode}"
+                                           th:placeholder="#{gym.owner.request.form.postalcode.placeholder}">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('postalCode')}" th:errors="*{postalCode}">
+                                        Postal code error
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="phoneNumber" class="form-label" th:text="#{gym.owner.request.form.phone.label}">Phone Number (optional)</label>
+                                <input type="text"
+                                       class="form-control"
+                                       th:class="${#fields.hasErrors('phoneNumber')} ? 'form-control is-invalid' : 'form-control'"
+                                       id="phoneNumber"
+                                       th:field="*{phoneNumber}"
+                                       th:placeholder="#{gym.owner.request.form.phone.placeholder}">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}">
+                                    Phone number error
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="gymDescription" class="form-label" th:text="#{gym.owner.request.form.description.label}">Gym Description & Why do you want to become a gym owner? *</label>
+                                <textarea class="form-control"
+                                          th:class="${#fields.hasErrors('gymDescription')} ? 'form-control is-invalid' : 'form-control'"
+                                          id="gymDescription"
+                                          th:field="*{gymDescription}"
+                                          rows="6"
+                                          th:placeholder="#{gym.owner.request.form.description.placeholder}"></textarea>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('gymDescription')}" th:errors="*{gymDescription}">
+                                    Description error
+                                </div>
+                                <small class="text-muted" th:text="#{gym.owner.request.form.description.hint}">Maximum 1000 characters</small>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <a th:href="@{/home}" class="btn btn-secondary" th:text="#{gym.owner.request.form.cancel}">Cancel</a>
+                                <button type="submit" class="btn btn-primary" th:text="#{gym.owner.request.form.submit}">Submit Request</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,6 +1,13 @@
 <div th:fragment="nav-sidebar" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
     <div class="d-flex flex-column flex-shrink-0 p-3 bg-body-tertiary h-100" style="width: 280px;">
         <ul class="nav nav-pills flex-column mb-auto">
+            <li sec:authorize="hasAuthority('ADMIN')">
+                <a href="/admin/dashboard" class="nav-link link-body-emphasis">
+                    <img class="bi pe-none me-2" th:src="@{/images/svg/person-circle.svg}" width="16" height="16"
+                         alt=""/>
+                    <span th:text="#{nav.admin.dashboard}">Admin Dashboard</span>
+                </a>
+            </li>
             <li sec:authorize="hasAnyAuthority('ADMIN', 'GYM_OWNER', 'GYM_WORKER', 'PENDING_GYM_WORKER', 'PENDING_GYM_WORKER')">
                 <a href="/Dashboard" class="nav-link link-body-emphasis">
                     <img class="bi pe-none me-2" th:src="@{/images/svg/person-circle.svg}" width="16" height="16"
@@ -20,6 +27,13 @@
                     <img class="bi pe-none me-2" th:src="@{/images/svg/person-circle.svg}" width="16" height="16"
                          alt=""/>
                     <span th:text="#{nav.chat}">Chat</span>
+                </a>
+            </li>
+            <li sec:authorize="hasAnyAuthority('ADMIN','USER', 'GYM_OWNER', 'GYM_WORKER')">
+                <a href="/friends" class="nav-link link-body-emphasis">
+                    <img class="bi pe-none me-2" th:src="@{/images/svg/person-circle.svg}" width="16" height="16"
+                         alt=""/>
+                    <span th:text="#{nav.friends}">Friends</span>
                 </a>
             </li>
             <li sec:authorize="hasAnyAuthority('ADMIN','USER')">

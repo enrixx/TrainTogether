@@ -26,18 +26,14 @@ public class RegisterDto {
     @Size(max = 50, message = "{error.lastname.max.length}")
     private String lastName;
 
-    @NotBlank
-    private String role;
-
     public RegisterDto() {}
 
-    public RegisterDto(String email, String password, String username, String firstName, String lastName, String role) {
+    public RegisterDto(String email, String password, String username, String firstName, String lastName) {
         this.email = email;
         this.password = password;
         this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
-        this.role = role;
     }
 
     public String getEmail() { return email; }
@@ -55,6 +51,4 @@ public class RegisterDto {
     public String getLastName() { return lastName; }
     public void setLastName(String lastName) { this.lastName = lastName; }
 
-    public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
 }

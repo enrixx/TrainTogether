@@ -1,6 +1,9 @@
 package de.othr.traintogether.controller;
 
 import de.othr.traintogether.dto.UserDto;
+import de.othr.traintogether.model.RequestStatus;
+import de.othr.traintogether.repository.GymOwnerRequestRepository;
+import de.othr.traintogether.service.GymOwnerRequestService;
 import de.othr.traintogether.service.UserService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -13,9 +16,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class MainLayoutController {
 
     private final UserService userService;
+    private final GymOwnerRequestRepository gymOwnerRequestRepository;
+    private final GymOwnerRequestService gymOwnerRequestService;
 
-    public MainLayoutController(UserService userService) {
+    public MainLayoutController(UserService userService,
+                               GymOwnerRequestRepository gymOwnerRequestRepository,
+                               GymOwnerRequestService gymOwnerRequestService) {
         this.userService = userService;
+        this.gymOwnerRequestRepository = gymOwnerRequestRepository;
+        this.gymOwnerRequestService = gymOwnerRequestService;
     }
 
     @GetMapping({"/", "/home"})
@@ -24,9 +33,19 @@ public class MainLayoutController {
 
         if (authentication != null && authentication.isAuthenticated()) {
             String email = authentication.getName();
-            UserDto user = userService.findUserByEmail(email);
+            UserDto user = userService.findUserDTOByEmail(email);
             if (user != null) {
                 model.addAttribute("currentUser", user);
+
+                boolean hasPendingRequest = gymOwnerRequestRepository.existsByUserIdAndStatus(
+                    user.getId(), RequestStatus.PENDING
+                );
+                model.addAttribute("hasPendingGymOwnerRequest", hasPendingRequest);
+
+                // Check if user has a rejected gym owner request (for reapplication button)
+                // Only show rejected banner if user has NO pending request
+                boolean hasRejectedRequest = !hasPendingRequest && gymOwnerRequestService.hasRejectedRequest(email);
+                model.addAttribute("hasRejectedGymOwnerRequest", hasRejectedRequest);
             }
         }
 

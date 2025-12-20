@@ -2,6 +2,7 @@ package de.othr.traintogether.controller;
 
 import de.othr.traintogether.dto.UpdateProfileDto;
 import de.othr.traintogether.dto.UserDto;
+import de.othr.traintogether.service.GymOwnerRequestService;
 import de.othr.traintogether.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -22,15 +23,17 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class ProfileController {
 
     private final UserService userService;
+    private final GymOwnerRequestService gymOwnerRequestService;
 
-    public ProfileController(UserService userService) {
+    public ProfileController(UserService userService, GymOwnerRequestService gymOwnerRequestService) {
         this.userService = userService;
+        this.gymOwnerRequestService = gymOwnerRequestService;
     }
 
     @GetMapping
     public String profile(Model model, Authentication authentication) {
         String email = authentication.getName();
-        UserDto user = userService.findUserByEmail(email);
+        UserDto user = userService.findUserDTOByEmail(email);
 
         if (user == null) {
             return "redirect:/login";
@@ -39,6 +42,12 @@ public class ProfileController {
         model.addAttribute("title", "Profile");
         model.addAttribute("user", user);
         model.addAttribute("updateProfileDto", new UpdateProfileDto(user.getEmail(), user.getUsername(), user.getFirstName(), user.getLastName()));
+
+        // Check if user has rejected gym owner request (for reapplication button)
+        // Only show if user has NO pending request
+        boolean hasPendingRequest = gymOwnerRequestService.hasPendingRequest(email);
+        boolean hasRejectedRequest = !hasPendingRequest && gymOwnerRequestService.hasRejectedRequest(email);
+        model.addAttribute("hasRejectedGymOwnerRequest", hasRejectedRequest);
 
         return "profile";
     }
@@ -54,7 +63,7 @@ public class ProfileController {
 
         if (bindingResult.hasErrors()) {
             String email = authentication.getName();
-            UserDto user = userService.findUserByEmail(email);
+            UserDto user = userService.findUserDTOByEmail(email);
             model.addAttribute("user", user);
             model.addAttribute("title", "Profile");
             return "profile";
@@ -77,7 +86,7 @@ public class ProfileController {
             return "redirect:/profile";
         } catch (Exception e) {
             String email = authentication.getName();
-            UserDto user = userService.findUserByEmail(email);
+            UserDto user = userService.findUserDTOByEmail(email);
             model.addAttribute("user", user);
             model.addAttribute("title", "Profile");
             model.addAttribute("errorMessage", e.getMessage());
@@ -95,7 +104,7 @@ public class ProfileController {
 
         // Validate password fields
         if (updateDto.getCurrentPassword() == null || updateDto.getCurrentPassword().isEmpty()) {
-            UserDto user = userService.findUserByEmail(email);
+            UserDto user = userService.findUserDTOByEmail(email);
             model.addAttribute("user", user);
             model.addAttribute("title", "Profile");
             model.addAttribute("passwordError", "Current password is required");
@@ -103,7 +112,7 @@ public class ProfileController {
         }
 
         if (updateDto.getNewPassword() == null || updateDto.getNewPassword().isEmpty()) {
-            UserDto user = userService.findUserByEmail(email);
+            UserDto user = userService.findUserDTOByEmail(email);
             model.addAttribute("user", user);
             model.addAttribute("title", "Profile");
             model.addAttribute("passwordError", "New password is required");
@@ -111,7 +120,7 @@ public class ProfileController {
         }
 
         if (!updateDto.getNewPassword().equals(updateDto.getConfirmPassword())) {
-            UserDto user = userService.findUserByEmail(email);
+            UserDto user = userService.findUserDTOByEmail(email);
             model.addAttribute("user", user);
             model.addAttribute("title", "Profile");
             model.addAttribute("passwordError", "Passwords do not match");
@@ -124,7 +133,7 @@ public class ProfileController {
             redirectAttributes.addFlashAttribute("successMessage", "Password updated successfully!");
             return "redirect:/profile";
         } else {
-            UserDto user = userService.findUserByEmail(email);
+            UserDto user = userService.findUserDTOByEmail(email);
             model.addAttribute("user", user);
             model.addAttribute("title", "Profile");
             model.addAttribute("passwordError", "Current password is incorrect");
