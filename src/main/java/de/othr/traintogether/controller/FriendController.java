@@ -125,9 +125,14 @@ public class FriendController {
     }
 
     @GetMapping("/chat/{friendId}")
-    public String chatWithFriend(@PathVariable Long friendId, Authentication authentication) {
+    public String chatWithFriend(@PathVariable Long friendId, Authentication authentication, RedirectAttributes redirectAttributes) {
         User user = userService.getUserByEmail(authentication.getName());
         User friend = userService.getUserById(friendId);
+
+        if (!friendshipService.areFriends(user, friend)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "You are not friends with this user.");
+            return "redirect:/friends";
+        }
 
         Long chatRoomId = chatRoomService.getOrCreateDm(user, friend);
 

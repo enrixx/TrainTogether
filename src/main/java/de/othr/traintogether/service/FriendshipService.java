@@ -167,4 +167,10 @@ public class FriendshipService {
 
         friendshipRepository.delete(friendship);
     }
+
+    public boolean areFriends(User user1, User user2) {
+        return friendshipRepository.findBetweenUsers(user1, user2)
+                .map(f -> f.getStatus() == FriendshipStatus.ACCEPTED)
+                .orElse(false);
+    }
 }
