@@ -138,6 +138,15 @@ public class ChatRoomService {
 
     @Transactional
     public Long getOrCreateDm(User user1, User user2) {
+        // Lock users in consistent order to prevent deadlocks
+        if (user1.getId() < user2.getId()) {
+            userRepository.findByIdWithLock(user1.getId());
+            userRepository.findByIdWithLock(user2.getId());
+        } else {
+            userRepository.findByIdWithLock(user2.getId());
+            userRepository.findByIdWithLock(user1.getId());
+        }
+
         // Check if DM exists
         List<ChatRoom> user1Dms = chatRoomRepository.findByUserAndType(user1, ChatRoomType.DM);
 

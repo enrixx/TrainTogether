@@ -37,6 +37,15 @@ public class FriendshipService {
             throw new IllegalArgumentException("Cannot send friend request to yourself");
         }
 
+        // Lock users in consistent order to prevent race conditions
+        if (sender.getId() < receiver.getId()) {
+            userRepository.findByIdWithLock(sender.getId());
+            userRepository.findByIdWithLock(receiver.getId());
+        } else {
+            userRepository.findByIdWithLock(receiver.getId());
+            userRepository.findByIdWithLock(sender.getId());
+        }
+
         Optional<Friendship> existing = friendshipRepository.findBetweenUsers(sender, receiver);
         if (existing.isPresent()) {
             Friendship friendship = existing.get();
@@ -128,6 +137,19 @@ public class FriendshipService {
     }
 
     public void blockUser(User blocker, Long userIdToBlock) {
+        if (blocker.getId().equals(userIdToBlock)) {
+            throw new IllegalArgumentException("Cannot block yourself");
+        }
+
+        // Lock users in consistent order to prevent race conditions
+        if (blocker.getId() < userIdToBlock) {
+            userRepository.findByIdWithLock(blocker.getId());
+            userRepository.findByIdWithLock(userIdToBlock);
+        } else {
+            userRepository.findByIdWithLock(userIdToBlock);
+            userRepository.findByIdWithLock(blocker.getId());
+        }
+
         User toBlock = userRepository.findById(userIdToBlock)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
