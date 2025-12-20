@@ -17,8 +17,8 @@
                 <form th:action="@{/friends/request}" method="post" class="mt-2">
                     <input type="hidden" name="identifier" th:value="${confirmUnblockIdentifier}">
                     <input type="hidden" name="unblock" value="true">
-                    <button type="submit" class="btn btn-warning btn-sm">Unblock and Add</button>
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="alert">Cancel</button>
+                    <button type="submit" class="btn btn-warning btn-sm" th:text="#{friends.unblock.confirm.button}">Unblock and Add</button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="alert" th:text="#{friends.unblock.cancel.button}">Cancel</button>
                 </form>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -105,7 +105,7 @@
 
             <!-- Blocked Users -->
             <div th:if="${not #lists.isEmpty(blockedUsers)}" class="card mt-4">
-                <div class="card-header text-danger">
+                <div class="card-header text-danger" th:text="#{friends.blocked.title}">
                     Blocked Users
                 </div>
                 <ul class="list-group list-group-flush">
@@ -115,7 +115,7 @@
                         </div>
                         <form th:action="@{/friends/unblock}" method="post">
                             <input type="hidden" name="userId" th:value="${blocked.id}">
-                            <button type="submit" class="btn btn-outline-secondary btn-sm">Unblock</button>
+                            <button type="submit" class="btn btn-outline-secondary btn-sm" th:text="#{friends.blocked.unblock.button}">Unblock</button>
                         </form>
                     </li>
                 </ul>
