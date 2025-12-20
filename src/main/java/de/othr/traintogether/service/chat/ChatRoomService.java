@@ -148,14 +148,9 @@ public class ChatRoomService {
         }
 
         // Check if DM exists
-        List<ChatRoom> user1Dms = chatRoomRepository.findByUserAndType(user1, ChatRoomType.DM);
-
-        for (ChatRoom room : user1Dms) {
-            boolean isUser2Member = room.getMembers().stream()
-                    .anyMatch(m -> m.getUser().getId().equals(user2.getId()));
-            if (isUser2Member) {
-                return room.getId();
-            }
+        Optional<ChatRoom> existingRoom = chatRoomRepository.findDmBetweenUsers(user1, user2);
+        if (existingRoom.isPresent()) {
+            return existingRoom.get().getId();
         }
 
         ChatRoom room = createChatRoom(user1, user2);
