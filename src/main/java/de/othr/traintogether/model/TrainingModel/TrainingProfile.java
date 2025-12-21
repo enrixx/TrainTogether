@@ -76,4 +76,7 @@ public class TrainingProfile {
         this.activeTraininSplitId = activeTraininSplitId;
     }
 
+    public void addMeasurements(BodyMeasurements measurements) {
+        this.measurements.add(measurements);
+    }
 }

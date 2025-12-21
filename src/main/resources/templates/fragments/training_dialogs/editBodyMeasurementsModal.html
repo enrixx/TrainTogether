@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="editBodyMeasurementsModal">
+    <div class="modal fade" id="editBodyMeasurementsModal" tabindex="-1" aria-labelledby="editBodyMeasurementsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editBodyMeasurementsModalLabel">Body Measurements bearbeiten</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form th:action="@{/training/profile/me/update-measurements}" method="post">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="gewicht" class="form-label">Weight (kg)</label>
+                                    <input type="number" class="form-control" id="gewicht" name="gewicht" step="0.1" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="groesse" class="form-label">Height (cm)</label>
+                                    <input type="number" class="form-control" id="groesse" name="groesse" step="0.1" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="armLinks" class="form-label">Arm Links</label>
+                                    <input type="number" class="form-control" id="armLinks" name="armLinks" step="0.1" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="armRechts" class="form-label">Arm Rechts</label>
+                                    <input type="number" class="form-control" id="armRechts" name="armRechts" step="0.1" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="unterarmLinks" class="form-label">Unterarm Links</label>
+                                    <input type="number" class="form-control" id="unterarmLinks" name="unterarmLinks" step="0.1" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="unterarmRechts" class="form-label">Unterarm Rechts</label>
+                                    <input type="number" class="form-control" id="unterarmRechts" name="unterarmRechts" step="0.1" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="beinLinks" class="form-label">Bein Links</label>
+                                    <input type="number" class="form-control" id="beinLinks" name="beinLinks" step="0.1" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="beinRechts" class="form-label">Bein Rechts</label>
+                                    <input type="number" class="form-control" id="beinRechts" name="beinRechts" step="0.1" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="brust" class="form-label">Brust</label>
+                                    <input type="number" class="form-control" id="brust" name="brust" step="0.1" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="schulter" class="form-label">Schulter</label>
+                                    <input type="number" class="form-control" id="schulter" name="schulter" step="0.1" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="taille" class="form-label">Taille</label>
+                                    <input type="number" class="form-control" id="taille" name="taille" step="0.1" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="huefte" class="form-label">Hüfte</label>
+                                    <input type="number" class="form-control" id="huefte" name="huefte" step="0.1" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                            <button type="submit" class="btn btn-primary">Speichern</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,16 +1,150 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::content})}">
+<html lang="de" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::content})}">
 <head>
     <meta charset="UTF-8">
-    <title th:text="${title} ?: 'Workouts'">Workouts</title>
+    <title>Workouts</title>
 </head>
 <body>
 <div th:fragment="content">
-    <div class="container">
-        <h2>Workouts</h2>
-        <p>Liste der Workouts kommt hier.</p>
-    </div>
+    <main class="container-fluid p-5">
+
+        <!-- View for Existing Workout -->
+        <div id="view-todays-workout" th:if="${todaysWorkout != null and not todaysWorkout.isEmpty()}">
+            <div class="p-4 mb-4 bg-body-tertiary rounded-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3>Today's Logged Workout</h3>
+                    <div class="d-flex gap-2">
+                        <a th:href="@{/workouts/previous}" class="btn btn-secondary">See Previous Workouts</a>
+                        <button id="edit-workout-btn" class="btn btn-primary">Edit Workout</button>
+                    </div>
+                </div>
+                <hr>
+                <h5 th:text="${loggedDayName}"></h5>
+                <ul class="list-group">
+                    <li th:each="ex : ${todaysWorkout}" class="list-group-item">
+                        <span th:text="${ex.exerciseName}" class="fw-bold"></span>
+                        <span th:if="${ex.exerciseName != 'RESTDAY'}">
+                             - <span th:text="${ex.sets} + ' Sets'"></span> /
+                            <span th:text="${ex.reps} + ' Reps'"></span>
+                        </span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- View for Logging a New Workout -->
+        <div id="log-new-workout" th:style="${todaysWorkout != null and not todaysWorkout.isEmpty() ? 'display: none;' : ''}">
+            <!-- Header with Split Name and Edit Button -->
+            <div class="p-4 mb-4 bg-body-tertiary rounded-3" >
+                <div class="container-fluid m-0">
+                    <div class="row">
+                        <div class="col d-flex justify-content-start">
+                            <h3 th:if="${split != null}" th:text="'Training Split: ' + ${split.splitName}">Push-Pull-Legs</h3>
+                        </div>
+                        <div class="col d-flex justify-content-end gap-2">
+                            <a th:href="@{/workouts/previous}" class="btn btn-secondary" th:if="${todaysWorkout == null or todaysWorkout.isEmpty()}">See Previous Workouts</a>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editSplitModal">
+                                Trainingssplit bearbeiten
+                            </button>
+                            <button id="cancel-edit-btn" class="btn btn-outline-secondary"
+                                    th:if="${todaysWorkout != null and not todaysWorkout.isEmpty()}">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                    <hr>
+                </div>
+
+                <div class="row g-2 w-100">
+                    <div class="col" th:each="day : ${split?.days}">
+                        <div class="p-2 border rounded-3 bg-body-secondary text-center h-100 d-flex flex-column w-100"
+                             style="cursor: pointer;"
+                             data-bs-toggle="collapse"
+                             th:data-bs-target="'#collapse-day-' + ${day.id}"
+                             aria-expanded="false"
+                             th:aria-controls="'collapse-day-' + ${day.id}">
+
+                            <strong th:text="${day.weekday}">Montag</strong>
+                            <ul class="list-unstyled mt-2 flex-grow-1">
+                                <li th:each="ex : ${day.personalExercises}" th:text="${ex.name} + ' - '   + 'X'  + ${ex.sets} "></li>
+                                <li th:if="${#lists.isEmpty(day.personalExercises)}" class="text-muted">RESTDAY</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Collapsible Forms for Logging Workouts -->
+            <div class="accordion" id="workoutAccordion">
+                <div th:each="day : ${split?.days}"
+                     class="collapse mt-3"
+                     th:classappend="${day.weekday.name() == currentDayOfWeek ? 'show' : ''}"
+                     th:id="'collapse-day-' + ${day.id}"
+                     data-bs-parent="#workoutAccordion">
+                    <div class="card card-body">
+                        <h4 th:text="'Log Workout: ' + ${day.weekday}"></h4>
+
+                        <form class="workout-log-form" th:action="@{/workouts/log}" method="post">
+                            <input type="hidden" name="trainingDayId" th:value="${day.id}"/>
+
+                            <div class="planned-exercises">
+                                <div th:each="exercise : ${day.personalExercises}" class="mb-3 row align-items-start exercise-log-row planned-row">
+                                    <label class="col-sm-3 col-form-label fw-bold" th:text="${exercise.name}"></label>
+                                    <input type="hidden" class="personal-exercise-id" th:value="${exercise.id}"/>
+                                    <div class="col-sm-2">
+                                        <div class="input-group">
+                                            <span class="input-group-text">Sets</span>
+                                            <input type="number" class="form-control sets-input" th:value="${exercise.sets}" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="reps-container d-flex flex-wrap gap-2"></div>
+                                    </div>
+                                    <div class="col-sm-1">
+                                        <button type="button" class="btn btn-sm btn-danger remove-row-btn">X</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="adhoc-exercises-container"></div>
+
+                            <button type="button" class="btn btn-outline-primary mt-3 add-adhoc-exercise-btn">+ Add Extra Exercise</button>
+                            <button type="submit" class="btn btn-success mt-3">Log Workout</button>
+
+                            <!-- Rest Day Button -->
+                            <button type="submit" formaction="/workouts/log-restday" class="btn btn-info mt-3">Mark as Rest Day</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Include Edit Split Modal -->
+        <div th:replace="~{fragments/training_dialogs/editSplitModal :: editSplitModal}"></div>
+
+    </main>
+
+    <script th:inline="javascript">
+    /*<![CDATA[*/
+        // Define server-side data as global JS variables
+        window.loggedDayId = /*[[${loggedDayId}]]*/ null;
+        window.todaysWorkout = /*[[${todaysWorkout}]]*/ null;
+        window.allExercises = /*[[${allExercises}]]*/ [];
+
+        $(document).ready(function() {
+            // Initialize rep inputs for the auto-expanded day
+            $('.collapse.show').find('.sets-input').each(function() {
+                generateRepInputs(this);
+            });
+        });
+    /*]]>*/
+    </script>
+    <script src="/js/workout-logger.js"></script>
+
+    <style>
+        .deleted-exercise { text-decoration: line-through; background-color: #ffe6e6; opacity: 0.7; }
+    </style>
 </div>
 </body>
 </html>
-

@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "training_exercises")
 @Getter
@@ -24,16 +26,19 @@ public class TrainingExercise {
     private PersonalExercise personalExercise;
 
     private int sets;
-    private int reps;
+    private String reps;
 
     @ManyToOne
     @JoinColumn(name = "day_id")
     private TrainingDay day;
 
-    public TrainingExercise(PersonalExercise exercise, int sets, int reps, TrainingDay day) {
+    private LocalDate date;
+
+    public TrainingExercise(PersonalExercise exercise, int sets, String reps, TrainingDay day, LocalDate date) {
         this.personalExercise = exercise;
         this.sets = sets;
         this.reps = reps;
         this.day = day;
+        this.date = date;
     }
 }
