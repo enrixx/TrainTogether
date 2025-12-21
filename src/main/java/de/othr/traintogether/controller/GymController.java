@@ -11,17 +11,28 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/gyms")
+@Controller
+@RequestMapping("/gym")
 public class GymController {
 
     private final GymService gymService;
     private final UserRepository userRepository;
 
     public GymController(GymService gymService, UserRepository userRepository) {
+    public GymController(GymService gymService) {
         this.gymService = gymService;
         this.userRepository = userRepository;
     }
@@ -41,6 +52,14 @@ public class GymController {
     @GetMapping("/search/city")
     public ResponseEntity<List<Gym>> searchByCity(@RequestParam String city) {
         return ResponseEntity.ok(gymService.searchByCity(city));
+    public String showGymPage(@PathVariable Long id, Model model) {
+        Optional<Gym> gym = gymService.getGymById(id);
+        if (gym.isPresent()) {
+            model.addAttribute("gym", gym.get());
+            return "gym";
+        } else {
+            return "redirect:/map";
+        }
     }
 
     @GetMapping("/search/name")
@@ -54,6 +73,16 @@ public class GymController {
         User owner = userRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return ResponseEntity.ok(gymService.findByOwnerId(owner.getId()));
+    @GetMapping("/edit/{id}")
+    @PreAuthorize("hasAuthority('GYMOWNER')")
+    public String showEditGymPage(@PathVariable Long id, Model model) {
+        Optional<Gym> gym = gymService.getGymById(id);
+        if (gym.isPresent()) {
+            model.addAttribute("gym", gym.get());
+            return "edit-gym";
+        } else {
+            return "redirect:/map";
+        }
     }
 
     @PostMapping
@@ -72,6 +101,12 @@ public class GymController {
 
         Gym savedGym = gymService.create(gym, owner);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedGym);
+    @PostMapping("/edit/{id}")
+    @PreAuthorize("hasAuthority('GYMOWNER')")
+    public String editGym(@PathVariable Long id, @ModelAttribute Gym gym) {
+        gym.setId(id);
+        gymService.saveGym(gym);
+        return "redirect:/gym/" + id;
     }
 
     @PutMapping("/{id}")

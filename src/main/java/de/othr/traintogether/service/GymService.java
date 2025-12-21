@@ -25,10 +25,13 @@ public class GymService {
     @Transactional(readOnly = true)
     public List<Gym> findAll() {
         return gymRepository.findAll();
+    public List<Gym> getAllGyms() {
+        return (List<Gym>) gymRepository.findAll();
     }
 
     @Transactional(readOnly = true)
     public Optional<Gym> findById(Long id) {
+    public Optional<Gym> getGymById(Long id) {
         return gymRepository.findById(id);
     }
 
@@ -42,6 +45,8 @@ public class GymService {
     public Gym save(Gym gym) {
         logger.info("Saving gym: {}", gym.getName());
         return gymRepository.save(gym);
+    public void saveGym(Gym gym) {
+        gymRepository.save(gym);
     }
 
     @Transactional

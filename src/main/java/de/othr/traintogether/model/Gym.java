@@ -1,5 +1,9 @@
 package de.othr.traintogether.model;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,6 +26,8 @@ public class Gym {
 
     @Column(length = 100, nullable = false)
     private String name;
+    private double lat;
+    private double lon;
 
     @Column(length = 200)
     private String address;

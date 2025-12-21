@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Gym</title>
+</head>
+<body>
+<h1 th:text="${gym.name}">Gym Name</h1>
+<div sec:authorize="hasAuthority('GYMOWNER')">
+    <a th:href="@{/gym/edit/{id}(id=${gym.id})}">Edit</a>
+</div>
+</body>
+</html>ßß

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Gym</title>
+</head>
+<body>
+<h1>Edit Gym</h1>
+<form th:action="@{/gym/edit/{id}(id=${gym.id})}" th:object="${gym}" method="post">
+    <div>
+        <label for="name">Name:</label>
+        <input type="text" id="name" th:field="*{name}" />
+    </div>
+    <div>
+        <label for="lat">Latitude:</label>
+        <input type="text" id="lat" th:field="*{lat}" />
+    </div>
+    <div>
+        <label for="lon">Longitude:</label>
+        <input type="text" id="lon" th:field="*{lon}" />
+    </div>
+    <div>
+        <button type="submit">Save</button>
+    </div>
+</form>
+</body>
+</html>
