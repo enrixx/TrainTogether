@@ -10,5 +10,5 @@
         <p class="small me-3 mb-3 rounded-3 text-muted" th:text="${message.sentAt}">Time</p>
     </div>
     <img th:if="${roomType != 'DM'}" th:src="${message.sender.SenderPictureUrl}"
-         alt="avatar" style="width: 45px; height: 45px; object-fit: cover;">
+         alt="avatar" class="rounded-circle" style="width: 45px; height: 45px; object-fit: cover;">
 </div>

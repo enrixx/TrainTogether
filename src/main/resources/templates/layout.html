@@ -3,12 +3,15 @@
       th:fragment="layout(pageContent)">
 <head>
     <meta charset="UTF-8">
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
     <title>TrainTogether</title>
     <script th:src="@{/webjars/bootstrap/5.3.8/js/bootstrap.bundle.min.js}"></script>
     <script th:src="@{/webjars/jquery/3.7.1/jquery.min.js}"></script>
     <link rel="stylesheet"
           th:href="@{/webjars/bootstrap/5.3.8/css/bootstrap.min.css}"/>
     <script th:src="@{/webjars/popper.js/2.11.7/umd/popper.min.js}" defer></script>
+    <script th:src="@{/js/fetch-delete.js}" defer></script>
 </head>
 <body class="vh-100 d-flex flex-column">
 

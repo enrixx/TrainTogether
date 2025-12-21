@@ -1,6 +1,6 @@
 <form th:fragment="messageInput"
       th:if="${messagePage.canSend}"
-      th:action="@{/chat/{chatId}(chatId=${messagePage.roomId})}" method="post"
+      th:action="@{/chat/{chatId}/messages(chatId=${messagePage.roomId})}" method="post"
       th:object="${sendChatMessageDto}"
       class="d-flex align-items-center gap-2 pe-3 pt-3 mt-2"
       style="flex:0 0 auto;">

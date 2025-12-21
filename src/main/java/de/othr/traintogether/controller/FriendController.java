@@ -138,7 +138,7 @@ public class FriendController {
             return "redirect:/friends";
         }
 
-        Long chatRoomId = chatRoomService.getOrCreateDm(user, friend);
+        Long chatRoomId = chatRoomService.createDm(user.getEmail(), friend.getEmail());
 
         return "redirect:/chat/" + chatRoomId;
     }

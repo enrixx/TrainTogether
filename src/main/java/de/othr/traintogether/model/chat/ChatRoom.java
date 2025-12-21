@@ -36,6 +36,9 @@ public class ChatRoom {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
+    @Column(name = "description", length = 255)
+    private String description;
+
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ChatRoomMember> members = new HashSet<>();
 
@@ -50,13 +53,15 @@ public class ChatRoom {
     }
 
     public void addMember(ChatRoomMember member) {
+        for (ChatRoomMember m : members) {
+            if (Objects.equals(m.getUser().getId(), member.getUser().getId())) {
+                if (m.isRemoved()) {
+                    m.setRemoved(false);
+                }
+                return; // already a member
+            }
+        }
         member.setChatRoom(this);
         members.add(member);
-    }
-
-    public void removeMember(ChatRoomMember member) {
-        if (members.remove(member)) {
-            //TODO: flag member as removed so the chat doesnt appear for him
-        }
     }
 }

@@ -1,0 +1,54 @@
+<div th:fragment="chatDetails(chatDetails)" class="col-lg-4 col-md-5">
+    <div class="card">
+        <div class="card-body text-center position-relative">
+            <div class="position-relative d-inline-block mb-3">
+                <img id="avatarPreview"
+                     th:src="${chatDetails.pictureUrl}"
+                     alt="avatar"
+                     class="rounded-circle"
+                     width="120" height="120">
+                <p class="text-muted mb-2"
+                   th:text="|${#strings.toLowerCase(chatDetails.type)} - ${chatDetails.memberCount} #{chat.members.suffix}|">Group 0
+                    members</p>
+                <div class="card-body text-center d-flex flex-column gap-2">
+                    <div th:replace="~{fragments/edit-picture :: upload(endpointUrl=@{/chat/{id}/settings/upload-picture(id=${chatId})})}"></div>
+                    <div th:if="${chatDetails.hasPicture}">
+                        <div th:replace="~{fragments/edit-picture :: delete(endpointUrl=@{/chat/{id}/settings/delete-picture(id=${chatId})},pictureUrl=${chatDetails.pictureUrl})}"></div>
+                    </div>
+                </div>
+            </div>
+
+            <form th:action="@{/chat/{id}/settings(id=${chatId})}" th:object="${chatSettings}" method="post" enctype="multipart/form-data"
+                  class="w-100">
+                <div class="mb-2">
+                    <label for="chatNameInput" class="form-label visually-hidden" th:text="#{chat.name.placeholder}">Name</label>
+                    <input id="chatNameInput" name="name" type="text" autocomplete="off" class="form-control form-control-lg text-center"
+                           th:value="${chatDetails.name}" th:attr="placeholder=#{chat.name.placeholder}" />
+                </div>
+                <div class="mb-3 text-start">
+                    <label class="form-label small" for="chatDescription" th:text="#{chat.description.label}">Description</label>
+                    <textarea id="chatDescription" name="description" class="form-control form-control-sm" rows="3"
+                              th:attr="placeholder=#{chat.description.placeholder}" th:text="${chatDetails.description}"></textarea>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <button type="submit" class="btn btn-sm btn-primary" th:text="#{common.save}">Save</button>
+                        <a th:href="@{/chat}" class="btn btn-sm btn-outline-secondary ms-2" th:text="#{common.cancel}">Cancel</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span th:text="#{chat.type.label}">Type</span>
+                <span class="badge bg-secondary rounded-pill" th:text="${chatDetails.type}">GROUP</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span th:text="#{chat.created.label}">Created</span>
+                <span class="text-muted" th:text="${chatDetails.createdAt}">00-00-0000</span>
+            </li>
+        </ul>
+    </div>
+</div>

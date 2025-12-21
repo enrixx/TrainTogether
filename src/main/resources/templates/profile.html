@@ -41,26 +41,8 @@
                                 <span class="text-white fs-1" th:text="${user.firstName != null ? #strings.substring(user.firstName, 0, 1) + #strings.substring(user.lastName, 0, 1) : '?'}">JD</span>
                             </div>
                         </div>
-
-                        <form th:action="@{/profile/upload-picture}" method="post" enctype="multipart/form-data" class="mb-2">
-                            <div class="mb-3">
-                                <input type="file"
-                                       class="form-control"
-                                       id="profilePicture"
-                                       name="profilePicture"
-                                       accept="image/*"
-                                       required>
-                                <small class="text-muted" th:text="#{profile.picture.maxinfo}">Max size: 5MB. Allowed formats: JPG, PNG, GIF</small>
-                            </div>
-                            <button type="submit" class="btn btn-primary" th:text="#{profile.picture.upload}">Upload Picture</button>
-                        </form>
-
-                        <form th:if="${user.profilePictureUrl != null and !#strings.isEmpty(user.profilePictureUrl)}"
-                              th:action="@{/profile/delete-picture}"
-                              method="post"
-                              th:attr="onsubmit='return confirm(\'' + #{profile.picture.delete} + '\');'">
-                            <button type="submit" class="btn btn-danger btn-sm" th:text="#{profile.picture.delete}">Delete Picture</button>
-                        </form>
+                        <div th:replace="~{fragments/edit-picture :: upload(endpointUrl=@{/profile/upload-picture})}"></div>
+                        <div th:replace="~{fragments/edit-picture :: delete(endpointUrl=@{/profile/delete-picture},pictureUrl=${user.profilePictureUrl})}"></div>
                     </div>
                 </div>
             </div>

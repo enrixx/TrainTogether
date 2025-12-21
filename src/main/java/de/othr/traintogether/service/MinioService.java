@@ -60,13 +60,60 @@ public class MinioService {
 
     public String uploadProfilePicture(MultipartFile file, Long userId) {
         validateFile(file);
+        return saveFile(file, "profile-pictures", String.valueOf(userId));
+    }
 
+    public void deleteProfilePicture(String urlOrObjectName) {
+        deleteObjectByUrlOrName(urlOrObjectName);
+    }
+
+    public String uploadGroupPicture(MultipartFile file, Long groupId) {
+        validateFile(file);
+        return saveFile(file, "group-pictures", String.valueOf(groupId));
+    }
+
+    public void deleteGroupPicture(String urlOrObjectName) {
+        deleteObjectByUrlOrName(urlOrObjectName);
+    }
+
+    public String getPresignedUrl(String objectName, int expiryMinutes) {
+        try {
+            return minioClient.getPresignedObjectUrl(
+                    GetPresignedObjectUrlArgs.builder()
+                            .method(Method.GET)
+                            .bucket(bucketName)
+                            .object(objectName)
+                            .expiry(expiryMinutes, TimeUnit.MINUTES)
+                            .build()
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate presigned URL: " + e.getMessage(), e);
+        }
+    }
+
+    private String getPublicUrl(String objectName) {
+        try {
+            return minioClient.getPresignedObjectUrl(
+                    GetPresignedObjectUrlArgs.builder()
+                            .method(Method.GET)
+                            .bucket(bucketName)
+                            .object(objectName)
+                            .expiry(7, TimeUnit.DAYS)
+                            .build()
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to get public URL: " + e.getMessage(), e);
+        }
+    }
+
+    // Reusable save/upload helper
+    private String saveFile(MultipartFile file, String folder, String id) {
         String originalFilename = file.getOriginalFilename();
         String extension = originalFilename != null && originalFilename.contains(".")
                 ? originalFilename.substring(originalFilename.lastIndexOf("."))
                 : ".jpg";
 
-        String objectName = "profile-pictures/" + userId + "/" + UUID.randomUUID() + extension;
+        String objectName = folder + "/" + id + "/" + UUID.randomUUID() + extension;
 
         try (InputStream inputStream = file.getInputStream()) {
             minioClient.putObject(
@@ -81,11 +128,11 @@ public class MinioService {
             // Return the public URL
             return getPublicUrl(objectName);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to upload profile picture: " + e.getMessage(), e);
+            throw new RuntimeException("Failed to upload file: " + e.getMessage(), e);
         }
     }
 
-    public void deleteProfilePicture(String urlOrObjectName) {
+    private void deleteObjectByUrlOrName(String urlOrObjectName) {
         if (urlOrObjectName == null || urlOrObjectName.isEmpty()) {
             return;
         }
@@ -110,39 +157,8 @@ public class MinioService {
                             .build()
             );
         } catch (Exception e) {
-            // Log but don't throw - deletion failures shouldn't stop profile updates
-            System.err.println("Failed to delete profile picture: " + e.getMessage());
-        }
-    }
-
-    public String getPresignedUrl(String objectName, int expiryMinutes) {
-        try {
-            return minioClient.getPresignedObjectUrl(
-                    GetPresignedObjectUrlArgs.builder()
-                            .method(Method.GET)
-                            .bucket(bucketName)
-                            .object(objectName)
-                            .expiry(expiryMinutes, TimeUnit.MINUTES)
-                            .build()
-            );
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to generate presigned URL: " + e.getMessage(), e);
-        }
-    }
-
-    private String getPublicUrl(String objectName) {
-        try {
-            String endpoint = minioClient.getPresignedObjectUrl(
-                    GetPresignedObjectUrlArgs.builder()
-                            .method(Method.GET)
-                            .bucket(bucketName)
-                            .object(objectName)
-                            .expiry(7, TimeUnit.DAYS)
-                            .build()
-            );
-            return endpoint;
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to get public URL: " + e.getMessage(), e);
+            // Log but don't throw - deletion failures shouldn't stop updates
+            System.err.println("Failed to delete object: " + e.getMessage());
         }
     }
 
@@ -163,4 +179,3 @@ public class MinioService {
         }
     }
 }
-

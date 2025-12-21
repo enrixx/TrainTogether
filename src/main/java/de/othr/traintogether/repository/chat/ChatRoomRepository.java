@@ -15,6 +15,9 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     @Query("select r from ChatRoom r join r.members m where m.user = :user and r.type = :type")
     List<ChatRoom> findByUserAndType(@Param("user") User user, @Param("type") ChatRoomType type);
 
-    @Query("SELECT r FROM ChatRoom r JOIN r.members m1 JOIN r.members m2 WHERE r.type = 'DM' AND m1.user = :user1 AND m2.user = :user2")
-    Optional<ChatRoom> findDmBetweenUsers(@Param("user1") User user1, @Param("user2") User user2);
+    // Find a DM room that contains both users
+    @Query("select r from ChatRoom r join r.members m1 join r.members m2 " +
+            "where r.type = de.othr.traintogether.model.chat.ChatRoomType.DM " +
+            "and m1.user.id = :userId1 and m2.user.id = :userId2")
+    Optional<ChatRoom> findDmBetweenUsers(@Param("userId1") Long userId1, @Param("userId2") Long userId2);
 }

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::content})}">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{chat.settings}">Chat Settings</title>
+</head>
+
+<body>
+<div th:fragment="content" class="container-fluid h-100 d-flex flex-column p-3 overflow-auto">
+    <div class="row g-3" th:with="template=${chatSettings.canEdit} ? 'fragments/chat/chat-details-edit' : 'fragments/chat/chat-details'">
+        <div class="col-12">
+            <a th:href="@{/chat}" class="btn btn-sm btn-secondary mb-2">&larr; <span th:text="#{nav.chat}">Chat</span></a>
+            <h2 class="mb-0" th:text="#{chat.settings}">Chat Settings</h2>
+        </div>
+
+        <div th:replace="~{${template} :: chatDetails(chatDetails=${chatSettings.chatDetails})}"></div>
+        <div th:replace="~{fragments/chat/chat-member-list :: chatMemberList(chatMembers=${chatSettings.chatMembers}, isAdmin=${chatSettings.canEdit}, chatId=${chatSettings.chatDetails.chatId})}"></div>
+
+    </div>
+</div>
+</body>
+</html>
+

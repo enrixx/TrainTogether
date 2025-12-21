@@ -2,7 +2,7 @@
      class="d-flex flex-row justify-content-start"
      th:attr="data-message-id=${message.id}, data-cursor=${message.cursor}">
     <img th:if="${roomType != 'DM'}" th:src="${message.sender.SenderPictureUrl}"
-         alt="avatar" style="width: 45px; height: 45px; object-fit: cover;">
+         alt="avatar" class="rounded-circle" style="width: 45px; height: 45px; object-fit: cover;">
     <div style="max-width: calc(100% - 60px);">
         <div class="p-2 ms-3 mb-1 rounded-3 bg-body-tertiary">
             <p th:if="${roomType != 'DM'}"

@@ -1,4 +1,4 @@
-package de.othr.traintogether.dto;
+package de.othr.traintogether.dto.chat;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,6 @@
 package de.othr.traintogether.mapper;
 
-import de.othr.traintogether.dto.ChatRoomListingDto;
+import de.othr.traintogether.dto.chat.ChatRoomListingDto;
 import de.othr.traintogether.model.chat.ChatMessage;
 import de.othr.traintogether.model.chat.ChatRoom;
 import de.othr.traintogether.model.chat.ChatRoomMember;
@@ -12,14 +12,13 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Component
 public class ChatRoomMapper {
 
     public ChatRoomListingDto toDtoGroup(ChatRoom room, String unreadMessagesCount, Optional<ChatMessage> lastMessage) {
         if (room == null) return null;
-        ChatRoomListingDto dto = new ChatRoomListingDto(room.getId(),room.getType().name());
+        ChatRoomListingDto dto = new ChatRoomListingDto(room.getId(), room.getType().name());
         dto.setUnreadMessagesCount(unreadMessagesCount);
         if (lastMessage.isPresent()) {
             dto.setContainsMessage(true);
@@ -37,13 +36,14 @@ public class ChatRoomMapper {
         }
         return dto;
     }
+
     public ChatRoomListingDto toDtoDm(ChatRoom room, String unreadMessagesCount, Optional<ChatMessage> lastMessage, ChatRoomMember member) {
         ChatRoomListingDto dto = toDtoGroup(room, unreadMessagesCount, lastMessage);
-        if((long) room.getMembers().size() != 2) {
+        if ((long) room.getMembers().size() != 2) {
             return dto; // fallback to normal group mapping
         }
         ChatRoomMember otherMember = room.getMembers().stream()
-                .filter(m -> m.getUser() != null && !m.getUser().getId().equals(member.getUser().getId()))
+                .filter(m -> !m.getUser().getId().equals(member.getUser().getId()))
                 .findFirst()
                 .orElse(null);
 
