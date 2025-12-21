@@ -8,6 +8,8 @@ import de.othr.traintogether.repository.TrainingExerciseRepository;
 import de.othr.traintogether.repository.TrainingProfileRepository;
 import de.othr.traintogether.repository.TrainingSplitRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +22,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TrainingProfileInitializer {
 
+    private static final Logger logger = LoggerFactory.getLogger(TrainingProfileInitializer.class);
+
     private final TrainingProfileRepository profileRepo;
     private final BodyMeasurementsRepository bmRepo;
     private final TrainingSplitRepository splitRepo;
@@ -30,6 +34,7 @@ public class TrainingProfileInitializer {
     @EventListener
     public void onUserCreated(UserCreatedEvent event) {
         User user = event.getUser();
+        logger.info("Initializing training profile for user: {}", user.getEmail());
 
         BodyMeasurements bm = new BodyMeasurements();
         bmRepo.save(bm);
@@ -64,8 +69,6 @@ public class TrainingProfileInitializer {
             LocalDate date = today.minusDays(i);
             
             // Find the TrainingDay corresponding to this date's weekday
-            // Note: Weekday enum might need mapping if names don't match exactly with LocalDate.getDayOfWeek()
-            // Assuming Weekday enum matches standard order (MONDAY, TUESDAY...)
             String dayName = date.getDayOfWeek().name();
             TrainingDay trainingDay = split.getDays().stream()
                     .filter(d -> d.getWeekday().name().equals(dayName))
@@ -80,6 +83,7 @@ public class TrainingProfileInitializer {
                         pe,
                         3, // sets
                         "10,10,10", // reps
+                        "50,50,50", // weight
                         trainingDay,
                         date
                 );

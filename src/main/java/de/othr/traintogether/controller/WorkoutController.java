@@ -14,6 +14,7 @@ import de.othr.traintogether.repository.TrainingDayRepository;
 import de.othr.traintogether.repository.TrainingExerciseRepository;
 import de.othr.traintogether.repository.TrainingProfileRepository;
 import de.othr.traintogether.service.UserService;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -23,6 +24,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -54,23 +57,21 @@ public class WorkoutController {
             return "workouts";
         }
 
-        // Check for today's workout
         List<TrainingExercise> todaysWorkoutEntities = trainingExerciseRepo.findByDateAndPersonalExercise_User_Id(LocalDate.now(), user.getId());
         
         if (!todaysWorkoutEntities.isEmpty()) {
-            // Map to DTO to avoid serialization issues with Hibernate proxies
             List<WorkoutLogResponse> todaysWorkoutDto = todaysWorkoutEntities.stream()
                 .map(ex -> new WorkoutLogResponse(
                     ex.getPersonalExercise().getId(),
                     ex.getPersonalExercise().getName(),
                     ex.getSets(),
-                    ex.getReps()
+                    ex.getReps(),
+                    ex.getWeight()
                 ))
                 .collect(Collectors.toList());
 
             model.addAttribute("todaysWorkout", todaysWorkoutDto);
             
-            // We can also find the day that was logged
             if (todaysWorkoutEntities.get(0).getDay() != null) {
                 model.addAttribute("loggedDayId", todaysWorkoutEntities.get(0).getDay().getId());
                 model.addAttribute("loggedDayName", todaysWorkoutEntities.get(0).getDay().getWeekday());
@@ -81,7 +82,6 @@ public class WorkoutController {
         model.addAttribute("split", activeSplit);
         model.addAttribute("splits", profile.getSplits());
         
-        // Map allExercises to DTO to avoid serialization issues
         List<PersonalExercise> allExercisesEntities = exerciseRepo.findAllByUserId(user.getId());
         List<PersonalExerciseDto> allExercisesDto = allExercisesEntities.stream()
                 .map(ex -> new PersonalExerciseDto(ex.getId(), ex.getName()))
@@ -90,7 +90,6 @@ public class WorkoutController {
         
         model.addAttribute("activeSplit", profile.getActiveTraininSplitId());
         
-        // Add current day of week (MONDAY, TUESDAY, etc.)
         model.addAttribute("currentDayOfWeek", LocalDate.now().getDayOfWeek().name());
 
         return "workouts";
@@ -115,11 +114,55 @@ public class WorkoutController {
                         ex.getPersonalExercise().getId(),
                         ex.getPersonalExercise().getName(),
                         ex.getSets(),
-                        ex.getReps()
+                        ex.getReps(),
+                        ex.getWeight()
                 ))
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/api/progress")
+    @ResponseBody
+    public ResponseEntity<List<ProgressDataPoint>> getProgressData(@RequestParam("exerciseId") Long exerciseId, Authentication authentication) {
+        String email = authentication.getName();
+        UserDto user = userService.findUserByEmail(email);
+
+        List<TrainingExercise> exercises = trainingExerciseRepo.findAllByPersonalExercise_IdAndPersonalExercise_User_IdOrderByDateAsc(exerciseId, user.getId());
+        
+        List<ProgressDataPoint> dataPoints = new ArrayList<>();
+        
+        for (TrainingExercise ex : exercises) {
+            if (ex.getWeight() != null && !ex.getWeight().isEmpty()) {
+                try {
+                    double maxWeight = Arrays.stream(ex.getWeight().split(","))
+                            .map(String::trim)
+                            .filter(s -> !s.isEmpty())
+                            .mapToDouble(Double::parseDouble)
+                            .max()
+                            .orElse(0.0);
+                    
+                    if (maxWeight > 0) {
+                        dataPoints.add(new ProgressDataPoint(ex.getDate().toString(), maxWeight));
+                    }
+                } catch (NumberFormatException e) {
+                    // Ignore malformed data
+                }
+            }
+        }
+
+        return ResponseEntity.ok(dataPoints);
+    }
+
+    @Data
+    public static class ProgressDataPoint {
+        private String date;
+        private double weight;
+
+        public ProgressDataPoint(String date, double weight) {
+            this.date = date;
+            this.weight = weight;
+        }
     }
 
     @Transactional
@@ -135,13 +178,11 @@ public class WorkoutController {
 
         LocalDate date = LocalDate.now();
 
-        // Delete existing workout for today to allow "editing" by overwriting
         List<TrainingExercise> existingWorkout = trainingExerciseRepo.findByDateAndPersonalExercise_User_Id(date, user.getId());
         if (!existingWorkout.isEmpty()) {
             trainingExerciseRepo.deleteAll(existingWorkout);
         }
 
-        // Add a null check here to prevent NullPointerException
         if (workoutRequest.getExercises() != null) {
             for (WorkoutLogRequest.ExerciseLog exerciseLog : workoutRequest.getExercises()) {
                 PersonalExercise personalExercise = exerciseRepo.findById(exerciseLog.getPersonalExerciseId()).orElse(null);
@@ -149,7 +190,8 @@ public class WorkoutController {
                     TrainingExercise trainingExercise = new TrainingExercise(
                         personalExercise, 
                         exerciseLog.getSets(), 
-                        exerciseLog.getReps(), 
+                        exerciseLog.getReps(),
+                        exerciseLog.getWeight(),
                         trainingDay,
                         date
                     );
@@ -173,13 +215,11 @@ public class WorkoutController {
 
         LocalDate date = LocalDate.now();
 
-        // Delete existing workout for today
         List<TrainingExercise> existingWorkout = trainingExerciseRepo.findByDateAndPersonalExercise_User_Id(date, user.getId());
         if (!existingWorkout.isEmpty()) {
             trainingExerciseRepo.deleteAll(existingWorkout);
         }
 
-        // Find RESTDAY exercise - trying "Restday" as requested, falling back to "RESTDAY" if needed
         PersonalExercise restDayExercise = exerciseRepo.findByNameAndUser_Id("Restday", user.getId())
                 .or(() -> exerciseRepo.findByNameAndUser_Id("RESTDAY", user.getId()))
                 .orElse(null);
@@ -189,13 +229,12 @@ public class WorkoutController {
                 restDayExercise, 
                 0, 
                 "", 
+                "",
                 trainingDay,
                 date
             );
             trainingExerciseRepo.save(trainingExercise);
         } else {
-             // If Restday exercise doesn't exist, maybe create it? 
-             // For now, let's assume it exists or fail silently/redirect with error
              return "redirect:/workouts?error=restdayNotFound";
         }
 
