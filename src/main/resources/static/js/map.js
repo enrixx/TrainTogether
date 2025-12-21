@@ -81,29 +81,21 @@ document.getElementById("delete-confirm").onclick = async () => {
 };
 
 // =======================
-// Gyms automatisch laden (Overpass API)
+// Gyms automatisch laden
 // =======================
 async function loadNearbyGyms() {
     gymsLayer.clearLayers();
 
-    const bounds = map.getBounds();
-    const query = `
-        [out:json];
-        node["amenity"="gym"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
-        out;
-    `;
+    const response = await fetch("/api/gyms");
+    const gyms = await response.json();
 
-    const response = await fetch("https://overpass-api.de/api/interpreter", {
-        method: "POST",
-        body: query
-    });
-
-    const json = await response.json();
-
-    json.elements.forEach(g => {
-        L.marker([g.lat, g.lon], { icon: blueIcon() })
-            .bindPopup(g.tags.name || "Gym")
+    gyms.forEach(gym => {
+        const marker = L.marker([gym.lat, gym.lon], { icon: blueIcon() })
+            .bindPopup(gym.name)
             .addTo(gymsLayer);
+        marker.on('click', () => {
+            window.location.href = `/gym/${gym.id}`;
+        });
     });
 }
 
