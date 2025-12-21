@@ -27,6 +27,7 @@ public class TrainingExercise {
 
     private int sets;
     private String reps;
+    private String weight;
 
     @ManyToOne
     @JoinColumn(name = "day_id")
@@ -34,10 +35,11 @@ public class TrainingExercise {
 
     private LocalDate date;
 
-    public TrainingExercise(PersonalExercise exercise, int sets, String reps, TrainingDay day, LocalDate date) {
+    public TrainingExercise(PersonalExercise exercise, int sets, String reps, String weight, TrainingDay day, LocalDate date) {
         this.personalExercise = exercise;
         this.sets = sets;
         this.reps = reps;
+        this.weight = weight;
         this.day = day;
         this.date = date;
     }

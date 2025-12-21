@@ -14,6 +14,7 @@ public class WorkoutLogRequest {
     public static class ExerciseLog {
         private Long personalExerciseId;
         private int sets;
-        private String reps; // Changed to String
+        private String reps;
+        private String weight;
     }
 }

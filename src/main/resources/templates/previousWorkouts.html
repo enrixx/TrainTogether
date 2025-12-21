@@ -52,9 +52,15 @@
                         let html = `<h5>Workout on ${dateStr}</h5>`;
                         html += '<ul class="list-group">';
                         data.forEach(ex => {
+                            let details = '';
+                            if (ex.exerciseName !== 'RESTDAY' && ex.exerciseName !== 'Restday') {
+                                details = `<br><small class="text-muted">
+                                               Reps: ${ex.reps} | Weight: ${ex.weight} kg
+                                           </small>`;
+                            }
                             html += `<li class="list-group-item">
-                                        <strong>${ex.exerciseName}</strong><br>
-                                        <span class="text-muted">${ex.sets} Sets / ${ex.reps} Reps</span>
+                                        <strong>${ex.exerciseName}</strong> - ${ex.sets} Sets
+                                        ${details}
                                      </li>`;
                         });
                         html += '</ul>';
