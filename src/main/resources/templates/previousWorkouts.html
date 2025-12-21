@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::content})}">
+<head>
+    <meta charset="UTF-8">
+    <title>Previous Workouts</title>
+</head>
+<body>
+<div th:fragment="content">
+    <main class="container-fluid p-5">
+        <div class="p-4 mb-4 bg-body-tertiary rounded-3">
+            <h3>Previous Workouts</h3>
+            <p>Select a date to see the workout you logged.</p>
+
+            <div class="mb-3" style="max-width: 300px;">
+                <label for="workoutDateSelect" class="form-label">Date</label>
+                <input type="date" class="form-control" id="workoutDateSelect">
+            </div>
+
+            <div id="workout-details" class="mt-4">
+                <p class="text-muted">No date selected.</p>
+            </div>
+        </div>
+    </main>
+
+    <script th:inline="javascript">
+    /*<![CDATA[*/
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateInput = document.getElementById('workoutDateSelect');
+            const workoutDetailsEl = document.getElementById('workout-details');
+            const token = $("meta[name='_csrf']").attr("content");
+            const header = $("meta[name='_csrf_header']").attr("content");
+
+            dateInput.addEventListener('change', function() {
+                const dateStr = this.value;
+                if (!dateStr) {
+                    workoutDetailsEl.innerHTML = '<p class="text-muted">No date selected.</p>';
+                    return;
+                }
+
+                workoutDetailsEl.innerHTML = '<p>Loading...</p>';
+
+                fetch(`/workouts/api/by-date?date=${dateStr}`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        [header]: token
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        let html = `<h5>Workout on ${dateStr}</h5>`;
+                        html += '<ul class="list-group">';
+                        data.forEach(ex => {
+                            html += `<li class="list-group-item">
+                                        <strong>${ex.exerciseName}</strong><br>
+                                        <span class="text-muted">${ex.sets} Sets / ${ex.reps} Reps</span>
+                                     </li>`;
+                        });
+                        html += '</ul>';
+                        workoutDetailsEl.innerHTML = html;
+                    } else {
+                        workoutDetailsEl.innerHTML = '<div class="alert alert-info">No workout logged for this day.</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching workout data:', error);
+                    workoutDetailsEl.innerHTML = '<p class="text-danger">Could not load workout data.</p>';
+                });
+            });
+        });
+    /*]]>*/
+    </script>
+</div>
+</body>
+</html>

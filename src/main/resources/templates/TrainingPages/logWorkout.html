@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::content})}">
+<head>
+    <meta charset="UTF-8">
+    <title>Log Workout</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div th:fragment="content">
+    <main class="container-fluid p-5">
+        <h2>Log Your Workout</h2>
+
+        <form th:action="@{/workouts/log}" method="post">
+            <div class="mb-3">
+                <label for="trainingDay" class="form-label">Select Training Day</label>
+                <select id="trainingDay" name="trainingDayId" class="form-select" required>
+                    <option value="">Choose a day...</option>
+                    <option th:each="day : ${userTrainingDays}" th:value="${day.id}" th:text="${day.weekday}"></option>
+                </select>
+            </div>
+
+            <div id="exercise-entries">
+                <!-- Dynamic exercise entries will be added here -->
+            </div>
+
+            <button type="button" id="add-exercise-btn" class="btn btn-secondary mt-2">Add Exercise</button>
+            <button type="submit" class="btn btn-primary mt-2">Log Workout</button>
+        </form>
+
+        <hr class="my-4">
+
+        <h3>Progress</h3>
+        <div class="mb-3">
+            <label for="exercise-select-graph" class="form-label">Select Exercise to View Progress</label>
+            <select id="exercise-select-graph" class="form-select">
+                <option th:each="exercise : ${userExercises}" th:value="${exercise.id}" th:text="${exercise.name}"></option>
+            </select>
+        </div>
+        <div>
+            <canvas id="progressChart"></canvas>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            let exerciseCounter = 0;
+
+            document.getElementById('add-exercise-btn').addEventListener('click', function () {
+                const exerciseEntry = document.createElement('div');
+                exerciseEntry.classList.add('row', 'mb-2', 'align-items-end');
+                exerciseEntry.innerHTML = `
+                    <div class="col-md-6">
+                        <label class="form-label">Exercise</label>
+                        <select name="exercises[${exerciseCounter}].personalExerciseId" class="form-select" required>
+                            <option value="">Choose exercise...</option>
+                            <th:block th:each="exercise : ${userExercises}">
+                                <option th:value="${exercise.id}" th:text="${exercise.name}"></option>
+                            </th:block>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Sets</label>
+                        <input type="number" name="exercises[${exerciseCounter}].sets" class="form-control" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Reps</label>
+                        <input type="number" name="exercises[${exerciseCounter}].reps" class="form-control" required>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-danger remove-exercise-btn">Remove</button>
+                    </div>
+                `;
+                document.getElementById('exercise-entries').appendChild(exerciseEntry);
+                exerciseCounter++;
+            });
+
+            document.getElementById('exercise-entries').addEventListener('click', function (e) {
+                if (e.target && e.target.classList.contains('remove-exercise-btn')) {
+                    e.target.closest('.row').remove();
+                }
+            });
+
+            // Chart.js logic
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            let progressChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [], // Dates will go here
+                    datasets: [{
+                        label: 'Reps Over Time',
+                        data: [], // Reps will go here
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                }
+            });
+
+            document.getElementById('exercise-select-graph').addEventListener('change', function() {
+                const exerciseId = this.value;
+                fetch(`/workouts/progress?exerciseId=${exerciseId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        progressChart.data.labels = data.labels;
+                        progressChart.data.datasets[0].data = data.reps;
+                        progressChart.update();
+                    });
+            });
+        });
+    </script>
+</div>
+</body>
+</html>
