@@ -5,6 +5,7 @@ import de.othr.traintogether.security.JwtAuthenticationEntryPoint;
 import de.othr.traintogether.service.UserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -45,6 +46,7 @@ public class SecurityConfig {
     }
 
     @Bean
+    @Order(1)
     public SecurityFilterChain apiFilterChain(HttpSecurity http,
                                              JwtAuthFilter jwtAuthFilter,
                                              JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
@@ -52,9 +54,14 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .securityMatcher("/api/**")
-                //shold every endpoint be athenicated
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers(
+                                "/api/auth/**",
+                                "/api-docs/**",
+                                "/api-docs",
+                                "/swagger-ui/**",
+                                "/swagger-ui/index.html"
+                        ).permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(e -> e.authenticationEntryPoint(jwtAuthenticationEntryPoint))
@@ -66,14 +73,33 @@ public class SecurityConfig {
     }
 
     @Bean
+    @Order(2)
     public SecurityFilterChain mvcFilterChain(HttpSecurity http, AuthenticationProvider authenticationProvider) throws Exception {
         http
                 .authenticationProvider(authenticationProvider)
                 .csrf(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/register", "/register/gym-owner", "/login",
-                                         "/forgot-password", "/reset-password", "/error", "/error/**").permitAll()
-                        .requestMatchers("/js/**", "/images/**","/css/**", "/webjars/**","/favicon.ico").permitAll()
+                        // public MVC endpoints + allow swagger/ui and openapi JSON for browser access
+                        .requestMatchers(
+                                "/",
+                                "/register",
+                                "/register/gym-owner",
+                                "/login",
+                                "/forgot-password",
+                                "/reset-password",
+                                "/error",
+                                "/error/**",
+                                "/js/**",
+                                "/images/**",
+                                "/css/**",
+                                "/webjars/**",
+                                "/favicon.ico",
+                                "/api-docs/**",
+                                "/api-docs",
+                                "/swagger-ui/**",
+                                "/swagger-ui/index.html",
+                                "/webjars/**"
+                        ).permitAll()
                         .anyRequest().authenticated())
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(form -> form
@@ -84,7 +110,6 @@ public class SecurityConfig {
                         .failureUrl("/login?error=true")
                 )
                 .logout((logout) -> logout.logoutSuccessUrl("/"));
-
         return http.build();
     }
 }

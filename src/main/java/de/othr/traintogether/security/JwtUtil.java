@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Component
@@ -30,8 +31,10 @@ public class JwtUtil {
     public String generateToken(UserDetails userDetails) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + jwtExpirationMs);
+        String jti = UUID.randomUUID().toString();
 
         return Jwts.builder()
+                .setId(jti)
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(now)
                 .setExpiration(expiry)

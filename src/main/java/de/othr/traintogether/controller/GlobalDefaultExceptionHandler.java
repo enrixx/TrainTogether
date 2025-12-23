@@ -13,15 +13,21 @@ class GlobalDefaultExceptionHandler {
     public static final String DEFAULT_ERROR_VIEW = "error";
 
     @ExceptionHandler(value = Exception.class)
-    public ModelAndView
-    defaultErrorHandler(HttpServletRequest req, Exception e) throws Exception {
-        // If the exception is annotated with @ResponseStatus rethrow it and let
-        // the framework handle it - like the OrderNotFoundException example
-        // at the start of this post.
-        // AnnotationUtils is a Spring Framework utility class.
-        if (AnnotationUtils.findAnnotation
-                (e.getClass(), ResponseStatus.class) != null)
+    public ModelAndView defaultErrorHandler(HttpServletRequest req, Exception e) throws Exception {
+        // If the exception is annotated with @ResponseStatus rethrow it and let the framework handle it.
+        if (AnnotationUtils.findAnnotation(e.getClass(), ResponseStatus.class) != null) {
             throw e;
+        }
+
+        // If this is an API request, rethrow so REST/Security handlers can produce proper JSON status codes
+        String uri = req.getRequestURI();
+        String accept = req.getHeader("Accept");
+        if (uri != null && uri.startsWith("/api/")) {
+            throw e;
+        }
+        if (accept != null && accept.contains("application/json")) {
+            throw e;
+        }
 
         // Otherwise setup and send the user to a default error-view.
         ModelAndView mav = new ModelAndView();
