@@ -97,8 +97,7 @@ public class SecurityConfig {
                                 "/api-docs/**",
                                 "/api-docs",
                                 "/swagger-ui/**",
-                                "/swagger-ui/index.html",
-                                "/webjars/**"
+                                "/swagger-ui/index.html"
                         ).permitAll()
                         .anyRequest().authenticated())
                 .httpBasic(AbstractHttpConfigurer::disable)

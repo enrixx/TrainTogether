@@ -24,7 +24,11 @@ public class JwtUtil {
 
     public JwtUtil(@Value("${jwt.secret}") String secret,
                    @Value("${jwt.expirationMs:3600000}") long jwtExpirationMs) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        byte[] keyBytes = secret.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        if (keyBytes.length < 32) {
+            throw new IllegalArgumentException("JWT secret key must be at least 256 bits (32 bytes) long when encoded in UTF-8.");
+        }
+        this.key = Keys.hmacShaKeyFor(keyBytes);
         this.jwtExpirationMs = jwtExpirationMs;
     }
 
@@ -43,12 +47,16 @@ public class JwtUtil {
     }
 
     private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-        return claimsResolver.apply(claims);
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            return claimsResolver.apply(claims);
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid JWT token: " + e.getMessage(), e);
+        }
     }
 
     public String extractUsername(String token) {

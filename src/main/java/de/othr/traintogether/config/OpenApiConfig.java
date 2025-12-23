@@ -22,15 +22,6 @@ public class OpenApiConfig {
                 .build();
     }
 
-    // Group only /api/** endpoints
-    @Bean
-    public GroupedOpenApi apiGroup() {
-        return GroupedOpenApi.builder()
-                .group("api")
-                .pathsToMatch("/api/**")
-                .build();
-    }
-
     // Register a Bearer JWT security scheme
     @Bean
     public OpenAPI customOpenAPI() {
