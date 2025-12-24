@@ -15,10 +15,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-// ToDo: JWT authentication
 @RestController
 @RequestMapping("/api/gym-workers")
-@PreAuthorize("hasAuthority('GYM_OWNER')")
+@PreAuthorize("hasAnyAuthority('ADMIN', 'GYM_OWNER')")
 public class GymWorkerController {
 
     private final GymWorkerService gymWorkerService;
