@@ -41,17 +41,17 @@ public class MainLayoutController {
         if (authentication != null && authentication.isAuthenticated()) {
             String email = authentication.getName();
             UserDto user = userService.findUserDTOByEmail(email);
-            
+
             boolean isGymOwner = authentication.getAuthorities().stream()
                 .anyMatch(a -> {
                     String auth = a.getAuthority();
                     return auth.equals("GYM_OWNER") || auth.equals("ROLE_GYM_OWNER") || auth.equals("OWNER");
                 });
-            
+
             if (isGymOwner && user != null) {
                 // Find the gym for the button on the home page
                 List<Gym> gyms = gymService.findByOwnerId(user.getId());
-                
+
                 if (gyms.isEmpty()) {
                     gyms = gymService.findAll().stream()
                         .filter(g -> g.getOwner() != null && g.getOwner().getEmail().equalsIgnoreCase(email))
@@ -93,7 +93,7 @@ public class MainLayoutController {
             UserDto user = userService.findUserDTOByEmail(authentication.getName());
             if (user != null) {
                 List<Gym> gyms = gymService.findByOwnerId(user.getId());
-                
+
                 if (gyms.isEmpty()) {
                     gyms = gymService.findAll().stream()
                         .filter(g -> g.getOwner() != null && g.getOwner().getEmail().equalsIgnoreCase(authentication.getName()))
@@ -123,5 +123,6 @@ public class MainLayoutController {
         model.addAttribute("title", "Workouts");
         return "workouts";
     }
+}
 
 }

@@ -104,13 +104,13 @@ async function fetchGymsFromOverpass() {
             method: "POST",
             body: query
         });
-        
+
         if (!response.ok) {
             throw new Error(`Overpass API error: ${response.status}`);
         }
 
         const data = await response.json();
-        
+
         // Update cache with new data
         data.elements.forEach(element => {
             const id = element.id;
@@ -137,7 +137,7 @@ async function fetchGymsFromOverpass() {
 // Helper function to render both sources from cache and internal list
 function renderAllGyms() {
     gymsLayer.clearLayers();
-    
+
     const renderedInternalIds = new Set();
     const bounds = map.getBounds();
 
@@ -182,7 +182,7 @@ function renderAllGyms() {
     internalGyms.forEach(gym => {
         if (!renderedInternalIds.has(gym.id)) {
             let shouldRender = false;
-            
+
             if (activeSearch) {
                  const dist = map.distance([gym.lat, gym.lon], [activeSearch.lat, activeSearch.lon]);
                  if (dist <= activeSearch.radiusMeters) {
@@ -219,16 +219,16 @@ function addMarker(lat, lon, name, isInternal, id) {
 // Helper to start a search (draw circle, set activeSearch, fetch data)
 function startSearch(lat, lon, radiusKm) {
     activeSearch = { lat, lon, radiusMeters: radiusKm * 1000 };
-    
+
     // DO NOT clear cache here. We want to keep old results in case we revisit.
-    // externalGymsCache.clear(); 
+    // externalGymsCache.clear();
 
     // Remove old circle if it exists
     if (searchAreaCircle) {
         map.removeLayer(searchAreaCircle);
     }
     // Add a new circle to show the search area
-    searchAreaCircle = L.circle([lat, lon], { 
+    searchAreaCircle = L.circle([lat, lon], {
         radius: activeSearch.radiusMeters,
         color: '#0d6efd',
         fillColor: '#0d6efd',
@@ -236,10 +236,10 @@ function startSearch(lat, lon, radiusKm) {
     }).addTo(map);
 
     map.fitBounds(searchAreaCircle.getBounds());
-    
+
     // Render immediately from cache (if we have data for this area)
     renderAllGyms();
-    
+
     // Then fetch new data to update/fill gaps
     fetchGymsFromOverpass();
 }
@@ -294,7 +294,7 @@ document.getElementById("btn-search").addEventListener("click", async () => {
 
     try {
         const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=1`);
-        
+
         if (!response.ok) {
              throw new Error(`Nominatim API error: ${response.status}`);
         }
@@ -304,7 +304,7 @@ document.getElementById("btn-search").addEventListener("click", async () => {
         if (results.length > 0) {
             const lat = parseFloat(results[0].lat);
             const lon = parseFloat(results[0].lon);
-            
+
             startSearch(lat, lon, radiusKm);
 
         } else {
