@@ -24,12 +24,12 @@
 <main class="d-flex flex-grow-1 overflow-hidden">
     <aside sec:authorize="isAuthenticated()" th:replace="~{fragments/sidebar :: nav-sidebar}"
            class="flex-shrink-0"></aside>
-    <div class="flex-grow-1 d-flex">
-        <section th:insert="${pageContent}" class="h-100 w-100"></section>
+    <div class="flex-grow-1 overflow-auto">
+        <section th:insert="${pageContent}" class="w-100"></section>
     </div>
 </main>
-</body>
+
 <script src="/js/theme-toggle.js"></script>
 <script th:replace="~{fragments/language-selector :: languageSelectorScript}"></script>
-
+</body>
 </html>

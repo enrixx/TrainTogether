@@ -1,150 +1,214 @@
 package de.othr.traintogether.controller;
 
-import de.othr.traintogether.dto.GymDto;
+import de.othr.traintogether.dto.GymMapDto;
+import de.othr.traintogether.dto.UserDto;
+import de.othr.traintogether.model.Course;
 import de.othr.traintogether.model.Gym;
 import de.othr.traintogether.model.User;
-import de.othr.traintogether.repository.UserRepository;
+import de.othr.traintogether.service.CourseService;
 import de.othr.traintogether.service.GymService;
-import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import de.othr.traintogether.service.MinioService;
+import de.othr.traintogether.service.UserService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
-@RestController
-@RequestMapping("/api/gyms")
 @Controller
 @RequestMapping("/gym")
 public class GymController {
 
     private final GymService gymService;
-    private final UserRepository userRepository;
+    private final UserService userService;
+    private final MinioService minioService;
+    private final CourseService courseService;
 
-    public GymController(GymService gymService, UserRepository userRepository) {
-    public GymController(GymService gymService) {
+    public GymController(GymService gymService, UserService userService, MinioService minioService, CourseService courseService) {
         this.gymService = gymService;
-        this.userRepository = userRepository;
+        this.userService = userService;
+        this.minioService = minioService;
+        this.courseService = courseService;
     }
 
-    @GetMapping
-    public ResponseEntity<List<Gym>> getAllGyms() {
-        return ResponseEntity.ok(gymService.findAll());
+    // --- API for internal gym data ---
+    @GetMapping("/api/internal-gyms")
+    @ResponseBody
+    public List<GymMapDto> getInternalGyms() {
+        return gymService.findAll().stream()
+                .map(GymMapDto::new)
+                .collect(Collectors.toList());
     }
+
+    // --- Views ---
 
     @GetMapping("/{id}")
-    public ResponseEntity<Gym> getGymById(@PathVariable Long id) {
-        return gymService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
+    public String showGymPage(@PathVariable Long id, Model model, Authentication authentication) {
+        Optional<Gym> gymOpt = gymService.findById(id);
+        if (gymOpt.isPresent()) {
+            Gym gym = gymOpt.get();
 
-    @GetMapping("/search/city")
-    public ResponseEntity<List<Gym>> searchByCity(@RequestParam String city) {
-        return ResponseEntity.ok(gymService.searchByCity(city));
-    public String showGymPage(@PathVariable Long id, Model model) {
-        Optional<Gym> gym = gymService.getGymById(id);
-        if (gym.isPresent()) {
-            model.addAttribute("gym", gym.get());
+            if (authentication != null && authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("GYM_OWNER") || a.getAuthority().equals("ROLE_GYM_OWNER"))) {
+                
+                UserDto currentUser = userService.findUserDTOByEmail(authentication.getName());
+                
+                if (gym.getOwner() == null || !gym.getOwner().getId().equals(currentUser.getId())) {
+                    // Redirect to error page to avoid infinite loop with MainLayoutController
+                    return "redirect:/error?message=AccessDenied"; 
+                }
+            }
+
+            model.addAttribute("gym", gym);
+            if (authentication != null) {
+                User user = userService.getUserByEmail(authentication.getName());
+                model.addAttribute("currentUser", user);
+            }
             return "gym";
         } else {
             return "redirect:/map";
         }
     }
 
-    @GetMapping("/search/name")
-    public ResponseEntity<List<Gym>> searchByName(@RequestParam String name) {
-        return ResponseEntity.ok(gymService.searchByName(name));
-    }
-
-    @GetMapping("/owner/my-gyms")
-    @PreAuthorize("hasAuthority('GYM_OWNER')")
-    public ResponseEntity<List<Gym>> getMyGyms(Authentication authentication) {
-        User owner = userRepository.findByEmail(authentication.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        return ResponseEntity.ok(gymService.findByOwnerId(owner.getId()));
     @GetMapping("/edit/{id}")
-    @PreAuthorize("hasAuthority('GYMOWNER')")
-    public String showEditGymPage(@PathVariable Long id, Model model) {
-        Optional<Gym> gym = gymService.getGymById(id);
-        if (gym.isPresent()) {
-            model.addAttribute("gym", gym.get());
+    @PreAuthorize("hasAuthority('GYM_OWNER')")
+    public String showEditGymPage(@PathVariable Long id, Model model, Authentication authentication) {
+        Optional<Gym> gymOpt = gymService.findById(id);
+        if (gymOpt.isPresent()) {
+            Gym gym = gymOpt.get();
+            
+            UserDto currentUser = userService.findUserDTOByEmail(authentication.getName());
+
+            if (gym.getOwner() == null || !gym.getOwner().getId().equals(currentUser.getId())) {
+                return "redirect:/error?message=AccessDenied";
+            }
+
+            model.addAttribute("gym", gym);
             return "edit-gym";
         } else {
-            return "redirect:/map";
+            return "redirect:/map"; 
         }
     }
 
-    @PostMapping
-    @PreAuthorize("hasAuthority('GYM_OWNER')")
-    public ResponseEntity<Gym> createGym(@Valid @RequestBody GymDto gymDto, Authentication authentication) {
-        User owner = userRepository.findByEmail(authentication.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        Gym gym = new Gym();
-        gym.setName(gymDto.getName());
-        gym.setAddress(gymDto.getAddress());
-        gym.setCity(gymDto.getCity());
-        gym.setPostalCode(gymDto.getPostalCode());
-        gym.setPhoneNumber(gymDto.getPhoneNumber());
-        gym.setDescription(gymDto.getDescription());
-
-        Gym savedGym = gymService.create(gym, owner);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedGym);
     @PostMapping("/edit/{id}")
-    @PreAuthorize("hasAuthority('GYMOWNER')")
-    public String editGym(@PathVariable Long id, @ModelAttribute Gym gym) {
-        gym.setId(id);
-        gymService.saveGym(gym);
+    @PreAuthorize("hasAuthority('GYM_OWNER')")
+    public String editGym(@PathVariable Long id, 
+                          @ModelAttribute Gym gym, 
+                          @RequestParam(value = "bannerImage", required = false) MultipartFile bannerImage,
+                          Authentication authentication) {
+        Optional<Gym> existingGymOpt = gymService.findById(id);
+        if (existingGymOpt.isPresent()) {
+            Gym existingGym = existingGymOpt.get();
+            
+            UserDto currentUser = userService.findUserDTOByEmail(authentication.getName());
+
+            if (existingGym.getOwner() == null || !existingGym.getOwner().getId().equals(currentUser.getId())) {
+                return "redirect:/error?message=AccessDenied";
+            }
+            
+            // Handle banner image upload
+            if (bannerImage != null && !bannerImage.isEmpty()) {
+                // Delete old banner if it exists
+                if (existingGym.getBannerImageUrl() != null && !existingGym.getBannerImageUrl().isEmpty()) {
+                    minioService.deleteGymBanner(existingGym.getBannerImageUrl());
+                }
+                // Upload new banner
+                String newBannerUrl = minioService.uploadGymBanner(bannerImage, existingGym.getId());
+                existingGym.setBannerImageUrl(newBannerUrl);
+            }
+            
+            // Update other gym details
+            existingGym.setName(gym.getName());
+            existingGym.setAddress(gym.getAddress());
+            existingGym.setCity(gym.getCity());
+            existingGym.setPostalCode(gym.getPostalCode());
+            existingGym.setPhoneNumber(gym.getPhoneNumber());
+            existingGym.setDescription(gym.getDescription());
+            existingGym.setBannerText(gym.getBannerText());
+            existingGym.setBannerTextColor(gym.getBannerTextColor());
+            
+            gymService.update(id, existingGym);
+            
+            return "redirect:/gym/" + id;
+        }
+        return "redirect:/error?message=GymNotFound";
+    }
+
+    // --- Course Management ---
+
+    @PostMapping("/{id}/course/create")
+    @PreAuthorize("hasAuthority('GYM_OWNER')")
+    public String createCourse(@PathVariable Long id, 
+                               @RequestParam("name") String name,
+                               @RequestParam("description") String description,
+                               @RequestParam("dateTime") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateTime,
+                               @RequestParam("maxParticipants") int maxParticipants,
+                               Authentication authentication) {
+        Optional<Gym> gymOpt = gymService.findById(id);
+        if (gymOpt.isPresent()) {
+            Gym gym = gymOpt.get();
+            UserDto currentUser = userService.findUserDTOByEmail(authentication.getName());
+            
+            if (gym.getOwner() == null || !gym.getOwner().getId().equals(currentUser.getId())) {
+                return "redirect:/error?message=AccessDenied";
+            }
+
+            Course course = new Course();
+            course.setName(name);
+            course.setDescription(description);
+            course.setDateTime(dateTime);
+            course.setMaxParticipants(maxParticipants);
+            // For now, assign the owner as the trainer. Later we can add a dropdown to select a GymWorker.
+            course.setTrainer(userService.getUserByEmail(authentication.getName()));
+            
+            courseService.createCourse(course, gym);
+            return "redirect:/gym/" + id;
+        }
+        return "redirect:/map";
+    }
+
+    @PostMapping("/{id}/course/{courseId}/join")
+    @PreAuthorize("isAuthenticated()")
+    public String joinCourse(@PathVariable Long id, @PathVariable Long courseId, Authentication authentication) {
+        User user = userService.getUserByEmail(authentication.getName());
+        try {
+            courseService.joinCourse(courseId, user);
+        } catch (Exception e) {
+            // Handle full course or other errors
+        }
         return "redirect:/gym/" + id;
     }
 
-    @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('GYM_OWNER')")
-    public ResponseEntity<Gym> updateGym(@PathVariable Long id,
-                                         @Valid @RequestBody GymDto gymDto,
-                                         Authentication authentication) {
-        User owner = userRepository.findByEmail(authentication.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        if (!gymService.isOwner(id, owner.getId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-
-        Gym gym = new Gym();
-        gym.setName(gymDto.getName());
-        gym.setAddress(gymDto.getAddress());
-        gym.setCity(gymDto.getCity());
-        gym.setPostalCode(gymDto.getPostalCode());
-        gym.setPhoneNumber(gymDto.getPhoneNumber());
-        gym.setDescription(gymDto.getDescription());
-
-        Gym updatedGym = gymService.update(id, gym);
-        return ResponseEntity.ok(updatedGym);
+    @PostMapping("/{id}/course/{courseId}/leave")
+    @PreAuthorize("isAuthenticated()")
+    public String leaveCourse(@PathVariable Long id, @PathVariable Long courseId, Authentication authentication) {
+        User user = userService.getUserByEmail(authentication.getName());
+        courseService.leaveCourse(courseId, user);
+        return "redirect:/gym/" + id;
     }
-
-    @DeleteMapping("/{id}")
+    
+    @PostMapping("/{id}/course/{courseId}/delete")
     @PreAuthorize("hasAuthority('GYM_OWNER')")
-    public ResponseEntity<Void> deleteGym(@PathVariable Long id, Authentication authentication) {
-        User owner = userRepository.findByEmail(authentication.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        if (!gymService.isOwner(id, owner.getId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    public String deleteCourse(@PathVariable Long id, @PathVariable Long courseId, Authentication authentication) {
+        Optional<Gym> gymOpt = gymService.findById(id);
+        if (gymOpt.isPresent()) {
+            Gym gym = gymOpt.get();
+            UserDto currentUser = userService.findUserDTOByEmail(authentication.getName());
+            
+            if (gym.getOwner() == null || !gym.getOwner().getId().equals(currentUser.getId())) {
+                return "redirect:/error?message=AccessDenied";
+            }
+            
+            courseService.deleteCourse(courseId);
+            return "redirect:/gym/" + id;
         }
-
-        gymService.deleteById(id);
-        return ResponseEntity.noContent().build();
+        return "redirect:/map";
     }
 }
-

@@ -8,14 +8,14 @@
                     <span th:text="#{nav.admin.dashboard}">Admin Dashboard</span>
                 </a>
             </li>
-            <li sec:authorize="hasAnyAuthority('ADMIN', 'GYM_OWNER', 'GYM_WORKER', 'PENDING_GYM_WORKER', 'PENDING_GYM_WORKER')">
-                <a href="/Dashboard" class="nav-link link-body-emphasis">
+            <li sec:authorize="hasAnyAuthority('ADMIN', 'GYM_OWNER', 'GYM_WORKER', 'PENDING_GYM_WORKER')">
+                <a href="/dashboard" class="nav-link link-body-emphasis">
                     <img class="bi pe-none me-2" th:src="@{/images/svg/person-circle.svg}" width="16" height="16"
                          alt=""/>
                     <span th:text="#{nav.dashboard}">Dashboard</span>
                 </a>
             </li>
-            <li>
+            <li sec:authorize="hasAnyAuthority('ADMIN', 'USER', 'GYM_WORKER', 'GYM_OWNER')">
                 <a href="/map" class="nav-link link-body-emphasis">
                     <img class="bi pe-none me-2" th:src="@{/images/svg/person-circle.svg}" width="16" height="16"
                          alt=""/>
@@ -29,7 +29,7 @@
                     <span th:text="#{nav.chat}">Chat</span>
                 </a>
             </li>
-            <li sec:authorize="hasAnyAuthority('ADMIN','USER', 'GYM_OWNER', 'GYM_WORKER')">
+            <li sec:authorize="hasAnyAuthority('ADMIN','USER', 'GYM_WORKER')">
                 <a href="/friends" class="nav-link link-body-emphasis">
                     <img class="bi pe-none me-2" th:src="@{/images/svg/person-circle.svg}" width="16" height="16"
                          alt=""/>

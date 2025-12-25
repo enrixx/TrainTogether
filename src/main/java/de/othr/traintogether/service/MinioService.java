@@ -76,6 +76,15 @@ public class MinioService {
         deleteObjectByUrlOrName(urlOrObjectName);
     }
 
+    public String uploadGymBanner(MultipartFile file, Long gymId) {
+        validateFile(file);
+        return saveFile(file, "gym-banners", String.valueOf(gymId));
+    }
+
+    public void deleteGymBanner(String urlOrObjectName) {
+        deleteObjectByUrlOrName(urlOrObjectName);
+    }
+
     public String getPresignedUrl(String objectName, int expiryMinutes) {
         try {
             return minioClient.getPresignedObjectUrl(

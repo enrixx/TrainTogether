@@ -1,17 +1,14 @@
 package de.othr.traintogether.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "gyms")
@@ -24,18 +21,16 @@ public class Gym {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(length = 100, nullable = false)
+    @Column(nullable = false)
     private String name;
-    private double lat;
-    private double lon;
 
-    @Column(length = 200)
+    @Column(nullable = false)
     private String address;
 
-    @Column(length = 50)
+    @Column(nullable = false)
     private String city;
 
-    @Column(length = 10)
+    @Column(nullable = false, length = 10)
     private String postalCode;
 
     @Column(length = 20)
@@ -44,18 +39,33 @@ public class Gym {
     @Column(length = 1000)
     private String description;
 
-    @ManyToOne
-    @JoinColumn(name = "owner_id", nullable = false)
-    private User owner;
+    @Column(length = 500)
+    private String bannerImageUrl;
 
-    @OneToMany(mappedBy = "gym", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<GymWorker> gymWorkers = new HashSet<>();
+    @Column(length = 100)
+    private String bannerText;
+
+    @Column(length = 20)
+    private String bannerTextColor;
+
+    private double lat;
+    private double lon;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
-    public Gym(String name, User owner) {
-        this.name = name;
-        this.owner = owner;
-    }
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id")
+    @JsonIgnore
+    private User owner;
+
+    @OneToMany(mappedBy = "gym", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("dateTime ASC")
+    private List<Course> courses = new ArrayList<>();
+
+    @OneToMany(mappedBy = "gym", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<GymWorker> workers = new ArrayList<>();
+
+//    @OneToMany(mappedBy = "gym", cascade = CascadeType.ALL, orphanRemoval = true)
+//    private List<GymRating> ratings;
 }

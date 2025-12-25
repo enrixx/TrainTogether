@@ -3,12 +3,15 @@ package de.othr.traintogether.seed;
 import de.othr.traintogether.dto.GymOwnerRegisterDto;
 import de.othr.traintogether.dto.RegisterDto;
 import de.othr.traintogether.dto.chat.SendChatMessageDto;
+import de.othr.traintogether.model.Gym;
 import de.othr.traintogether.model.Role;
+import de.othr.traintogether.model.User;
 import de.othr.traintogether.model.chat.ChatRole;
 import de.othr.traintogether.repository.UserRepository;
 import de.othr.traintogether.repository.chat.ChatMessageRepository;
 import de.othr.traintogether.repository.chat.ChatRoomMemberRepository;
 import de.othr.traintogether.repository.chat.ChatRoomRepository;
+import de.othr.traintogether.service.GymService;
 import de.othr.traintogether.service.UserService;
 import de.othr.traintogether.service.chat.ChatMessageService;
 import de.othr.traintogether.service.chat.ChatRoomService;
@@ -25,18 +28,21 @@ public class DataInitializer implements CommandLineRunner {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatRoomService chatRoomService;
     private final ChatMessageService chatMessageService;
+    private final GymService gymService;
 
-    public DataInitializer(UserRepository repo, UserService userService, ChatRoomRepository chatRoomRepository, ChatRoomService chatRoomService, ChatRoomMemberRepository chatRoomMemberRepository, ChatMessageRepository chatMessageRepository, ChatMessageService chatMessageService) {
+    public DataInitializer(UserRepository repo, UserService userService, ChatRoomRepository chatRoomRepository, ChatRoomService chatRoomService, ChatRoomMemberRepository chatRoomMemberRepository, ChatMessageRepository chatMessageRepository, ChatMessageService chatMessageService, GymService gymService) {
         this.userRepository = repo;
         this.userService = userService;
         this.chatRoomRepository = chatRoomRepository;
         this.chatRoomService = chatRoomService;
         this.chatMessageService = chatMessageService;
+        this.gymService = gymService;
     }
 
     @Override
     public void run(String... args) {
         seedUsers();
+        seedGyms();
         seedExampleChats();
     }
 
@@ -67,6 +73,27 @@ public class DataInitializer implements CommandLineRunner {
         userService.registerGymOwner(pendingOwnerDto);
 
         userService.registerUser(new RegisterDto("Pworker@o", "Pworker", "Pending Gym Worker", "Hue G.", "Rection"), Role.PENDING_GYM_WORKER);
+    }
+
+    private void seedGyms() {
+        if (gymService.findAll().stream().anyMatch(g -> g.getName().equals("McFit Regensburg"))) {
+            return;
+        }
+
+        Optional<User> ownerOpt = userRepository.findByEmail("owner@o");
+        if (ownerOpt.isPresent()) {
+            User owner = ownerOpt.get();
+            Gym gym = new Gym();
+            gym.setName("McFit Regensburg");
+            gym.setAddress("Frankenstraße 2c");
+            gym.setCity("Regensburg");
+            gym.setPostalCode("93059");
+            gym.setPhoneNumber("0941 7852345");
+            gym.setDescription("McFit Regensburg - Trainieren auf 2000qm. 24h geöffnet.");
+            
+            // Coordinates will be set automatically by GymService
+            gymService.create(gym, owner);
+        }
     }
 
     private void seedExampleChats() {

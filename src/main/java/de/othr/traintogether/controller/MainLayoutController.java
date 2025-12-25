@@ -1,15 +1,19 @@
 package de.othr.traintogether.controller;
 
 import de.othr.traintogether.dto.UserDto;
+import de.othr.traintogether.model.Gym;
 import de.othr.traintogether.model.RequestStatus;
 import de.othr.traintogether.repository.GymOwnerRequestRepository;
 import de.othr.traintogether.service.GymOwnerRequestService;
+import de.othr.traintogether.service.GymService;
 import de.othr.traintogether.service.UserService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+
+import java.util.List;
 
 
 @Controller
@@ -18,13 +22,16 @@ public class MainLayoutController {
     private final UserService userService;
     private final GymOwnerRequestRepository gymOwnerRequestRepository;
     private final GymOwnerRequestService gymOwnerRequestService;
+    private final GymService gymService;
 
     public MainLayoutController(UserService userService,
                                GymOwnerRequestRepository gymOwnerRequestRepository,
-                               GymOwnerRequestService gymOwnerRequestService) {
+                               GymOwnerRequestService gymOwnerRequestService,
+                               GymService gymService) {
         this.userService = userService;
         this.gymOwnerRequestRepository = gymOwnerRequestRepository;
         this.gymOwnerRequestService = gymOwnerRequestService;
+        this.gymService = gymService;
     }
 
     @GetMapping({"/", "/home"})
@@ -34,6 +41,28 @@ public class MainLayoutController {
         if (authentication != null && authentication.isAuthenticated()) {
             String email = authentication.getName();
             UserDto user = userService.findUserDTOByEmail(email);
+            
+            boolean isGymOwner = authentication.getAuthorities().stream()
+                .anyMatch(a -> {
+                    String auth = a.getAuthority();
+                    return auth.equals("GYM_OWNER") || auth.equals("ROLE_GYM_OWNER") || auth.equals("OWNER");
+                });
+            
+            if (isGymOwner && user != null) {
+                // Find the gym for the button on the home page
+                List<Gym> gyms = gymService.findByOwnerId(user.getId());
+                
+                if (gyms.isEmpty()) {
+                    gyms = gymService.findAll().stream()
+                        .filter(g -> g.getOwner() != null && g.getOwner().getEmail().equalsIgnoreCase(email))
+                        .toList();
+                }
+
+                if (!gyms.isEmpty()) {
+                    model.addAttribute("myGymId", gyms.get(0).getId());
+                }
+            }
+
             if (user != null) {
                 model.addAttribute("currentUser", user);
 
@@ -42,8 +71,6 @@ public class MainLayoutController {
                 );
                 model.addAttribute("hasPendingGymOwnerRequest", hasPendingRequest);
 
-                // Check if user has a rejected gym owner request (for reapplication button)
-                // Only show rejected banner if user has NO pending request
                 boolean hasRejectedRequest = !hasPendingRequest && gymOwnerRequestService.hasRejectedRequest(email);
                 model.addAttribute("hasRejectedGymOwnerRequest", hasRejectedRequest);
             }
@@ -52,16 +79,38 @@ public class MainLayoutController {
         return "home";
     }
 
-
-    //TODO: Move To separate Controller
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'GYM_OWNER', 'GYM_WORKER', 'PENDING_GYM_WORKER', 'PENDING_GYM_WORKER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'GYM_OWNER', 'GYM_WORKER', 'PENDING_GYM_WORKER')")
     @GetMapping("/dashboard")
-    public String dashboard(Model model) {
+    public String dashboard(Model model, Authentication authentication) {
+        // Redirect Gym Owners to their edit page
+        boolean isGymOwner = authentication.getAuthorities().stream()
+            .anyMatch(a -> {
+                String auth = a.getAuthority();
+                return auth.equals("GYM_OWNER") || auth.equals("ROLE_GYM_OWNER") || auth.equals("OWNER");
+            });
+
+        if (isGymOwner) {
+            UserDto user = userService.findUserDTOByEmail(authentication.getName());
+            if (user != null) {
+                List<Gym> gyms = gymService.findByOwnerId(user.getId());
+                
+                if (gyms.isEmpty()) {
+                    gyms = gymService.findAll().stream()
+                        .filter(g -> g.getOwner() != null && g.getOwner().getEmail().equalsIgnoreCase(authentication.getName()))
+                        .toList();
+                }
+
+                if (!gyms.isEmpty()) {
+                    return "redirect:/gym/edit/" + gyms.get(0).getId();
+                }
+            }
+        }
+
         model.addAttribute("title", "Dashboard");
         return "dashboard";
     }
 
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'USER', 'GYM_WORKER', 'GYM_OWNER')")
     @GetMapping("/map")
     public String map(Model model) {
         model.addAttribute("title", "Map");
@@ -76,4 +125,3 @@ public class MainLayoutController {
     }
 
 }
-

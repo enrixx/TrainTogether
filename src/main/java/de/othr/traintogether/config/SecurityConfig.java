@@ -49,8 +49,6 @@ public class SecurityConfig {
                         .requestMatchers("/", "/register", "/register/gym-owner", "/login",
                                          "/forgot-password", "/reset-password", "/error", "/error/**").permitAll()
                         .requestMatchers("/js/**", "/images/**","/css/**", "/webjars/**","/favicon.ico").permitAll()
-                        .requestMatchers("/gym/**").hasAnyAuthority("USER", "GYMOWNER")
-                        .requestMatchers("/gym/edit/**").hasAuthority("GYMOWNER")
                         .anyRequest().authenticated())
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(form -> form
