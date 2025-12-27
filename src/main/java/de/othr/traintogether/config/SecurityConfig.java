@@ -1,8 +1,11 @@
 package de.othr.traintogether.config;
 
+import de.othr.traintogether.filter.JwtAuthFilter;
+import de.othr.traintogether.security.JwtAuthenticationEntryPoint;
 import de.othr.traintogether.service.UserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -12,9 +15,11 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -41,7 +46,35 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationProvider authenticationProvider) throws Exception {
+    @Order(1)
+    public SecurityFilterChain apiFilterChain(HttpSecurity http,
+                                             JwtAuthFilter jwtAuthFilter,
+                                             JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
+                                             AuthenticationProvider authenticationProvider) throws Exception {
+        http
+                .csrf(AbstractHttpConfigurer::disable)
+                .securityMatcher("/api/**")
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/api/auth/**",
+                                "/api-docs/**",
+                                "/api-docs",
+                                "/swagger-ui/**",
+                                "/swagger-ui/index.html"
+                        ).permitAll()
+                        .anyRequest().authenticated())
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(e -> e.authenticationEntryPoint(jwtAuthenticationEntryPoint))
+                .authenticationProvider(authenticationProvider)
+
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    @Bean
+    @Order(2)
+    public SecurityFilterChain mvcFilterChain(HttpSecurity http, AuthenticationProvider authenticationProvider) throws Exception {
         http
                 .authenticationProvider(authenticationProvider)
                 .csrf(Customizer.withDefaults())
@@ -53,6 +86,26 @@ public class SecurityConfig {
                         .requestMatchers("/gym/edit/**").hasAnyAuthority("GYM_OWNER", "ROLE_GYM_OWNER", "OWNER")
                         // General rules later - Allow public access to view gyms
                         .requestMatchers("/gym/**").permitAll()
+                        // public MVC endpoints + allow swagger/ui and openapi JSON for browser access
+                        .requestMatchers(
+                                "/",
+                                "/register",
+                                "/register/gym-owner",
+                                "/login",
+                                "/forgot-password",
+                                "/reset-password",
+                                "/error",
+                                "/error/**",
+                                "/js/**",
+                                "/images/**",
+                                "/css/**",
+                                "/webjars/**",
+                                "/favicon.ico",
+                                "/api-docs/**",
+                                "/api-docs",
+                                "/swagger-ui/**",
+                                "/swagger-ui/index.html"
+                        ).permitAll()
                         .anyRequest().authenticated())
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(form -> form
@@ -63,7 +116,6 @@ public class SecurityConfig {
                         .failureUrl("/login?error=true")
                 )
                 .logout((logout) -> logout.logoutSuccessUrl("/"));
-
         return http.build();
     }
 }

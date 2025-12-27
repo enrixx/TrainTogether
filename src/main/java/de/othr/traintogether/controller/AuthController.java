@@ -2,6 +2,7 @@ package de.othr.traintogether.controller;
 
 import de.othr.traintogether.dto.*;
 import de.othr.traintogether.model.User;
+import de.othr.traintogether.security.JwtUtil;
 import de.othr.traintogether.service.EmailService;
 import de.othr.traintogether.service.GymOwnerRequestService;
 import de.othr.traintogether.service.UserService;
@@ -12,6 +13,8 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -19,6 +22,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Locale;
@@ -32,18 +36,33 @@ public class AuthController {
     private final GymOwnerRequestService gymOwnerRequestService;
     private final EmailService emailService;
     private final MessageSource messageSource;
+    private final JwtUtil jwtUtil;
+    private final UserDetailsService userDetailsService;
 
-    public AuthController(UserService userService, GymOwnerRequestService gymOwnerRequestService, EmailService emailService, MessageSource messageSource) {
+    public AuthController(UserService userService, GymOwnerRequestService gymOwnerRequestService, EmailService emailService, MessageSource messageSource, JwtUtil jwtUtil, UserDetailsService userDetailsService) {
         this.userService = userService;
         this.gymOwnerRequestService = gymOwnerRequestService;
         this.emailService = emailService;
         this.messageSource = messageSource;
+        this.jwtUtil = jwtUtil;
+        this.userDetailsService = userDetailsService;
     }
 
     @PreAuthorize("isAnonymous()")
     @GetMapping("/login")
     public String loginPage() {
         return "login";
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/token")
+    @ResponseBody
+    public AuthResponse tokenForAuthenticatedUser(Authentication authentication) {
+        // This endpoint is protected by the MVC security chain (session-based).
+        String email = authentication.getName();
+        UserDetails ud = userDetailsService.loadUserByUsername(email);
+        String token = jwtUtil.generateToken(ud);
+        return new AuthResponse(token, jwtUtil.getJwtExpirationMs());
     }
 
     @PreAuthorize("isAnonymous()")
@@ -100,7 +119,6 @@ public class AuthController {
         }
 
         try {
-            ;
             userService.registerGymOwner(registerDto);
             return "redirect:/login?registered=gym-owner";
         } catch (Exception e) {
