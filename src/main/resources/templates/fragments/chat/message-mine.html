@@ -2,11 +2,9 @@
      class="d-flex flex-row justify-content-end"
      th:attr="data-message-id=${message.id}, data-cursor=${message.cursor}">
     <div style="max-width: calc(100% - 60px);">
-        <p class="small p-2 me-3 mb-1 text-white rounded-3 bg-primary"
-           th:text="${message.content}"
-           style="white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word;">
-            Message
-        </p>
+        <div class="p-2 me-3 mb-1 rounded-3 bg-primary">
+            <div th:replace="~{fragments/chat/message-content :: chatMessageContent(message=${message})}"></div>
+        </div>
         <p class="small me-3 mb-3 rounded-3 text-muted" th:text="${message.sentAt}">Time</p>
     </div>
     <img th:if="${roomType != 'DM'}" th:src="${message.sender.SenderPictureUrl}"

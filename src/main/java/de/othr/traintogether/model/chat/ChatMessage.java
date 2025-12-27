@@ -54,4 +54,11 @@ public class ChatMessage {
     @JoinColumn(name = "attachment_id", unique = true)
     private ChatAttachment attachment;
 
+    public void setAttachment(ChatAttachment attachment) {
+        this.attachment = attachment;
+        if (attachment != null) {
+            attachment.setMessage(this);
+        }
+    }
+
 }

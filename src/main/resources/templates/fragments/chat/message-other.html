@@ -10,11 +10,9 @@
                th:text="${message.sender.SenderName}"
                style="font-size:0.75rem;">Name</p>
 
-            <p class="small"
-               th:text="${message.content}"
-               style="white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word;">
-                Message
-            </p>
+            <div>
+                <div th:replace="~{fragments/chat/message-content :: chatMessageContent(message=${message})}"></div>
+            </div>
         </div>
         <p class="small ms-3 mb-3 rounded-3 text-muted float-end" th:text="${message.sentAt}">Time</p>
     </div>

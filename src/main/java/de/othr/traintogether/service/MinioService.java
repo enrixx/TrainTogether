@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -15,6 +16,19 @@ public class MinioService {
 
     private final MinioClient minioClient;
     private final String bucketName;
+
+    private static final Set<String> ALLOWED_ATTACHMENT_CONTENT_TYPES = Set.of(
+            "application/pdf",
+            "application/msword", // .doc
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+            "application/vnd.ms-excel", // .xls
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
+            "application/vnd.ms-powerpoint", // .ppt
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation", // .pptx
+            "application/zip",
+            "application/x-rar-compressed",
+            "text/plain"
+    );
 
     public MinioService(MinioClient minioClient,
                         @Value("${minio.bucket-name}") String bucketName) {
@@ -59,7 +73,7 @@ public class MinioService {
     }
 
     public String uploadProfilePicture(MultipartFile file, Long userId) {
-        validateFile(file);
+        validateImageFile(file);
         return saveFile(file, "profile-pictures", String.valueOf(userId));
     }
 
@@ -68,11 +82,20 @@ public class MinioService {
     }
 
     public String uploadGroupPicture(MultipartFile file, Long groupId) {
-        validateFile(file);
+        validateImageFile(file);
         return saveFile(file, "group-pictures", String.valueOf(groupId));
     }
 
     public void deleteGroupPicture(String urlOrObjectName) {
+        deleteObjectByUrlOrName(urlOrObjectName);
+    }
+
+    public String uploadChatAttachment(MultipartFile file, Long chatId) {
+        validateAttachmentFile(file);
+        return saveFile(file, "chat-attachments", String.valueOf(chatId));
+    }
+
+    public void deleteChatAttachment(String urlOrObjectName) {
         deleteObjectByUrlOrName(urlOrObjectName);
     }
 
@@ -162,14 +185,39 @@ public class MinioService {
         }
     }
 
-    private void validateFile(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("File cannot be empty");
-        }
+    private void validateImageFile(MultipartFile file) {
+        baseValidate(file);
 
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
             throw new IllegalArgumentException("File must be an image");
+        }
+    }
+
+    private void validateAttachmentFile(MultipartFile file) {
+        baseValidate(file);
+
+        String contentType = file.getContentType();
+        boolean allowed = false;
+
+        if (contentType != null) {
+            if (contentType.startsWith("image/")) {
+                allowed = true;
+            } else if (ALLOWED_ATTACHMENT_CONTENT_TYPES.contains(contentType)) {
+                allowed = true;
+            }
+        }
+
+        if (!allowed) {
+            throw new IllegalArgumentException(
+                    "Unsupported file type. Possible Types: images, PDF, DOC/DOCX, XLS/XLSX, PPT/PPTX, ZIP, RAR, TXT"
+            );
+        }
+    }
+
+    private void baseValidate(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("File cannot be empty");
         }
 
         // Max 5MB (configured in application.properties)
