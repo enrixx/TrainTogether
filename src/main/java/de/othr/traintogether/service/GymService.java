@@ -78,6 +78,9 @@ public class GymService {
         existingGym.setPostalCode(updatedGym.getPostalCode());
         existingGym.setPhoneNumber(updatedGym.getPhoneNumber());
         existingGym.setDescription(updatedGym.getDescription());
+        existingGym.setBannerText(updatedGym.getBannerText());
+        existingGym.setBannerTextColor(updatedGym.getBannerTextColor());
+        existingGym.setBannerImageUrl(updatedGym.getBannerImageUrl());
 
         if (addressChanged) {
             geocodeGym(existingGym);
@@ -96,6 +99,11 @@ public class GymService {
     @Transactional(readOnly = true)
     public List<Gym> findByOwnerId(Long ownerId) {
         return gymRepository.findByOwnerId(ownerId);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Gym> findByOwnerEmail(String email) {
+        return gymRepository.findFirstByOwnerEmail(email);
     }
 
     @Transactional(readOnly = true)

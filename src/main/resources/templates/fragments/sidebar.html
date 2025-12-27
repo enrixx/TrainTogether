@@ -29,7 +29,7 @@
                     <span th:text="#{nav.chat}">Chat</span>
                 </a>
             </li>
-            <li sec:authorize="hasAnyAuthority('ADMIN','USER', 'GYM_WORKER')">
+            <li sec:authorize="hasAnyAuthority('USER')">
                 <a href="/friends" class="nav-link link-body-emphasis">
                     <img class="bi pe-none me-2" th:src="@{/images/svg/person-circle.svg}" width="16" height="16"
                          alt=""/>

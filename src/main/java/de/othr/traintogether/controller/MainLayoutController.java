@@ -13,7 +13,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
-import java.util.List;
+import java.util.Optional;
 
 
 @Controller
@@ -41,27 +41,10 @@ public class MainLayoutController {
         if (authentication != null && authentication.isAuthenticated()) {
             String email = authentication.getName();
             UserDto user = userService.findUserDTOByEmail(email);
-
-            boolean isGymOwner = authentication.getAuthorities().stream()
-                .anyMatch(a -> {
-                    String auth = a.getAuthority();
-                    return auth.equals("GYM_OWNER") || auth.equals("ROLE_GYM_OWNER") || auth.equals("OWNER");
-                });
-
-            if (isGymOwner && user != null) {
-                // Find the gym for the button on the home page
-                List<Gym> gyms = gymService.findByOwnerId(user.getId());
-
-                if (gyms.isEmpty()) {
-                    gyms = gymService.findAll().stream()
-                        .filter(g -> g.getOwner() != null && g.getOwner().getEmail().equalsIgnoreCase(email))
-                        .toList();
-                }
-
-                if (!gyms.isEmpty()) {
-                    model.addAttribute("myGymId", gyms.get(0).getId());
-                }
-            }
+            
+            // Check if user has a gym (implicitly checks if they are a gym owner)
+            Optional<Gym> myGym = gymService.findByOwnerEmail(email);
+            myGym.ifPresent(gym -> model.addAttribute("myGymId", gym.getId()));
 
             if (user != null) {
                 model.addAttribute("currentUser", user);
@@ -82,27 +65,11 @@ public class MainLayoutController {
     @PreAuthorize("hasAnyAuthority('ADMIN', 'GYM_OWNER', 'GYM_WORKER', 'PENDING_GYM_WORKER')")
     @GetMapping("/dashboard")
     public String dashboard(Model model, Authentication authentication) {
-        // Redirect Gym Owners to their edit page
-        boolean isGymOwner = authentication.getAuthorities().stream()
-            .anyMatch(a -> {
-                String auth = a.getAuthority();
-                return auth.equals("GYM_OWNER") || auth.equals("ROLE_GYM_OWNER") || auth.equals("OWNER");
-            });
-
-        if (isGymOwner) {
-            UserDto user = userService.findUserDTOByEmail(authentication.getName());
-            if (user != null) {
-                List<Gym> gyms = gymService.findByOwnerId(user.getId());
-
-                if (gyms.isEmpty()) {
-                    gyms = gymService.findAll().stream()
-                        .filter(g -> g.getOwner() != null && g.getOwner().getEmail().equalsIgnoreCase(authentication.getName()))
-                        .toList();
-                }
-
-                if (!gyms.isEmpty()) {
-                    return "redirect:/gym/edit/" + gyms.get(0).getId();
-                }
+        // Redirect Gym Owners to their edit page if they have a gym
+        if (authentication != null) {
+            Optional<Gym> myGym = gymService.findByOwnerEmail(authentication.getName());
+            if (myGym.isPresent()) {
+                return "redirect:/gym/edit/" + myGym.get().getId();
             }
         }
 
@@ -123,5 +90,5 @@ public class MainLayoutController {
         model.addAttribute("title", "Workouts");
         return "workouts";
     }
-}
 
+}

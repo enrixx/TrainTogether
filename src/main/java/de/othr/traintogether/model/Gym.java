@@ -69,7 +69,4 @@ public class Gym {
 
     @OneToMany(mappedBy = "gym", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<GymWorker> workers = new ArrayList<>();
-
-//    @OneToMany(mappedBy = "gym", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private List<GymRating> ratings;
 }
