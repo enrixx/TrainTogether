@@ -1,12 +1,4 @@
-package de.othr.traintogether.controller;
-
-import de.othr.traintogether.model.Gym;
-import de.othr.traintogether.service.GymService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
+package de.othr.traintogether.api;
 
 //@RestController
 //@RequestMapping("/api/gyms")
