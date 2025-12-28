@@ -3,7 +3,7 @@
       th:replace="~{layout :: layout(~{::content})}">
 <head>
     <meta charset="UTF-8">
-    <title>Training Profile</title>
+    <title th:text="#{profile.title}">Training Profile</title>
     <style>
         .deleted-exercise {
             text-decoration: line-through;
@@ -21,34 +21,35 @@
             <div class="container-fluid m-0">
                 <div class="row">
                     <div class="col d-flex justify-content-start">
-                        <h2>About Me</h2>
+                        <h2 th:text="#{profile.about}">About Me</h2>
                     </div>
 
 
                     <div class="col d-flex justify-content-end">
                         <button class="btn btn-primary"
                                 data-bs-toggle="modal"
-                                data-bs-target="#editDescriptionModal">
+                                data-bs-target="#editDescriptionModal" th:text="#{profile.description.edit}">
                             Beschreibung bearbeiten
                         </button>
                     </div>
 
                     <div class="row">
-                        <p th:text="${profile.description}">Mein Trainingsprofil — automatisch generiert.</p>
+                        <p th:if="${profile != null}" style="white-space: pre-wrap;" th:text="${profile.description != null and !profile.description.isEmpty() ? profile.description : #messages.msg('profile.description.default')}">Mein Trainingsprofil — automatisch generiert.</p>
+                        <p th:if="${profile == null}" th:text="#{profile.notfound}">Kein Profil gefunden.</p>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Trainingssplit -->
-        <div class="p-4 mb-4 bg-body-tertiary rounded-3" >
+        <div class="p-4 mb-4 bg-body-tertiary rounded-3" th:if="${split != null}">
             <div class="container-fluid m-0">
                 <div class="row">
                     <div class="col d-flex justify-content-start">
-                        <h3 th:text="'Training Split: ' + ${split.splitName}">Push-Pull-Legs</h3>
+                        <h3 th:text="#{profile.split.title} + ': ' + ${split.splitName}">Push-Pull-Legs</h3>
                     </div>
                     <div class="col d-flex justify-content-end">
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editSplitModal">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editSplitModal" th:text="#{profile.split.edit}">
                             Trainingssplit bearbeiten
                         </button>
                     </div>
@@ -68,6 +69,9 @@
                 </div>
             </div>
         </div>
+        <div th:if="${split == null}">
+            <p th:text="#{profile.split.notfound}">Kein aktiver Trainingssplit gefunden.</p>
+        </div>
 
         <!-- Body Measurements -->
 
@@ -75,16 +79,16 @@
             <div class="container-fluid m-0">
                 <div class="row">
                     <div class="col d-flex justify-content-start">
-                        <h3>Body Measurements</h3>
+                        <h3 th:text="#{profile.measurements.title}">Body Measurements</h3>
                     </div>
                     <div class="col d-flex justify-content-end">
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editBodyMeasurementsModal">Body Measurements bearbeiten</button>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editBodyMeasurementsModal" th:text="#{profile.measurements.edit}">Body Measurements bearbeiten</button>
                     </div>
                 </div>
                 <hr>
 
                 <div th:if="${latestBodyMeasurements == null}">
-                    <p>No body measurements recorded yet.</p>
+                    <p th:text="#{profile.measurements.nodata}">No body measurements recorded yet.</p>
                 </div>
 
                 <div class="row g-2" th:if="${latestBodyMeasurements != null}">
@@ -92,17 +96,17 @@
                     <!-- BMI / Gewicht / Größe -->
                     <div class="col-md-2">
                         <div class="p-3 border rounded-3 text-center">
-                            <strong>BMI</strong>
+                            <strong th:text="#{profile.measurements.bmi}">BMI</strong>
                             <p th:text="${latestBodyMeasurements.bmi}"
                                th:class="${latestBodyMeasurements.bmi < 18.5} ? 'text-primary' : (${latestBodyMeasurements.bmi >= 25} ? 'text-danger' : 'text-success')">
                             </p>
                         </div>
                         <div class="p-3 border rounded-3 text-center mt-2">
-                            <strong>Gewicht</strong>
+                            <strong th:text="#{profile.measurements.weight}">Gewicht</strong>
                             <p th:text="${latestBodyMeasurements.gewicht} + ' kg'">80.0 kg</p>
                         </div>
                         <div class="p-3 border rounded-3 text-center mt-2">
-                            <strong>Größe</strong>
+                            <strong th:text="#{profile.measurements.height}">Größe</strong>
                             <p th:text="${latestBodyMeasurements.groesse} + ' cm'">180.0 cm</p>
                         </div>
                     </div>
@@ -110,11 +114,11 @@
                     <!-- Arms -->
                     <div class="col-md-2">
                         <div class="p-3 border rounded-3 text-center">
-                            <strong>Arm Links</strong>
+                            <strong th:text="#{profile.measurements.arm.left}">Arm Links</strong>
                             <p th:text="${latestBodyMeasurements.armLinks.value} + ' cm'">32.0 cm</p>
                         </div>
                         <div class="p-3 border rounded-3 text-center mt-2">
-                            <strong>Arm Rechts</strong>
+                            <strong th:text="#{profile.measurements.arm.right}">Arm Rechts</strong>
                             <p th:text="${latestBodyMeasurements.armRechts.value} + ' cm'">32.5 cm</p>
                         </div>
                     </div>
@@ -123,11 +127,11 @@
                     <!-- Unterarme -->
                     <div class="col-md-2">
                         <div class="p-3 border rounded-3 text-center">
-                            <strong>Unterarm Links</strong>
+                            <strong th:text="#{profile.measurements.forearm.left}">Unterarm Links</strong>
                             <p th:text="${latestBodyMeasurements.unterarmLinks.value} + ' cm'">28.0 cm</p>
                         </div>
                         <div class="p-3 border rounded-3 text-center mt-2">
-                            <strong>Unterarm Rechts</strong>
+                            <strong th:text="#{profile.measurements.forearm.right}">Unterarm Rechts</strong>
                             <p th:text="${latestBodyMeasurements.unterarmRechts.value} + ' cm'">28.2 cm</p>
                         </div>
                     </div>
@@ -135,11 +139,11 @@
                     <!-- Beine -->
                     <div class="col-md-2">
                         <div class="p-3 border rounded-3 text-center">
-                            <strong>Bein Links</strong>
+                            <strong th:text="#{profile.measurements.leg.left}">Bein Links</strong>
                             <p th:text="${latestBodyMeasurements.beinLinks.value} + ' cm'">55.0 cm</p>
                         </div>
                         <div class="p-3 border rounded-3 text-center mt-2">
-                            <strong>Bein Rechts</strong>
+                            <strong th:text="#{profile.measurements.leg.right}">Bein Rechts</strong>
                             <p th:text="${latestBodyMeasurements.beinRechts.value} + ' cm'">55.5 cm</p>
                         </div>
                     </div>
@@ -147,11 +151,11 @@
                     <!-- Brust/Schulter -->
                     <div class="col-md-2">
                         <div class="p-3 border rounded-3 text-center">
-                            <strong>Brust</strong>
+                            <strong th:text="#{profile.measurements.chest}">Brust</strong>
                             <p th:text="${latestBodyMeasurements.brust.value} + ' cm'">100.0 cm</p>
                         </div>
                         <div class="p-3 border rounded-3 text-center mt-2">
-                            <strong>Schulter</strong>
+                            <strong th:text="#{profile.measurements.shoulder}">Schulter</strong>
                             <p th:text="${latestBodyMeasurements.schulter.value} + ' cm'">50.0 cm</p>
                         </div>
                     </div>
@@ -159,11 +163,11 @@
                     <!-- Taille/Hüfte -->
                     <div class="col-md-2">
                         <div class="p-3 border rounded-3 text-center">
-                            <strong>Taille</strong>
+                            <strong th:text="#{profile.measurements.waist}">Taille</strong>
                             <p th:text="${latestBodyMeasurements.taille.value} + ' cm'">85.0 cm</p>
                         </div>
                         <div class="p-3 border rounded-3 text-center mt-2">
-                            <strong>Hüfte</strong>
+                            <strong th:text="#{profile.measurements.hips}">Hüfte</strong>
                             <p th:text="${latestBodyMeasurements.huefte.value} + ' cm'">95.0 cm</p>
                         </div>
                     </div>

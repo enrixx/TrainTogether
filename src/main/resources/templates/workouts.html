@@ -3,7 +3,7 @@
       th:replace="~{layout :: layout(~{::content})}">
 <head>
     <meta charset="UTF-8">
-    <title>Workouts</title>
+    <title th:text="#{workouts.title}">Workouts</title>
     <!-- This head section is ignored by Thymeleaf layout -->
 </head>
 <body>
@@ -17,10 +17,10 @@
         <div id="view-todays-workout" th:if="${todaysWorkout != null and not todaysWorkout.isEmpty()}">
             <div class="p-4 mb-4 bg-body-tertiary rounded-3">
                 <div class="d-flex justify-content-between align-items-center">
-                    <h3>Today's Logged Workout</h3>
+                    <h3 th:text="#{workouts.today.title}">Today's Logged Workout</h3>
                     <div class="d-flex gap-2">
-                        <a th:href="@{/workouts/previous}" class="btn btn-secondary">See Previous Workouts</a>
-                        <button id="edit-workout-btn" class="btn btn-primary">Edit Workout</button>
+                        <a th:href="@{/workouts/previous}" class="btn btn-secondary" th:text="#{workouts.previous}">See Previous Workouts</a>
+                        <button id="edit-workout-btn" class="btn btn-primary" th:text="#{workouts.edit}">Edit Workout</button>
                     </div>
                 </div>
                 <hr>
@@ -29,11 +29,11 @@
                     <li th:each="ex : ${todaysWorkout}" class="list-group-item">
                         <span th:text="${ex.exerciseName}" class="fw-bold"></span>
                         <span th:if="${ex.exerciseName != 'RESTDAY' and ex.exerciseName != 'Restday'}">
-                             - <span th:text="${ex.sets} + ' Sets'"></span>
+                             - <span th:text="${ex.sets} + ' ' + #{workouts.sets}"></span>
                              <br>
                              <small class="text-muted">
-                                 Reps: <span th:text="${ex.reps}"></span> |
-                                 Weight: <span th:text="${ex.weight}"></span> kg
+                                 <span th:text="#{workouts.reps}">Reps</span>: <span th:text="${ex.reps}"></span> |
+                                 <span th:text="#{workouts.weight}">Weight</span>: <span th:text="${ex.weight}"></span> kg
                              </small>
                         </span>
                     </li>
@@ -48,15 +48,15 @@
                 <div class="container-fluid m-0">
                     <div class="row">
                         <div class="col d-flex justify-content-start">
-                            <h3 th:if="${split != null}" th:text="'Training Split: ' + ${split.splitName}">Push-Pull-Legs</h3>
+                            <h3 th:if="${split != null}" th:text="#{workouts.split.title} + ': ' + ${split.splitName}">Push-Pull-Legs</h3>
                         </div>
                         <div class="col d-flex justify-content-end gap-2">
-                            <a th:href="@{/workouts/previous}" class="btn btn-secondary" th:if="${todaysWorkout == null or todaysWorkout.isEmpty()}">See Previous Workouts</a>
-                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editSplitModal">
+                            <a th:href="@{/workouts/previous}" class="btn btn-secondary" th:if="${todaysWorkout == null or todaysWorkout.isEmpty()}" th:text="#{workouts.previous}">See Previous Workouts</a>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editSplitModal" th:text="#{workouts.split.edit}">
                                 Trainingssplit bearbeiten
                             </button>
                             <button id="cancel-edit-btn" class="btn btn-outline-secondary"
-                                    th:if="${todaysWorkout != null and not todaysWorkout.isEmpty()}">
+                                    th:if="${todaysWorkout != null and not todaysWorkout.isEmpty()}" th:text="#{workouts.cancel}">
                                 Cancel
                             </button>
                         </div>
@@ -91,7 +91,7 @@
                      th:id="'collapse-day-' + ${day.id}"
                      data-bs-parent="#workoutAccordion">
                     <div class="card card-body">
-                        <h4 th:text="'Log Workout: ' + ${day.weekday}"></h4>
+                        <h4 th:text="#{workouts.log.header} + ': ' + ${day.weekday}"></h4>
 
                         <form class="workout-log-form" th:action="@{/workouts/log}" method="post">
                             <input type="hidden" name="trainingDayId" th:value="${day.id}"/>
@@ -102,7 +102,7 @@
                                     <input type="hidden" class="personal-exercise-id" th:value="${exercise.id}"/>
                                     <div class="col-sm-2">
                                         <div class="input-group">
-                                            <span class="input-group-text">Sets</span>
+                                            <span class="input-group-text" th:text="#{workouts.sets}">Sets</span>
                                             <input type="number" class="form-control sets-input" th:value="${exercise.sets}" required>
                                         </div>
                                     </div>
@@ -117,11 +117,11 @@
 
                             <div class="adhoc-exercises-container"></div>
 
-                            <button type="button" class="btn btn-outline-primary mt-3 add-adhoc-exercise-btn">+ Add Extra Exercise</button>
-                            <button type="submit" class="btn btn-success mt-3">Log Workout</button>
+                            <button type="button" class="btn btn-outline-primary mt-3 add-adhoc-exercise-btn" th:text="#{workouts.add.exercise}">+ Add Extra Exercise</button>
+                            <button type="submit" class="btn btn-success mt-3" th:text="#{workouts.log.button}">Log Workout</button>
 
                             <!-- Rest Day Button -->
-                            <button type="submit" formaction="/workouts/log-restday" class="btn btn-info mt-3">Mark as Rest Day</button>
+                            <button type="submit" formaction="/workouts/log-restday" class="btn btn-info mt-3" th:text="#{workouts.restday.button}">Mark as Rest Day</button>
                         </form>
                     </div>
                 </div>
@@ -130,17 +130,17 @@
 
         <!-- Progress Graph Section -->
         <div class="p-4 mt-4 bg-body-tertiary rounded-3">
-            <h3>Progress Tracker</h3>
+            <h3 th:text="#{workouts.progress.title}">Progress Tracker</h3>
             <div class="mb-3" style="max-width: 400px;">
-                <label for="progressExerciseSelect" class="form-label">Select Exercise</label>
+                <label for="progressExerciseSelect" class="form-label" th:text="#{workouts.progress.select}">Select Exercise</label>
                 <select class="form-select" id="progressExerciseSelect">
-                    <option value="" selected disabled>Choose exercise...</option>
+                    <option value="" selected disabled th:text="#{workouts.progress.choose}">Choose exercise...</option>
                     <option th:each="ex : ${allExercises}" th:value="${ex.id}" th:text="${ex.name}"></option>
                 </select>
             </div>
             <div style="height: 400px; position: relative;">
                 <canvas id="progressChart"></canvas>
-                <div id="chartMessage" class="position-absolute top-50 start-50 translate-middle text-muted" style="display: none;">
+                <div id="chartMessage" class="position-absolute top-50 start-50 translate-middle text-muted" style="display: none;" th:text="#{workouts.progress.nodata}">
                     No data available for this exercise.
                 </div>
             </div>
@@ -157,121 +157,10 @@
         window.loggedDayId = /*[[${loggedDayId}]]*/ null;
         window.todaysWorkout = /*[[${todaysWorkout}]]*/ null;
         window.allExercises = /*[[${allExercises}]]*/ [];
-
-        $(document).ready(function() {
-            // Initialize rep inputs for the auto-expanded day
-            $('.collapse.show').find('.sets-input').each(function() {
-                if (typeof generateSetInputs === 'function') {
-                    generateSetInputs(this);
-                }
-            });
-
-            // --- Progress Chart Logic ---
-            let progressChart = null;
-
-            $('#progressExerciseSelect').change(function() {
-                const exerciseId = $(this).val();
-                if (!exerciseId) return;
-
-                console.log("Fetching progress for exercise:", exerciseId);
-
-                const token = $("meta[name='_csrf']").attr("content");
-                const header = $("meta[name='_csrf_header']").attr("content");
-
-                fetch(`/workouts/api/progress?exerciseId=${exerciseId}`, {
-                    headers: {
-                        'Accept': 'application/json',
-                        [header]: token
-                    }
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok: ' + response.statusText);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log("Progress data received:", data);
-
-                    const chartMessage = document.getElementById('chartMessage');
-                    const canvas = document.getElementById('progressChart');
-
-                    if (!data || data.length === 0) {
-                        console.log("No data points found.");
-                        if (progressChart) {
-                            progressChart.destroy();
-                            progressChart = null;
-                        }
-                        chartMessage.style.display = 'block';
-                        return;
-                    }
-
-                    chartMessage.style.display = 'none';
-                    const labels = data.map(d => d.date);
-                    const weights = data.map(d => d.weight);
-
-                    const ctx = canvas.getContext('2d');
-
-                    if (progressChart) {
-                        progressChart.destroy();
-                    }
-
-                    if (typeof Chart === 'undefined') {
-                        console.error("Chart.js library is not loaded!");
-                        return;
-                    }
-
-                    progressChart = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: labels,
-                            datasets: [{
-                                label: 'Max Weight (kg)',
-                                data: weights,
-                                borderColor: 'rgba(75, 192, 192, 1)',
-                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                                borderWidth: 2,
-                                tension: 0.1,
-                                pointRadius: 5,
-                                pointHoverRadius: 7
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            scales: {
-                                y: {
-                                    beginAtZero: false,
-                                    title: {
-                                        display: true,
-                                        text: 'Weight (kg)'
-                                    }
-                                },
-                                x: {
-                                    title: {
-                                        display: true,
-                                        text: 'Date'
-                                    }
-                                }
-                            },
-                            plugins: {
-                                legend: {
-                                    display: true,
-                                    position: 'top'
-                                },
-                                tooltip: {
-                                    enabled: true
-                                }
-                            }
-                        }
-                    });
-                })
-                .catch(error => console.error('Error fetching progress data:', error));
-            });
-        });
     /*]]>*/
     </script>
     <script src="/js/workout-logger.js"></script>
+    <script src="/js/workout-progress-chart.js"></script>
 
     <style>
         .deleted-exercise { text-decoration: line-through; background-color: #ffe6e6; opacity: 0.7; }

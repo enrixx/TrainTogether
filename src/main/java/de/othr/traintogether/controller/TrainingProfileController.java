@@ -1,44 +1,32 @@
 package de.othr.traintogether.controller;
 
-import de.othr.traintogether.dto.BatchExerciseUpdateRequest;
-import de.othr.traintogether.dto.UserDto;
-import de.othr.traintogether.model.TrainingModel.*;
-import de.othr.traintogether.model.User;
-import de.othr.traintogether.repository.PersonalExerciseRepository;
-import de.othr.traintogether.repository.TrainingDayRepository;
-import de.othr.traintogether.repository.TrainingProfileRepository;
-import de.othr.traintogether.repository.UserRepository;
-import de.othr.traintogether.service.UserService;
+import de.othr.traintogether.dto.BatchExerciseUpdateRequestDto;
+import de.othr.traintogether.model.TrainingModel.PersonalExercise;
+import de.othr.traintogether.model.TrainingModel.TrainingProfile;
+import de.othr.traintogether.service.TrainingProfileService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.core.Authentication;
 
-import java.security.Principal;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-
 
 @Controller
 @RequiredArgsConstructor
 public class TrainingProfileController {
 
-    private final UserService userService;
-    private final TrainingProfileRepository profileRepo;
-    private final PersonalExerciseRepository exerciseRepo;
-    private final TrainingDayRepository trainingDayRepo;
-    private final UserRepository userRepository;
+    private static final Logger logger = LoggerFactory.getLogger(TrainingProfileController.class);
+    private final TrainingProfileService trainingProfileService;
 
     @GetMapping("/training/profile/me")
-    public String getTrainingProfile( Model model, Authentication authentication) {
+    public String getTrainingProfile(Model model, Authentication authentication) {
         String email = authentication.getName();
-        UserDto user = userService.findUserByEmail(email);
-        List<PersonalExercise> allExercises = exerciseRepo.findAllByUserId(user.getId());
-
-        TrainingProfile profile = profileRepo.findByUserId(user.getId());
+        TrainingProfile profile = trainingProfileService.getTrainingProfile(email);
+        List<PersonalExercise> allExercises = trainingProfileService.getAllExercises(email);
 
         if (profile == null) {
             model.addAttribute("error", "Kein Trainingsprofil gefunden.");
@@ -46,7 +34,7 @@ public class TrainingProfileController {
         }
 
         model.addAttribute("profile", profile);
-        model.addAttribute("split", profile.getActiveTraininSplit()); // Use the active split method
+        model.addAttribute("split", profile.getActiveTraininSplit());
         model.addAttribute("splits", profile.getSplits());
         if (!profile.getMeasurements().isEmpty()) {
             model.addAttribute("latestBodyMeasurements", profile.getMeasurements().getLast());
@@ -57,68 +45,29 @@ public class TrainingProfileController {
         return "TrainingPages/TrainingProfile";
     }
 
-
     @PostMapping("/training/profile/update-description")
     public String updateDescription(@RequestParam("description") String description,
                                     Authentication authentication) {
-
-        String email = authentication.getName();
-        UserDto user = userService.findUserByEmail(email);
-
-        TrainingProfile profile = profileRepo.findByUserId(user.getId());
-
-        profile.setDescription(description);
-        profileRepo.save(profile);
-
+        trainingProfileService.updateDescription(authentication.getName(), description);
         return "redirect:/training/profile/me?success=description-updated";
     }
 
     @PostMapping("/training/profile/me/create-split")
     public String createSplit(@RequestParam("splitName") String splitName,
                               Authentication authentication) {
-
-        String email = authentication.getName();
-        UserDto user = userService.findUserByEmail(email);
-        TrainingProfile profile = profileRepo.findByUserId(user.getId());
-
-        profile.addSplit(new TrainingSplit(splitName));
-
-        profileRepo.save(profile);
-
+        trainingProfileService.createSplit(authentication.getName(), splitName);
         return "redirect:/training/profile/me?success=split-created";
     }
 
     @PostMapping("/training/profile/me/set-active-split")
     public String setActiveSplit(@RequestParam("splitId") Long splitId, Authentication authentication) {
-        String email = authentication.getName();
-        UserDto user = userService.findUserByEmail(email);
-        TrainingProfile profile = profileRepo.findByUserId(user.getId());
-
-        profile.setActiveTraininSplitId(splitId);
-        profileRepo.save(profile);
-
+        trainingProfileService.setActiveSplit(authentication.getName(), splitId);
         return "redirect:/training/profile/me?success=active-split-updated";
     }
 
     @PostMapping("/training/profile/me/delete-split")
     public String deleteSplit(@RequestParam("splitId") Long splitId, Authentication authentication) {
-        String email = authentication.getName();
-        UserDto user = userService.findUserByEmail(email);
-        TrainingProfile profile = profileRepo.findByUserId(user.getId());
-
-        profile.getSplits().removeIf(s -> s.getId().equals(splitId));
-        
-        // If active split was deleted, reset active split
-        if (profile.getActiveTraininSplitId().equals(splitId)) {
-            if (!profile.getSplits().isEmpty()) {
-                profile.setActiveTraininSplitId(profile.getSplits().get(0).getId());
-            } else {
-                profile.setActiveTraininSplitId(null);
-            }
-        }
-
-        profileRepo.save(profile);
-
+        trainingProfileService.deleteSplit(authentication.getName(), splitId);
         return "redirect:/training/profile/me?success=split-deleted";
     }
 
@@ -127,60 +76,28 @@ public class TrainingProfileController {
             @RequestParam Long trainingDayId,
             @RequestParam List<Long> personalExerciseIds
     ) {
+        // This method was empty in the original controller, keeping it as is or should it be implemented?
+        // Assuming it's a placeholder or handled elsewhere for now, but keeping the endpoint.
         return "redirect:/training/profile/me";
     }
 
     @PostMapping("/training/profile/me/remove-exercise-from-day")
     public String removeExerciseFromDay(
             @RequestParam Long trainingDayId,
-            @RequestParam Long exerciseId,
-            Authentication authentication
+            @RequestParam Long exerciseId
     ) {
-        TrainingDay trainingDay = trainingDayRepo.findById(trainingDayId).orElse(null);
-        if (trainingDay != null) {
-            trainingDay.getPersonalExercises().removeIf(ex -> ex.getId().equals(exerciseId));
-            trainingDayRepo.save(trainingDay);
-        }
+        trainingProfileService.removeExerciseFromDay(trainingDayId, exerciseId);
         return "redirect:/training/profile/me?success=exercise-removed";
     }
 
     @PostMapping("/training/profile/me/batch-update-exercises")
     @ResponseBody
-    public ResponseEntity<String> batchUpdateExercises(@RequestBody BatchExerciseUpdateRequest request, Authentication authentication) {
+    public ResponseEntity<String> batchUpdateExercises(@RequestBody BatchExerciseUpdateRequestDto request, Authentication authentication) {
         try {
-            String email = authentication.getName();
-            User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
-
-            if (request.getUpdates() != null) {
-                for (BatchExerciseUpdateRequest.DayUpdate update : request.getUpdates()) {
-                    TrainingDay trainingDay = trainingDayRepo.findById(update.getDayId()).orElse(null);
-                    if (trainingDay != null) {
-                        // Handle deletions
-                        if (update.getExerciseIdsToDelete() != null) {
-                            trainingDay.getPersonalExercises().removeIf(ex -> update.getExerciseIdsToDelete().contains(ex.getId()));
-                        }
-
-                        if (update.getExercises() != null) {
-                            for (BatchExerciseUpdateRequest.ExerciseUpdate exerciseUpdate : update.getExercises()) {
-                                PersonalExercise templateExercise = exerciseRepo.findById(exerciseUpdate.getExerciseId()).orElse(null);
-                                if (templateExercise != null) {
-                                    PersonalExercise newExercise = new PersonalExercise();
-                                    newExercise.setName(templateExercise.getName());
-                                    newExercise.setSets(exerciseUpdate.getSets());
-                                    newExercise.setUser(user);
-                                    
-                                    exerciseRepo.save(newExercise);
-                                    trainingDay.addPersonalExercise(newExercise);
-                                }
-                            }
-                        }
-                        trainingDayRepo.save(trainingDay);
-                    }
-                }
-            }
+            trainingProfileService.batchUpdateExercises(authentication.getName(), request);
             return ResponseEntity.ok("{\"status\":\"success\"}");
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error updating exercises", e);
             return ResponseEntity.status(500).body("{\"status\":\"error\", \"message\":\"" + e.getMessage() + "\"}");
         }
     }
@@ -195,30 +112,9 @@ public class TrainingProfileController {
             @RequestParam Double taille, @RequestParam Double huefte,
             Authentication authentication
     ) {
-        String email = authentication.getName();
-        UserDto user = userService.findUserByEmail(email);
-        TrainingProfile profile = profileRepo.findByUserId(user.getId());
-
-        BodyMeasurements measurements = new BodyMeasurements();
-        measurements.setGewicht(gewicht);
-        measurements.setGroesse(groesse);
-        measurements.setArmLinks(new Measurement(armLinks));
-        measurements.setArmRechts(new Measurement(armRechts));
-        measurements.setUnterarmLinks(new Measurement(unterarmLinks));
-        measurements.setUnterarmRechts(new Measurement(unterarmRechts));
-        measurements.setBeinLinks(new Measurement(beinLinks));
-        measurements.setBeinRechts(new Measurement(beinRechts));
-        measurements.setBrust(new Measurement(brust));
-        measurements.setSchulter(new Measurement(schulter));
-        measurements.setTaille(new Measurement(taille));
-        measurements.setHuefte(new Measurement(huefte));
-
-        double heightInMeters = measurements.getGroesse() / 100.0;
-        double bmi = measurements.getGewicht() / (heightInMeters * heightInMeters);
-        measurements.setBmi(Math.round(bmi * 10.0) / 10.0);
-
-        profile.addMeasurements(measurements);
-        profileRepo.save(profile);
+        trainingProfileService.updateMeasurements(authentication.getName(), gewicht, groesse,
+                armLinks, armRechts, unterarmLinks, unterarmRechts,
+                beinLinks, beinRechts, brust, schulter, taille, huefte);
         return "redirect:/training/profile/me?success=measurements-updated";
     }
 }

@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.DayOfWeek;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -34,7 +35,7 @@ public class TrainingSplit {
     public TrainingSplit(String name) {
         this.splitName = name;
 
-        for (Weekday weekday : Weekday.values()) {
+        for (DayOfWeek weekday : DayOfWeek.values()) {
             TrainingDay day = new TrainingDay(weekday);
             addDay(day);
         }
@@ -53,11 +54,11 @@ public class TrainingSplit {
 
     @PostLoad
     private void ensureAllDaysExist() {
-        Set<Weekday> existing = days.stream()
+        Set<DayOfWeek> existing = days.stream()
                 .map(TrainingDay::getWeekday)
                 .collect(Collectors.toSet());
 
-        for (Weekday weekday : Weekday.values()) {
+        for (DayOfWeek weekday : DayOfWeek.values()) {
             if (!existing.contains(weekday)) {
                 TrainingDay d = new TrainingDay(weekday);
                 addDay(d);

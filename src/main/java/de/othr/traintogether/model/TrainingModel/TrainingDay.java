@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import java.time.DayOfWeek;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,7 +21,7 @@ public class TrainingDay {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    private Weekday weekday;
+    private DayOfWeek weekday;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "split_id")
@@ -38,7 +38,7 @@ public class TrainingDay {
     )
     private List<PersonalExercise> personalExercises = new ArrayList<>();
 
-    public TrainingDay(Weekday weekday) {
+    public TrainingDay(DayOfWeek weekday) {
         this.weekday = weekday;
     }
 

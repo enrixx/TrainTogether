@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Data
-public class WorkoutLogRequest {
+public class WorkoutLogRequestDto {
     private Long trainingDayId;
     private LocalDate date;
     private List<ExerciseLog> exercises;

@@ -42,72 +42,12 @@
         </div>
     </main>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            let exerciseCounter = 0;
-
-            document.getElementById('add-exercise-btn').addEventListener('click', function () {
-                const exerciseEntry = document.createElement('div');
-                exerciseEntry.classList.add('row', 'mb-2', 'align-items-end');
-                exerciseEntry.innerHTML = `
-                    <div class="col-md-6">
-                        <label class="form-label">Exercise</label>
-                        <select name="exercises[${exerciseCounter}].personalExerciseId" class="form-select" required>
-                            <option value="">Choose exercise...</option>
-                            <th:block th:each="exercise : ${userExercises}">
-                                <option th:value="${exercise.id}" th:text="${exercise.name}"></option>
-                            </th:block>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Sets</label>
-                        <input type="number" name="exercises[${exerciseCounter}].sets" class="form-control" required>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Reps</label>
-                        <input type="number" name="exercises[${exerciseCounter}].reps" class="form-control" required>
-                    </div>
-                    <div class="col-md-2">
-                        <button type="button" class="btn btn-danger remove-exercise-btn">Remove</button>
-                    </div>
-                `;
-                document.getElementById('exercise-entries').appendChild(exerciseEntry);
-                exerciseCounter++;
-            });
-
-            document.getElementById('exercise-entries').addEventListener('click', function (e) {
-                if (e.target && e.target.classList.contains('remove-exercise-btn')) {
-                    e.target.closest('.row').remove();
-                }
-            });
-
-            // Chart.js logic
-            const ctx = document.getElementById('progressChart').getContext('2d');
-            let progressChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: [], // Dates will go here
-                    datasets: [{
-                        label: 'Reps Over Time',
-                        data: [], // Reps will go here
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
-                    }]
-                }
-            });
-
-            document.getElementById('exercise-select-graph').addEventListener('change', function() {
-                const exerciseId = this.value;
-                fetch(`/workouts/progress?exerciseId=${exerciseId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        progressChart.data.labels = data.labels;
-                        progressChart.data.datasets[0].data = data.reps;
-                        progressChart.update();
-                    });
-            });
-        });
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        window.userExercises = /*[[${userExercises}]]*/ [];
+        /*]]>*/
     </script>
+    <script src="/js/log-workout.js"></script>
 </div>
 </body>
 </html>
