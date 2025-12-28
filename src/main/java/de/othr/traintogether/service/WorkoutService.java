@@ -29,7 +29,7 @@ public class WorkoutService {
 
     @Transactional(readOnly = true)
     public WorkoutPageDto getWorkoutPageData(String email) {
-        UserDto user = userService.findUserByEmail(email);
+        UserDto user = userService.findUserDTOByEmail(email);
         TrainingProfile profile = profileRepo.findByUserId(user.getId());
 
         if (profile == null) {
@@ -83,7 +83,7 @@ public class WorkoutService {
 
     @Transactional(readOnly = true)
     public List<WorkoutLogResponseDto> getWorkoutsByDate(String email, String dateStr) {
-        UserDto user = userService.findUserByEmail(email);
+        UserDto user = userService.findUserDTOByEmail(email);
         LocalDate date = LocalDate.parse(dateStr);
 
         List<TrainingExercise> exercises = trainingExerciseRepo.findByDateAndPersonalExercise_User_Id(date, user.getId());
@@ -101,7 +101,7 @@ public class WorkoutService {
 
     @Transactional(readOnly = true)
     public List<ProgressDataPointDto> getProgressData(String email, Long exerciseId) {
-        UserDto user = userService.findUserByEmail(email);
+        UserDto user = userService.findUserDTOByEmail(email);
 
         List<TrainingExercise> exercises = trainingExerciseRepo.findAllByPersonalExercise_IdAndPersonalExercise_User_IdOrderByDateAsc(exerciseId, user.getId());
 
@@ -130,7 +130,7 @@ public class WorkoutService {
 
     @Transactional
     public void logWorkout(String email, WorkoutLogRequestDto workoutRequest) {
-        UserDto user = userService.findUserByEmail(email);
+        UserDto user = userService.findUserDTOByEmail(email);
 
         TrainingDay trainingDay = dayRepo.findById(workoutRequest.getTrainingDayId()).orElse(null);
         if (trainingDay == null) {
@@ -164,7 +164,7 @@ public class WorkoutService {
 
     @Transactional
     public void logRestDay(String email, Long trainingDayId) {
-        UserDto user = userService.findUserByEmail(email);
+        UserDto user = userService.findUserDTOByEmail(email);
 
         TrainingDay trainingDay = dayRepo.findById(trainingDayId).orElse(null);
         if (trainingDay == null) {

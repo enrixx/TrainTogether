@@ -36,8 +36,7 @@ public class UserService {
                        MinioService minioService,
                        GymOwnerRequestRepository gymOwnerRequestRepository,
                        GymRepository gymRepository,
-                       PasswordResetTokenRepository passwordResetTokenRepository) {
-                       MinioService minioService,
+                       PasswordResetTokenRepository passwordResetTokenRepository,
                        ApplicationEventPublisher eventPublisher) {
         this.userRepository = userRepository;
         this.authorityRepository = authorityRepository;

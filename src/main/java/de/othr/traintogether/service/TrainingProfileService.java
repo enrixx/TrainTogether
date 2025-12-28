@@ -26,19 +26,19 @@ public class TrainingProfileService {
 
     @Transactional(readOnly = true)
     public TrainingProfile getTrainingProfile(String email) {
-        UserDto user = userService.findUserByEmail(email);
+        UserDto user = userService.findUserDTOByEmail(email);
         return profileRepo.findByUserId(user.getId());
     }
 
     @Transactional(readOnly = true)
     public List<PersonalExercise> getAllExercises(String email) {
-        UserDto user = userService.findUserByEmail(email);
+        UserDto user = userService.findUserDTOByEmail(email);
         return exerciseRepo.findAllByUserId(user.getId());
     }
 
     @Transactional
     public void updateDescription(String email, String description) {
-        UserDto user = userService.findUserByEmail(email);
+        UserDto user = userService.findUserDTOByEmail(email);
         TrainingProfile profile = profileRepo.findByUserId(user.getId());
         profile.setDescription(description);
         profileRepo.save(profile);
@@ -46,7 +46,7 @@ public class TrainingProfileService {
 
     @Transactional
     public void createSplit(String email, String splitName) {
-        UserDto user = userService.findUserByEmail(email);
+        UserDto user = userService.findUserDTOByEmail(email);
         TrainingProfile profile = profileRepo.findByUserId(user.getId());
         profile.addSplit(new TrainingSplit(splitName));
         profileRepo.save(profile);
@@ -54,7 +54,7 @@ public class TrainingProfileService {
 
     @Transactional
     public void setActiveSplit(String email, Long splitId) {
-        UserDto user = userService.findUserByEmail(email);
+        UserDto user = userService.findUserDTOByEmail(email);
         TrainingProfile profile = profileRepo.findByUserId(user.getId());
         profile.setActiveTraininSplitId(splitId);
         profileRepo.save(profile);
@@ -62,7 +62,7 @@ public class TrainingProfileService {
 
     @Transactional
     public void deleteSplit(String email, Long splitId) {
-        UserDto user = userService.findUserByEmail(email);
+        UserDto user = userService.findUserDTOByEmail(email);
         TrainingProfile profile = profileRepo.findByUserId(user.getId());
 
         profile.getSplits().removeIf(s -> s.getId().equals(splitId));
@@ -128,7 +128,7 @@ public class TrainingProfileService {
                                    Double beinLinks, Double beinRechts,
                                    Double brust, Double schulter,
                                    Double taille, Double huefte) {
-        UserDto user = userService.findUserByEmail(email);
+        UserDto user = userService.findUserDTOByEmail(email);
         TrainingProfile profile = profileRepo.findByUserId(user.getId());
 
         BodyMeasurements measurements = new BodyMeasurements();

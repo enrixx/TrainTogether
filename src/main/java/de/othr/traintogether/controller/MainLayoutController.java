@@ -83,20 +83,4 @@ public class MainLayoutController {
         model.addAttribute("title", "Map");
         return "map";
     }
-
-    @PreAuthorize("hasAnyAuthority('ADMIN','USER')")
-    @GetMapping("/workouts")
-    public String workouts(Model model) {
-        model.addAttribute("title", "Workouts");
-        return "workouts";
-    }
-
-}
-
-    @PreAuthorize("hasAnyAuthority('ADMIN','USER','GYM_OWNER','GYM_WORKER')")
-    @GetMapping("/chat")
-    public String chat(Model model) {
-        model.addAttribute("title", "Chat");
-        return "chat";
-    }
 }
