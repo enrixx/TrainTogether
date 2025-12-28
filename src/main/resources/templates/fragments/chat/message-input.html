@@ -1,22 +1,45 @@
-<form th:fragment="messageInput"
-      th:if="${messagePage.canSend}"
-      th:action="@{/chat/{chatId}/messages(chatId=${messagePage.roomId})}" method="post"
-      th:object="${sendChatMessageDto}"
-      class="d-flex align-items-center gap-2 pe-3 pt-3 mt-2"
-      style="flex:0 0 auto;">
-    <button type="button" class="btn btn-link p-0 text-muted" aria-label="Attach file" th:attr="aria-label=#{chat.attach.aria}">
-        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-paperclip" viewBox="0 0 16 16">
-            <path d="M4.5 3a2.5 2.5 0 0 1 5 0v9a1.5 1.5 0 0 1-3 0V5a.5.5 0 0 1 1 0v7a.5.5 0 0 0 1 0V3a1.5 1.5 0 1 0-3 0v9a2.5 2.5 0 0 0 5 0V5a.5.5 0 0 1 1 0v7a3.5 3.5 0 1 1-7 0z"/>
-        </svg>
-    </button>
-    <input type="text" class="form-control form-control-lg flex-grow" aria-label="Message input"
-           th:placeholder="#{chat.input.placeholder}"
-           th:attr="aria-label=#{chat.input.aria}"
-           autocomplete="off"
-           th:field="*{content}">
-    <button type="submit" class="btn btn-link p-0" aria-label="Send message" th:attr="aria-label=#{chat.send.aria}">
-        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-send" viewBox="0 0 16 16">
-            <path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11ZM6.636 10.07l2.761 4.338L14.13 2.576zm6.787-8.201L1.591 6.602l4.339 2.76z"/>
-        </svg>
-    </button>
-</form>
+<div th:fragment="messageInput" th:if="${messagePage.canSend}" class="pt-3 mt-2">
+    <div id="chatFileNameContainer" class="d-inline-flex align-items-center border rounded px-2 py-1"
+         style="max-width:190px; margin-left: 40px; display:none!important; visibility:hidden; opacity:0; pointer-events:none;" hidden aria-hidden="true">
+        <span id="chatFileName" class="text-truncate"
+              style="max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+        <button type="button" class="btn btn-sm btn-outline-danger ms-2 p-0 d-inline-flex align-items-center justify-content-center" aria-label="Remove file"
+                th:title="#{chat.remove.file}"
+                style="width:20px; height:20px;"
+                onclick="(function(){var fi=document.getElementById('chatFileInput'); var container=document.getElementById('chatFileNameContainer'); if(fi){fi.value='';} document.getElementById('chatFileName').textContent=''; container.hidden = true; container.style.display = 'none'; container.style.visibility='hidden'; container.style.opacity='0'; container.style.pointerEvents='none'; container.setAttribute('aria-hidden','true');})();">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+                <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
+            </svg>
+        </button>
+    </div>
+    <form th:action="@{/chat/{chatId}/messages(chatId=${messagePage.roomId})}" method="post"
+          th:object="${sendChatMessageDto}"
+          class="d-flex align-items-center gap-2 pt-2"
+          style="flex:0 0 auto;" enctype="multipart/form-data">
+        <button type="button" class="btn btn-link p-0 text-muted" aria-label="Attach file"
+                th:attr="aria-label=#{chat.attach.aria}"
+                onclick="document.getElementById('chatFileInput').click();">
+            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-paperclip"
+                 viewBox="0 0 16 16">
+                <path d="M4.5 3a2.5 2.5 0 0 1 5 0v9a1.5 1.5 0 0 1-3 0V5a.5.5 0 0 1 1 0v7a.5.5 0 0 0 1 0V3a1.5 1.5 0 1 0-3 0v9a2.5 2.5 0 0 0 5 0V5a.5.5 0 0 1 1 0v7a3.5 3.5 0 1 1-7 0z"/>
+            </svg>
+        </button>
+
+        <!-- Hidden Input -->
+        <input type="file" th:field="*{file}" id="chatFileInput" class="d-none"
+               accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/zip,application/x-rar-compressed,text/plain,.csv"
+               onchange="(function(el){var name=(el.files && el.files.length)?el.files[0].name:'';var span=document.getElementById('chatFileName');var container=document.getElementById('chatFileNameContainer'); span.textContent = name; if(name){container.hidden = false; container.style.display = 'inline-flex'; container.style.visibility='visible'; container.style.opacity='1'; container.style.pointerEvents='auto'; container.removeAttribute('aria-hidden');}else{container.hidden = true; container.style.display = 'none'; container.style.visibility='hidden'; container.style.opacity='0'; container.style.pointerEvents='none'; container.setAttribute('aria-hidden','true');}})(this)">
+
+        <input type="text" class="form-control form-control-lg flex-grow" aria-label="Message input"
+               th:placeholder="#{chat.input.placeholder}"
+               th:attr="aria-label=#{chat.input.aria}"
+               autocomplete="off"
+               th:field="*{content}">
+        <button type="submit" class="btn btn-link p-0" aria-label="Send message" th:attr="aria-label=#{chat.send.aria}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-send"
+                 viewBox="0 0 16 16">
+                <path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11ZM6.636 10.07l2.761 4.338L14.13 2.576zm6.787-8.201L1.591 6.602l4.339 2.76z"/>
+            </svg>
+        </button>
+    </form>
+</div>

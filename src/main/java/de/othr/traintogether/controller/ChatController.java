@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -74,8 +75,14 @@ public class ChatController {
     public String sendMessage(
             @PathVariable("chatId") Long chatId,
             @Valid @ModelAttribute("sendChatMessageDto") SendChatMessageDto sendChatMessageDto,
+            BindingResult bindingResult,
             Model model,
             Principal principal) {
+
+        if (bindingResult.hasErrors()) {
+                model.addAttribute("sendError", "Message content cannot be empty");
+                return "redirect:/chat/" + chatId;
+        }
 
         try {
             chatMessageService.sendMessage(principal.getName(), chatId, sendChatMessageDto);

@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
 @Getter
 @Setter
@@ -17,5 +18,5 @@ public class SendChatMessageDto {
     private String content;
     private boolean edited;
     private String replyTo;
-    private AttachmentDto attachment;
+    private MultipartFile file;
 }

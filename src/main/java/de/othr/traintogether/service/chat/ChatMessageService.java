@@ -8,6 +8,7 @@ import de.othr.traintogether.mapper.ChatMessageMapper;
 import de.othr.traintogether.model.chat.*;
 import de.othr.traintogether.repository.chat.ChatMessageRepository;
 import de.othr.traintogether.repository.chat.ChatRoomMemberRepository;
+import de.othr.traintogether.service.MinioService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -26,13 +28,15 @@ public class ChatMessageService {
     private final ChatMessageMapper chatMessageMapper;
     private final CursorService cursorService;
     private final ChatAuthService chatAuthService;
+    private final MinioService minioService;
 
-    public ChatMessageService(ChatRoomMemberRepository chatRoomMemberRepository, ChatMessageRepository chatMessageRepository, ChatMessageMapper chatMessageMapper, CursorService cursorService, ChatAuthService chatAuthService) {
+    public ChatMessageService(ChatRoomMemberRepository chatRoomMemberRepository, ChatMessageRepository chatMessageRepository, ChatMessageMapper chatMessageMapper, CursorService cursorService, ChatAuthService chatAuthService, MinioService minioService) {
         this.chatRoomMemberRepository = chatRoomMemberRepository;
         this.chatMessageRepository = chatMessageRepository;
         this.chatMessageMapper = chatMessageMapper;
         this.cursorService = cursorService;
         this.chatAuthService = chatAuthService;
+        this.minioService = minioService;
     }
 
     @Transactional
@@ -49,6 +53,17 @@ public class ChatMessageService {
 
         chatRoomMember.setLastRead(message.getSentAt());
         chatRoomMemberRepository.save(chatRoomMember);
+
+        if(!messageDto.getFile().isEmpty()){
+            var file = messageDto.getFile();
+             String attachmentUrl = minioService.uploadChatAttachment(file, chatRoomID);
+            ChatAttachment attachment = new ChatAttachment(attachmentUrl,
+                    Objects.requireNonNull(file.getOriginalFilename()),
+                    Objects.requireNonNull(file.getContentType()),
+                    file.getSize());
+            message.setAttachment(attachment);
+            chatMessageRepository.save(message);
+        }
 
         // If DM, and a new message is sent to a removed member, un-remove them
         ChatRoom room = chatRoomMember.getChatRoom();

@@ -1,7 +1,9 @@
 package de.othr.traintogether.mapper;
 
+import de.othr.traintogether.dto.chat.AttachmentDto;
 import de.othr.traintogether.dto.chat.ChatMessageDto;
 import de.othr.traintogether.dto.chat.MessageSenderDto;
+import de.othr.traintogether.model.chat.ChatAttachment;
 import de.othr.traintogether.model.chat.ChatMessage;
 import de.othr.traintogether.model.chat.ChatRoomMember;
 import de.othr.traintogether.service.chat.CursorService;
@@ -60,7 +62,12 @@ public class ChatMessageMapper {
         }
 
         if (message.getAttachment() != null) {
-            //TODO: add AttachmentDto later
+            ChatAttachment attachment = message.getAttachment();
+            AttachmentDto attachmentDto = new AttachmentDto(
+                    attachment.getFilename(),
+                    attachment.getUrl(),
+                    attachment.getContentType());
+            messageDto.setAttachment(attachmentDto);
         }
 
         return messageDto;
