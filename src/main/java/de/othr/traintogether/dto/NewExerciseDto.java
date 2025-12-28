@@ -7,7 +7,7 @@ import lombok.AllArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class NewExercise {
+public class NewExerciseDto {
     // Can be a Long (for existing days) or a String (for new days)
     private String trainingDayId;
     private Long personalExerciseId;

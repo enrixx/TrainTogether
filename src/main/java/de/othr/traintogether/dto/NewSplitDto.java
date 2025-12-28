@@ -8,7 +8,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UpdateAllRequest {
-    private List<NewSplit> newSplits;
-    private List<NewExercise> newExercises;
+public class NewSplitDto {
+    private String name;
+    private List<String> days;
 }

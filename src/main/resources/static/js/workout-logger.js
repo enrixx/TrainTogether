@@ -40,43 +40,23 @@ function generateSetInputs(setsInput, repsArray = [], weightArray = []) {
 }
 
 function createAdHocExerciseRow(exerciseId = null, sets = 3, repsArray = [], weightArray = []) {
-    // Access the global variable 'allExercises' defined in the HTML
-    const exerciseOptions = window.allExercises.map(ex => {
-        const selected = (exerciseId && ex.id === exerciseId) ? 'selected' : '';
-        return `<option value="${ex.id}" ${selected}>${ex.name}</option>`;
-    }).join('');
-
-    const row = document.createElement('div');
-    row.className = 'mb-3 row align-items-start exercise-log-row adhoc-row';
-    row.innerHTML = `
-        <div class="col-sm-3">
-            <select class="form-select adhoc-exercise-select">
-                <option value="" selected disabled>Choose exercise...</option>
-                ${exerciseOptions}
-            </select>
-        </div>
-        <div class="col-sm-2">
-            <div class="input-group">
-                <span class="input-group-text">Sets</span>
-                <input type="number" class="form-control sets-input" value="${sets}" required>
-            </div>
-        </div>
-        <div class="col-sm-6">
-            <div class="reps-container d-flex flex-column gap-1"></div>
-        </div>
-        <div class="col-sm-1">
-            <button type="button" class="btn btn-sm btn-danger remove-row-btn">X</button>
-        </div>
-    `;
-    generateSetInputs(row.querySelector('.sets-input'), repsArray, weightArray);
-    return row;
+    return $.get('/workouts/fragments/adhoc-row').then(function(html) {
+        const row = $(html);
+        if (exerciseId) {
+            row.find('.adhoc-exercise-select').val(exerciseId);
+        }
+        row.find('.sets-input').val(sets);
+        generateSetInputs(row.find('.sets-input')[0], repsArray, weightArray);
+        return row;
+    });
 }
 
 $(document).ready(function() {
     $('.add-adhoc-exercise-btn').click(function() {
         const container = $(this).siblings('.adhoc-exercises-container');
-        const newRow = createAdHocExerciseRow();
-        container.append(newRow);
+        createAdHocExerciseRow().then(function(newRow) {
+            container.append(newRow);
+        });
     });
 
     $(document).on('click', '.remove-row-btn', function() {
@@ -140,8 +120,9 @@ $(document).ready(function() {
                 if (!loggedExercise.processed) {
                     const repsArray = loggedExercise.reps ? loggedExercise.reps.split(',') : [];
                     const weightArray = loggedExercise.weight ? loggedExercise.weight.split(',') : [];
-                    const newRow = createAdHocExerciseRow(loggedExercise.personalExerciseId, loggedExercise.sets, repsArray, weightArray);
-                    adhocContainer.append(newRow);
+                    createAdHocExerciseRow(loggedExercise.personalExerciseId, loggedExercise.sets, repsArray, weightArray).then(function(newRow) {
+                        adhocContainer.append(newRow);
+                    });
                 }
             });
         }

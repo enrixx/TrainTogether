@@ -1,26 +1,22 @@
-<!DOCTYPE html>
-<html lang="en">
-<body>
-
-<div th:fragment="editDescriptionModal">
+<div th:fragment="editDescriptionModal" xmlns:th="http://www.thymeleaf.org">
     <div class="modal fade" id="editDescriptionModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
 
                 <form th:action="@{/training/profile/update-description}" method="post">
                     <div class="modal-header">
-                        <h5 class="modal-title">Beschreibung bearbeiten</h5>
+                        <h5 class="modal-title" th:text="#{profile.description.edit}">Beschreibung bearbeiten</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
 
                     <div class="modal-body">
                         <textarea class="form-control" name="description" rows="5"
-                                  th:text="${profile.description}"></textarea>
+                                  th:text="${profile != null ? profile.description : ''}"></textarea>
                     </div>
 
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                        <button type="submit" class="btn btn-primary">Speichern</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{workouts.cancel}">Abbrechen</button>
+                        <button type="submit" class="btn btn-primary" th:text="#{workouts.save}">Speichern</button>
                     </div>
                 </form>
 
@@ -28,6 +24,3 @@
         </div>
     </div>
 </div>
-
-</body>
-</html>
