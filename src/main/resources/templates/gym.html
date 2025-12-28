@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout :: layout(~{::content})}">
+<div th:fragment="content" class="h-100 overflow-auto">
+    <!-- Banner Image -->
+    <div class="w-100 bg-secondary d-flex align-items-center justify-content-center text-white"
+         th:style="${gym.bannerImageUrl != null} ? 'height: 300px; background-size: cover; background-position: center; background-image: url(' + ${gym.bannerImageUrl} + ');' : 'height: 300px; background-size: cover; background-position: center;'">
+        <h1 class="display-4 fw-bold"
+            th:if="${gym.bannerText != null && !gym.bannerText.isEmpty()}"
+            th:text="${gym.bannerText}"
+            th:style="'text-shadow: 2px 2px 4px rgba(0,0,0,0.7); color: ' + (${gym.bannerTextColor != null} ? ${gym.bannerTextColor} : '#ffffff') + ';'">
+            Gym Name
+        </h1>
+    </div>
+
+    <div class="container mt-5">
+        <!-- Edit Button for Owner -->
+        <div class="d-flex justify-content-end mb-3" sec:authorize="hasAuthority('GYM_OWNER')">
+            <!-- Check if current user is actually the owner of THIS gym -->
+            <a th:if="${#authentication.name == gym.owner.email}" th:href="@{/gym/edit/{id}(id=${gym.id})}" class="btn btn-outline-primary">
+                <i class="bi bi-pencil"></i> <span th:text="#{gym.edit.button}">Edit Gym</span>
+            </a>
+        </div>
+
+        <!-- Description Section -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <h2 class="border-bottom pb-2 mb-3" th:text="#{gym.about.title}">About Us</h2>
+                <p class="lead" th:text="${gym.description != null ? gym.description : #messages.msg('gym.about.empty')}" style="white-space: pre-wrap;">
+                    Description...
+                </p>
+            </div>
+        </div>
+
+        <!-- Courses Section -->
+        <div class="row mb-5">
+            <div class="col-12 d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                <h2 class="mb-0" th:text="#{gym.courses.title}">Offers & Courses</h2>
+            </div>
+
+            <div class="col-12">
+                <div th:if="${#lists.isEmpty(gym.courses)}" class="alert alert-light border text-center p-5 text-muted" th:text="#{gym.courses.empty}">
+                    No courses available.
+                </div>
+
+                <div th:if="${!#lists.isEmpty(gym.courses)}">
+                    <!-- Tabs Navigation -->
+                    <ul class="nav nav-pills mb-3" id="courseTabs" role="tablist">
+                        <li class="nav-item" role="presentation" th:each="course, iterStat : ${gym.courses}">
+                            <button class="nav-link"
+                                    th:classappend="${iterStat.index == 0} ? 'active'"
+                                    th:id="'tab-' + ${course.id}"
+                                    data-bs-toggle="pill"
+                                    th:data-bs-target="'#content-' + ${course.id}"
+                                    type="button" role="tab"
+                                    th:aria-controls="'content-' + ${course.id}"
+                                    th:aria-selected="${iterStat.index == 0}"
+                                    th:text="${course.name}">
+                                Course Name
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content" id="courseTabsContent">
+                        <div class="tab-pane fade"
+                             th:each="course, iterStat : ${gym.courses}"
+                             th:classappend="${iterStat.index == 0} ? 'show active'"
+                             th:id="'content-' + ${course.id}"
+                             role="tabpanel"
+                             th:aria-labelledby="'tab-' + ${course.id}">
+
+                            <div class="card shadow-sm border-0 bg-body-tertiary">
+                                <div class="card-body p-4">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <h3 class="mb-3" th:text="${course.name}">Yoga</h3>
+
+                                            <div class="d-flex align-items-center mb-3 text-primary">
+                                                <i class="bi bi-calendar-event me-2 fs-5"></i>
+                                                <span class="fs-5 fw-bold" th:text="${#temporals.format(course.dateTime, 'EEEE, dd. MMMM yyyy, HH:mm') + ' Uhr'}">Date</span>
+                                            </div>
+
+                                            <p class="card-text lead mb-4" th:text="${course.description}" style="white-space: pre-wrap;">Description</p>
+
+                                            <div class="d-flex align-items-center mt-4">
+                                                <div class="me-4">
+                                                    <i class="bi bi-people me-1"></i>
+                                                    <span class="fw-bold" th:text="${course.participants.size()}">5</span> / <span th:text="${course.maxParticipants}">20</span> <span th:text="#{gym.courses.participants}">Participants</span>
+                                                </div>
+
+                                                <!-- Actions -->
+                                                <div th:if="${currentUser != null}">
+                                                    <form th:if="${!course.participants.contains(currentUser) && course.participants.size() < course.maxParticipants}"
+                                                          th:action="@{/gym/{id}/course/{courseId}/join(id=${gym.id}, courseId=${course.id})}" method="post">
+                                                        <button type="submit" class="btn btn-primary" th:text="#{gym.courses.join}">Join Now</button>
+                                                    </form>
+
+                                                    <form th:if="${course.participants.contains(currentUser)}"
+                                                          th:action="@{/gym/{id}/course/{courseId}/leave(id=${gym.id}, courseId=${course.id})}" method="post">
+                                                        <button type="submit" class="btn btn-outline-secondary" th:text="#{gym.courses.leave}">Leave</button>
+                                                    </form>
+
+                                                    <button th:if="${!course.participants.contains(currentUser) && course.participants.size() >= course.maxParticipants}"
+                                                            class="btn btn-secondary" disabled th:text="#{gym.courses.full}">Course Full</button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-4 mt-4 mt-md-0">
+                                            <div class="card border-0 shadow-sm">
+                                                <div class="card-body text-center">
+                                                    <h6 class="card-subtitle mb-3 text-muted" th:text="#{gym.courses.trainer}">Trainer</h6>
+
+                                                    <img th:if="${course.trainer.profilePictureUrl != null}"
+                                                         th:src="${course.trainer.profilePictureUrl}"
+                                                         class="rounded-circle mb-3"
+                                                         style="width: 80px; height: 80px; object-fit: cover;"
+                                                         alt="Trainer">
+                                                    <div th:unless="${course.trainer.profilePictureUrl != null}"
+                                                         class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center mb-3"
+                                                         style="width: 80px; height: 80px;">
+                                                        <span class="text-white fs-3" th:text="${#strings.substring(course.trainer.firstName, 0, 1)}">T</span>
+                                                    </div>
+
+                                                    <h5 class="card-title" th:text="${course.trainer.firstName + ' ' + course.trainer.lastName}">Max Mustermann</h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Team Section -->
+        <div class="row mb-5" th:if="${!#lists.isEmpty(gym.workers)}">
+            <div class="col-12 border-bottom pb-2 mb-3">
+                <h2 class="mb-0" th:text="#{gym.team.title}">Our Team</h2>
+            </div>
+            <div class="col-12">
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+                    <div class="col" th:each="worker : ${gym.workers}">
+                        <div class="card h-100 border-0 shadow-sm text-center bg-body-tertiary">
+                            <div class="card-body">
+                                <img th:if="${worker.user.profilePictureUrl != null}"
+                                     th:src="${worker.user.profilePictureUrl}"
+                                     class="rounded-circle mb-3"
+                                     style="width: 100px; height: 100px; object-fit: cover;"
+                                     alt="Worker">
+                                <div th:unless="${worker.user.profilePictureUrl != null}"
+                                     class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center mb-3"
+                                     style="width: 100px; height: 100px;">
+                                    <span class="text-white fs-2" th:text="${#strings.substring(worker.user.firstName, 0, 1)}">W</span>
+                                </div>
+                                <h5 class="card-title" th:text="${worker.user.firstName + ' ' + worker.user.lastName}">Worker Name</h5>
+                                <p class="card-text text-muted small" th:text="#{gym.team.role}">Trainer</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Impressum / Contact Info -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="card bg-body-tertiary border-0">
+                    <div class="card-body">
+                        <h3 class="card-title mb-4" th:text="#{gym.contact.title}">Contact & Imprint</h3>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5 class="text-muted mb-3" th:text="#{gym.contact.address}">Address</h5>
+                                <p class="mb-1 fw-bold" th:text="${gym.name}">Gym Name</p>
+                                <p class="mb-1" th:text="${gym.address}">Musterstraße 1</p>
+                                <p class="mb-0">
+                                    <span th:text="${gym.postalCode}">12345</span>
+                                    <span th:text="${gym.city}">Musterstadt</span>
+                                </p>
+                            </div>
+                            <div class="col-md-6 mt-3 mt-md-0">
+                                <h5 class="text-muted mb-3" th:text="#{gym.contact.contact}">Contact</h5>
+                                <p class="mb-1" th:if="${gym.phoneNumber}">
+                                    <strong th:text="#{gym.contact.phone} + ':'">Phone:</strong> <span th:text="${gym.phoneNumber}">0123 456789</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</html>

@@ -87,7 +87,7 @@ public class ChatRoomService {
     }
 
     @Transactional
-    public void createReadOnlyGroup(String name, String pictureUrl, Set<String> userEmails, String ownerEmail) {
+    public Long createReadOnlyGroup(String name, String pictureUrl, Set<String> userEmails, String ownerEmail) {
 
         User owner = chatAuthService.getUser(ownerEmail);
         ChatRoom room = new ChatRoom(ChatRoomType.READ_ONLY, name, pictureUrl);
@@ -99,6 +99,7 @@ public class ChatRoomService {
             room.addMember(member);
         }
         chatRoomRepository.save(room);
+        return room.getId();
     }
 
     @Transactional
@@ -110,9 +111,20 @@ public class ChatRoomService {
         }
         User user = chatAuthService.getUser(userEmail);
 
-        boolean exists = chatRoom.getMembers().stream()
-                .anyMatch(m -> user.getId() != null && user.getId().equals(m.getUser().getId()));
-        if (exists) return;
+        // Check if user is already a member (even if removed)
+        Optional<ChatRoomMember> existingMember = chatRoom.getMembers().stream()
+                .filter(m -> user.getId() != null && user.getId().equals(m.getUser().getId()))
+                .findFirst();
+
+        if (existingMember.isPresent()) {
+            ChatRoomMember member = existingMember.get();
+            if (member.isRemoved()) {
+                member.setRemoved(false);
+                member.setRole(chatRole); // Update role if needed
+                chatRoomMemberRepository.save(member);
+            }
+            return;
+        }
 
         ChatRoomMember newMember = new ChatRoomMember(chatRoom, user, chatRole);
         chatRoom.addMember(newMember);
@@ -124,6 +136,13 @@ public class ChatRoomService {
         ChatRoomMember member = chatAuthService.getMember(userEmail, chatRoomId);
         member.setRemoved(true);
         chatRoomMemberRepository.save(member);
+    }
+    
+    @Transactional
+    public void deleteChatRoom(Long chatRoomId) {
+        if (chatRoomId != null) {
+            chatRoomRepository.deleteById(chatRoomId);
+        }
     }
 
     @Transactional

@@ -79,6 +79,13 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider)
                 .csrf(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/", "/register", "/register/gym-owner", "/login",
+                                         "/forgot-password", "/reset-password", "/error", "/error/**").permitAll()
+                        .requestMatchers("/js/**", "/images/**","/css/**", "/webjars/**","/favicon.ico").permitAll()
+                        // Specific rules first - Allow all variations of the role
+                        .requestMatchers("/gym/edit/**").hasAnyAuthority("GYM_OWNER", "ROLE_GYM_OWNER", "OWNER")
+                        // General rules later - Allow public access to view gyms
+                        .requestMatchers("/gym/**").permitAll()
                         // public MVC endpoints + allow swagger/ui and openapi JSON for browser access
                         .requestMatchers(
                                 "/",

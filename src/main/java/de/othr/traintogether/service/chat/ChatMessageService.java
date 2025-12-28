@@ -54,7 +54,7 @@ public class ChatMessageService {
         chatRoomMember.setLastRead(message.getSentAt());
         chatRoomMemberRepository.save(chatRoomMember);
 
-        if(!messageDto.getFile().isEmpty()){
+        if(messageDto.getFile() != null && !messageDto.getFile().isEmpty()){
             var file = messageDto.getFile();
              String attachmentUrl = minioService.uploadChatAttachment(file, chatRoomID);
             ChatAttachment attachment = new ChatAttachment(attachmentUrl,
