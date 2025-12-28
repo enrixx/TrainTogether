@@ -43,11 +43,11 @@ public class TrainingProfile {
     }
 
     public void addSplit(TrainingSplit newSplit){
-        splits.add(0, newSplit);
+        splits.addFirst(newSplit);
     }
 
-    public void deleteSplit(Long splitId){
-        splits.removeIf(s -> s.getId() != null && s.getId().equals(splitId));
+    public void deleteSplit(int splitId){
+        splits.remove(splitId);
     }
 
     public Long getActiveTraininSplitId(){
@@ -64,7 +64,7 @@ public class TrainingProfile {
             this.activeTraininSplitId = 1L;
         }
         TrainingSplit activeSplit = splits.stream()
-                .filter(s -> s.getId() != null && s.getId().equals(this.activeTraininSplitId))
+                .filter(s -> s.getId() == this.activeTraininSplitId)
                 .findFirst()
                 .orElse(null);
 
