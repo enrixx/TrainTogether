@@ -9,6 +9,7 @@ import de.othr.traintogether.repository.TrainingDayRepository;
 import de.othr.traintogether.repository.TrainingProfileRepository;
 import de.othr.traintogether.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +28,23 @@ public class TrainingProfileService {
     @Transactional(readOnly = true)
     public TrainingProfile getTrainingProfile(String email) {
         UserDto user = userService.findUserDTOByEmail(email);
-        return profileRepo.findByUserId(user.getId());
+        TrainingProfile profile = profileRepo.findByUserId(user.getId());
+
+        if (profile != null) {
+            Hibernate.initialize(profile.getSplits());
+            Hibernate.initialize(profile.getMeasurements());
+            if (profile.getSplits() != null) {
+                profile.getSplits().forEach(split -> {
+                    Hibernate.initialize(split.getDays());
+                    if (split.getDays() != null) {
+                        split.getDays().forEach(day -> {
+                            Hibernate.initialize(day.getPersonalExercises());
+                        });
+                    }
+                });
+            }
+        }
+        return profile;
     }
 
     @Transactional(readOnly = true)

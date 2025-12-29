@@ -8,6 +8,7 @@ import de.othr.traintogether.repository.GymRepository;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.hibernate.Hibernate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -41,13 +42,21 @@ public class GymService {
 
     @Transactional(readOnly = true)
     public Optional<Gym> findById(Long id) {
-        return gymRepository.findById(id);
+        Optional<Gym> gym = gymRepository.findById(id);
+        gym.ifPresent(g -> {
+            Hibernate.initialize(g.getCourses());
+            Hibernate.initialize(g.getWorkers());
+        });
+        return gym;
     }
 
     @Transactional(readOnly = true)
     public Gym getById(Long id) {
-        return gymRepository.findById(id)
+        Gym gym = gymRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Gym not found with id: " + id));
+        Hibernate.initialize(gym.getCourses());
+        Hibernate.initialize(gym.getWorkers());
+        return gym;
     }
 
     @Transactional
