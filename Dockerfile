@@ -3,7 +3,8 @@ FROM openjdk:25-ea-jdk-oraclelinux9 AS build
 WORKDIR /app
 
 # Install utilities needed for Maven Wrapper
-RUN dnf install -y tar gzip
+# Oracle Linux 9 uses microdnf by default in minimal images, but let's try microdnf first or fallback to dnf
+RUN microdnf install -y tar gzip || dnf install -y tar gzip
 
 # Copy Maven Wrapper files and Project files
 COPY .mvn/ .mvn
