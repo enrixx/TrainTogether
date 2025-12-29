@@ -14,7 +14,7 @@ TrainTogether is a software project for the OTH Regensburg.
 3. Start the database container:
 
    ```bash
-   docker compose up -d
+  docker-compose -f docker-compose.dev.yaml up -d
    ```
 
 4. Run the Spring Boot application locally. It will read the `.env` file automatically.

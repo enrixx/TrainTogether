@@ -7,6 +7,7 @@ import de.othr.traintogether.repository.TrainingDayRepository;
 import de.othr.traintogether.repository.TrainingExerciseRepository;
 import de.othr.traintogether.repository.TrainingProfileRepository;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +40,19 @@ public class WorkoutService {
         TrainingSplit activeSplit = profile.getActiveTraininSplit();
         if (activeSplit == null) {
             throw new IllegalStateException("No active training split found. Please set one in your profile.");
+        }
+
+        // Force initialization of lazy collections
+        Hibernate.initialize(profile.getSplits());
+        if (profile.getSplits() != null) {
+            profile.getSplits().forEach(split -> {
+                Hibernate.initialize(split.getDays());
+                if (split.getDays() != null) {
+                    split.getDays().forEach(day -> {
+                        Hibernate.initialize(day.getPersonalExercises());
+                    });
+                }
+            });
         }
 
         List<TrainingExercise> todaysWorkoutEntities = trainingExerciseRepo.findByDateAndPersonalExercise_User_Id(LocalDate.now(), user.getId());
