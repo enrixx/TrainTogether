@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::content})}">
+<head>
+  <meta charset="UTF-8">
+  <title>Trainingstag wählen</title>
+</head>
+<body>
+<div th:fragment="content">
+  <h1>Trainingstag auswählen</h1>
+
+  <form th:action="@{/workout/days}" th:object="${day}" method="post">
+
+    <label for="weekday">Wochentag:</label>
+    <select id="weekday" th:field="*{weekday}">
+      <option value="Montag">Montag</option>
+      <option value="Dienstag">Dienstag</option>
+      <option value="Mittwoch">Mittwoch</option>
+      <option value="Donnerstag">Donnerstag</option>
+      <option value="Freitag">Freitag</option>
+      <option value="Samstag">Samstag</option>
+      <option value="Sonntag">Sonntag</option>
+    </select>
+    <br><br>
+
+    <label for="muscleGroup">Muskelgruppe:</label>
+    <input id="muscleGroup" type="text" th:field="*{muscleGroup}" />
+    <br><br>
+    <button type="submit">Weiter</button>
+  </form>
+</div>
+</body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::content})}">
+<head>
+    <meta charset="UTF-8">
+    <title>Übungen</title>
+</head>
+<body>
+<h1>Übungen für <span th:text="${day.weekday}"></span></h1>
+<p>Muskelgruppe: <span th:text="${day.muscleGroup}"></span></p>
+
+<form th:action="@{/workout/exercises}" th:object="${exercise}" method="post">
+
+    <input type="hidden" name="day" th:value="${day.weekday}" />
+
+    <label for="exerciseName">Übung:</label>
+    <input id="exerciseName" type="text" th:field="*{name}" /><br>
+
+    <label for="exerciseReps">Wiederholungen:</label>
+    <input id="exerciseReps" type="number" th:field="*{reps}" /><br>
+
+    <label for="exerciseSets">Sätze:</label>
+    <input id="exerciseSets" type="number" th:field="*{sets}" /><br>
+
+    <br>
+    <button type="submit">Übung hinzufügen</button>
+</form>
+
+<div th:if="${added}">
+    <p style="color:green;">Übung gespeichert!</p>
+</div>
+
+</body>
+</html>

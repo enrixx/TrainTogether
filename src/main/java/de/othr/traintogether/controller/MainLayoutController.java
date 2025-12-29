@@ -41,7 +41,7 @@ public class MainLayoutController {
         if (authentication != null && authentication.isAuthenticated()) {
             String email = authentication.getName();
             UserDto user = userService.findUserDTOByEmail(email);
-            
+
             // Check if user has a gym (implicitly checks if they are a gym owner)
             Optional<Gym> myGym = gymService.findByOwnerEmail(email);
             myGym.ifPresent(gym -> model.addAttribute("myGymId", gym.getId()));
@@ -83,12 +83,4 @@ public class MainLayoutController {
         model.addAttribute("title", "Map");
         return "map";
     }
-
-    @PreAuthorize("hasAnyAuthority('ADMIN','USER')")
-    @GetMapping("/workouts")
-    public String workouts(Model model) {
-        model.addAttribute("title", "Workouts");
-        return "workouts";
-    }
-
 }

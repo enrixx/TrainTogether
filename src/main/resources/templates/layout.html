@@ -3,15 +3,25 @@
       th:fragment="layout(pageContent)">
 <head>
     <meta charset="UTF-8">
-    <meta name="_csrf" th:content="${_csrf.token}" />
-    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
     <title>TrainTogether</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- CSRF Token -->
+    <th:block th:if="${_csrf}">
+        <meta name="_csrf" th:content="${_csrf.token}"/>
+        <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    </th:block>
+
     <script th:src="@{/webjars/bootstrap/5.3.8/js/bootstrap.bundle.min.js}"></script>
     <script th:src="@{/webjars/jquery/3.7.1/jquery.min.js}"></script>
     <link rel="stylesheet"
           th:href="@{/webjars/bootstrap/5.3.8/css/bootstrap.min.css}"/>
     <script th:src="@{/webjars/popper.js/2.11.7/umd/popper.min.js}" defer></script>
     <script th:src="@{/js/fetch-delete.js}" defer></script>
+
+    <!-- Custom Scripts -->
+    <script src="/js/theme-toggle.js"></script>
+    <script src="/js/split-editor.js"></script>
 </head>
 <body class="vh-100 d-flex flex-column">
 
@@ -29,7 +39,6 @@
     </div>
 </main>
 
-<script src="/js/theme-toggle.js"></script>
 <script th:replace="~{fragments/language-selector :: languageSelectorScript}"></script>
 </body>
 </html>

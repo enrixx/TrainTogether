@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::content})}">
+<head>
+    <meta charset="UTF-8">
+    <title>Previous Workouts</title>
+</head>
+<body>
+<div th:fragment="content">
+    <main class="container-fluid p-5">
+        <div class="p-4 mb-4 bg-body-tertiary rounded-3">
+            <h3>Previous Workouts</h3>
+            <p>Select a date to see the workout you logged.</p>
+
+            <div class="mb-3" style="max-width: 300px;">
+                <label for="workoutDateSelect" class="form-label">Date</label>
+                <input type="date" class="form-control" id="workoutDateSelect">
+            </div>
+
+            <div id="workout-details" class="mt-4">
+                <p class="text-muted">No date selected.</p>
+            </div>
+        </div>
+    </main>
+
+    <script src="/js/previous-workouts.js"></script>
+</div>
+</body>
+</html>

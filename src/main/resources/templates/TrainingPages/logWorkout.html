@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::content})}">
+<head>
+    <meta charset="UTF-8">
+    <title>Log Workout</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div th:fragment="content">
+    <main class="container-fluid p-5">
+        <h2>Log Your Workout</h2>
+
+        <form th:action="@{/workouts/log}" method="post">
+            <div class="mb-3">
+                <label for="trainingDay" class="form-label">Select Training Day</label>
+                <select id="trainingDay" name="trainingDayId" class="form-select" required>
+                    <option value="">Choose a day...</option>
+                    <option th:each="day : ${userTrainingDays}" th:value="${day.id}" th:text="${day.weekday}"></option>
+                </select>
+            </div>
+
+            <div id="exercise-entries">
+                <!-- Dynamic exercise entries will be added here -->
+            </div>
+
+            <button type="button" id="add-exercise-btn" class="btn btn-secondary mt-2">Add Exercise</button>
+            <button type="submit" class="btn btn-primary mt-2">Log Workout</button>
+        </form>
+
+        <hr class="my-4">
+
+        <h3>Progress</h3>
+        <div class="mb-3">
+            <label for="exercise-select-graph" class="form-label">Select Exercise to View Progress</label>
+            <select id="exercise-select-graph" class="form-select">
+                <option th:each="exercise : ${userExercises}" th:value="${exercise.id}" th:text="${exercise.name}"></option>
+            </select>
+        </div>
+        <div>
+            <canvas id="progressChart"></canvas>
+        </div>
+    </main>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        window.userExercises = /*[[${userExercises}]]*/ [];
+        /*]]>*/
+    </script>
+    <script src="/js/log-workout.js"></script>
+</div>
+</body>
+</html>

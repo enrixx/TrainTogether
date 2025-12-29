@@ -6,11 +6,16 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.Getter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.UUID;
 import java.util.function.Function;
@@ -18,15 +23,22 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
 
+    private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
+
     private final Key key;
     @Getter
     private final long jwtExpirationMs;
 
     public JwtUtil(@Value("${jwt.secret}") String secret,
                    @Value("${jwt.expirationMs:3600000}") long jwtExpirationMs) {
-        byte[] keyBytes = secret.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
         if (keyBytes.length < 32) {
-            throw new IllegalArgumentException("JWT secret key must be at least 256 bits (32 bytes) long when encoded in UTF-8.");
+            logger.warn("JWT secret is too short ({} bytes). It must be at least 32 bytes. Hashing it to create a secure key for development.", keyBytes.length);
+            try {
+                keyBytes = MessageDigest.getInstance("SHA-256").digest(keyBytes);
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException("SHA-256 algorithm not found", e);
+            }
         }
         this.key = Keys.hmacShaKeyFor(keyBytes);
         this.jwtExpirationMs = jwtExpirationMs;
@@ -85,4 +97,3 @@ public class JwtUtil {
     }
 
 }
-
