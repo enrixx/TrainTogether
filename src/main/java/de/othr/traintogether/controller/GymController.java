@@ -150,6 +150,7 @@ public class GymController {
                                @RequestParam("description") String description,
                                @RequestParam("dateTime") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateTime,
                                @RequestParam("maxParticipants") int maxParticipants,
+                               @RequestParam("outdoors") boolean isOutdoors,
                                Authentication authentication) {
         Optional<Gym> gymOpt = gymService.findById(id);
         if (gymOpt.isPresent()) {
@@ -165,6 +166,7 @@ public class GymController {
             course.setDescription(description);
             course.setDateTime(dateTime);
             course.setMaxParticipants(maxParticipants);
+            course.setOutdoors(isOutdoors);
             // For now, assign the owner as the trainer. Later we can add a dropdown to select a GymWorker.
             course.setTrainer(userService.getUserByEmail(authentication.getName()));
 

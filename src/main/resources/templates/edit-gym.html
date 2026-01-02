@@ -152,6 +152,7 @@
                                                 <th th:text="#{gym.edit.courses.table.date}">Date & Time</th>
                                                 <th th:text="#{gym.edit.courses.table.trainer}">Trainer</th>
                                                 <th th:text="#{gym.edit.courses.table.participants}">Participants</th>
+                                                <th th:text="#{gym.edit.courses.table.outdoors}">Outdoors</th>
                                                 <th th:text="#{gym.edit.courses.table.actions}">Actions</th>
                                             </tr>
                                         </thead>
@@ -162,6 +163,9 @@
                                                 <td th:text="${course.trainer.firstName}">Max</td>
                                                 <td>
                                                     <span th:text="${course.participants.size()}">5</span> / <span th:text="${course.maxParticipants}">20</span>
+                                                </td>
+                                                <td>
+                                                    <span th:if="${course.isOutdoors}" class="badge bg-success" th:text="#{gym.course.outdoors}">Outdoors</span>
                                                 </td>
                                                 <td>
                                                     <form th:action="@{/gym/{id}/course/{courseId}/delete(id=${gym.id}, courseId=${course.id})}" method="post" class="d-inline">
@@ -224,6 +228,13 @@
                             <label for="courseMaxParticipants" class="form-label" th:text="#{gym.course.create.max}">Max Participants</label>
                             <input type="number" class="form-control" id="courseMaxParticipants" name="maxParticipants" value="20" min="1" required>
                         </div>
+
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="courseOutdoors" name="outdoors" value="true">
+                            <label class="form-check-label" for="courseOutdoors" th:text="#{gym.course.create.outdoors}">Outdoors</label>
+                            <input type="hidden" name="outdoors" value="false" />
+                        </div>
+
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{gym.course.create.cancel}">Cancel</button>
