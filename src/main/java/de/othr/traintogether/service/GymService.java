@@ -45,6 +45,7 @@ public class GymService {
         Optional<Gym> gym = gymRepository.findById(id);
         gym.ifPresent(g -> {
             Hibernate.initialize(g.getCourses());
+            Hibernate.initialize(g.getCourses().stream().flatMap(c -> c.getParticipants().stream()).toList());
             Hibernate.initialize(g.getWorkers());
             Hibernate.initialize(g.getOwner());
         });
@@ -56,6 +57,7 @@ public class GymService {
         Gym gym = gymRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Gym not found with id: " + id));
         Hibernate.initialize(gym.getCourses());
+        Hibernate.initialize(gym.getCourses().stream().flatMap(c -> c.getParticipants().stream()).toList());
         Hibernate.initialize(gym.getWorkers());
         Hibernate.initialize(gym.getOwner());
         return gym;
