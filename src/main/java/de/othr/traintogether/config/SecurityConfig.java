@@ -85,7 +85,7 @@ public class SecurityConfig {
                         // Specific rules first - Allow all variations of the role
                         .requestMatchers("/gym/edit/**").hasAnyAuthority("GYM_OWNER", "ROLE_GYM_OWNER", "OWNER")
                         // General rules later - Allow public access to view gyms
-                        .requestMatchers("/gym/**").permitAll()
+                        .requestMatchers("/gym/**").authenticated()
                         // public MVC endpoints + allow swagger/ui and openapi JSON for browser access
                         .requestMatchers(
                                 "/",

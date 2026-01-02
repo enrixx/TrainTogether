@@ -46,6 +46,7 @@ public class GymService {
         gym.ifPresent(g -> {
             Hibernate.initialize(g.getCourses());
             Hibernate.initialize(g.getWorkers());
+            Hibernate.initialize(g.getOwner());
         });
         return gym;
     }
@@ -56,6 +57,7 @@ public class GymService {
                 .orElseThrow(() -> new RuntimeException("Gym not found with id: " + id));
         Hibernate.initialize(gym.getCourses());
         Hibernate.initialize(gym.getWorkers());
+        Hibernate.initialize(gym.getOwner());
         return gym;
     }
 

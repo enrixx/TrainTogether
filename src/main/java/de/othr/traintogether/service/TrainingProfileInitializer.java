@@ -36,18 +36,6 @@ public class TrainingProfileInitializer {
         User user = event.getUser();
         logger.info("Initializing training profile for user: {}", user.getEmail());
 
-        BodyMeasurements bm = new BodyMeasurements();
-        bmRepo.save(bm);
-
-        TrainingSplit split = new TrainingSplit("Base Split");
-        splitRepo.save(split);
-
-        TrainingProfile profile = new TrainingProfile(user.getId());
-        profile.getMeasurements().add(bm);
-        profile.getSplits().add(split);
-
-        profileRepo.save(profile);
-
         List<PersonalExercise> savedExercises = new ArrayList<>();
         for (ExerciseName ex : ExerciseName.values()) {
             PersonalExercise pe = new PersonalExercise(ex.name(), user);
@@ -55,7 +43,27 @@ public class TrainingProfileInitializer {
             savedExercises.add(pe);
         }
 
-        // Dummy data for User ID 1
+        // Create Training Profile
+        TrainingProfile profile = new TrainingProfile(user.getId());
+        
+        // Create initial Body Measurements
+        BodyMeasurements bm = new BodyMeasurements();
+        bmRepo.save(bm);
+        profile.addMeasurements(bm);
+
+        // Create Default Split
+        TrainingSplit split = new TrainingSplit("Default Split");
+        splitRepo.save(split);
+        profile.addSplit(split);
+
+        // Save profile first to generate ID
+        profile = profileRepo.save(profile);
+
+        // Set active split
+        profile.setActiveTraininSplitId(split.getId());
+        profileRepo.save(profile);
+
+        // Dummy data for User ID 1 (Seed Data)
         if (user.getId() == 1L) {
             createDummyData(user, split, savedExercises);
         }
