@@ -72,8 +72,8 @@
 
                             <div class="card shadow-sm border-0 bg-body-tertiary">
                                 <div class="card-body p-4">
-                                    <div class="row">
-                                        <div class="col-md-8">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="w-auto">
                                             <h3 class="mb-3" th:text="${course.name}">Yoga</h3>
 
                                             <div class="d-flex align-items-center mb-3 text-primary">
@@ -107,9 +107,29 @@
                                             </div>
                                         </div>
 
-                                        <div class="col-md-4 mt-4 mt-md-0">
+                                        <!-- Weather card for outdoor courses -->
+                                        <div th:if="${courseWeather != null and courseWeather.containsKey(course.id)}" class="w-auto h-100">
+                                            <div class="card p-2 border-0 small">
+                                                <div class="d-flex align-items-center flex-column" style="padding: 20px">
+                                                    <h5 th:text="#{gym.course.outdoors.weather.condition}">Weather Condition:</h5>
+                                                    <div class="d-flex flex-row">
+                                                        <div class="me-3">
+                                                            <img th:src="${'https://openweathermap.org/img/wn/' + courseWeather.get(course.id).icon + '@2x.png'}" th:alt="${courseWeather.get(course.id).description}" style="width:48px; height:48px;"/>
+                                                        </div>
+                                                        <div>
+                                                            <div class="fw-bold" th:text="${courseWeather.get(course.id).temperatureC != null ? courseWeather.get(course.id).temperatureC + '°C' : ''}"></div>
+                                                            <div class="text-muted" th:text="${courseWeather.get(course.id).description}"></div>
+                                                            <div class="text-muted small">Wind: <span th:text="${courseWeather.get(course.id).windSpeed}"></span> m/s</div>
+                                                            <div class="text-muted small" th:text="${#temporals.format(courseWeather.get(course.id).timestamp, 'dd.MM.yyyy HH:mm')}"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="w-auto mt-4 mt-md-0">
                                             <div class="card border-0 shadow-sm">
-                                                <div class="card-body text-center">
+                                                <div class="card-body text-center" style="padding-left: 60px; padding-right: 60px;">
                                                     <h6 class="card-subtitle mb-3 text-muted" th:text="#{gym.courses.trainer}">Trainer</h6>
 
                                                     <img th:if="${course.trainer.profilePictureUrl != null}"
