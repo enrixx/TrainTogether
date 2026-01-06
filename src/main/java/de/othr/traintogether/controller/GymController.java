@@ -2,13 +2,11 @@ package de.othr.traintogether.controller;
 
 import de.othr.traintogether.dto.GymMapDto;
 import de.othr.traintogether.dto.UserDto;
+import de.othr.traintogether.dto.WeatherDto;
 import de.othr.traintogether.model.Course;
 import de.othr.traintogether.model.Gym;
 import de.othr.traintogether.model.User;
-import de.othr.traintogether.service.CourseService;
-import de.othr.traintogether.service.GymService;
-import de.othr.traintogether.service.MinioService;
-import de.othr.traintogether.service.UserService;
+import de.othr.traintogether.service.*;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -18,7 +16,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -30,12 +31,14 @@ public class GymController {
     private final UserService userService;
     private final MinioService minioService;
     private final CourseService courseService;
+    private final OpenWeatherMapService openWeatherMapService;
 
-    public GymController(GymService gymService, UserService userService, MinioService minioService, CourseService courseService) {
+    public GymController(GymService gymService, UserService userService, MinioService minioService, CourseService courseService, OpenWeatherMapService openWeatherMapService) {
         this.gymService = gymService;
         this.userService = userService;
         this.minioService = minioService;
         this.courseService = courseService;
+        this.openWeatherMapService = openWeatherMapService;
     }
 
     // --- API for internal gym data ---
@@ -67,6 +70,24 @@ public class GymController {
             }
 
             model.addAttribute("gym", gym);
+
+            Map<Long, WeatherDto> courseWeather = new HashMap<>();
+            double lat = gym.getLat();
+            double lon = gym.getLon();
+            if (lat != 0 || lon != 0) {
+                for (Course course : gym.getCourses()) {
+                    try {
+                        if (course.isOutdoors()) {
+                            long epochSeconds = course.getDateTime().atZone(ZoneId.systemDefault()).toEpochSecond();
+                            openWeatherMapService.fetchWeather(lat, lon, epochSeconds).ifPresent(w -> courseWeather.put(course.getId(), w));
+                        }
+                    } catch (Exception e) {
+                        // Log error and continue
+                    }
+                }
+            }
+            model.addAttribute("courseWeather", courseWeather);
+
             if (authentication != null) {
                 User user = userService.getUserByEmail(authentication.getName());
                 model.addAttribute("currentUser", user);
@@ -150,6 +171,7 @@ public class GymController {
                                @RequestParam("description") String description,
                                @RequestParam("dateTime") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateTime,
                                @RequestParam("maxParticipants") int maxParticipants,
+                               @RequestParam("outdoors") boolean isOutdoors,
                                Authentication authentication) {
         Optional<Gym> gymOpt = gymService.findById(id);
         if (gymOpt.isPresent()) {
@@ -165,6 +187,7 @@ public class GymController {
             course.setDescription(description);
             course.setDateTime(dateTime);
             course.setMaxParticipants(maxParticipants);
+            course.setOutdoors(isOutdoors);
             // For now, assign the owner as the trainer. Later we can add a dropdown to select a GymWorker.
             course.setTrainer(userService.getUserByEmail(authentication.getName()));
 

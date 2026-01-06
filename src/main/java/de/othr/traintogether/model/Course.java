@@ -33,6 +33,9 @@ public class Course {
     @Column(nullable = false)
     private int maxParticipants;
 
+    @Column(name = "is_outdoors", nullable = false, columnDefinition = "boolean default false")
+    private boolean isOutdoors = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "gym_id", nullable = false)
     @JsonIgnore
