@@ -41,7 +41,7 @@ public class ProfileController {
 
         model.addAttribute("title", "Profile");
         model.addAttribute("user", user);
-        model.addAttribute("updateProfileDto", new UpdateProfileDto(user.getEmail(), user.getUsername(), user.getFirstName(), user.getLastName()));
+        model.addAttribute("updateProfileDto", new UpdateProfileDto(user.getEmail(), user.getUsername(), user.getFirstName(), user.getLastName(), user.getGender(), user.getBirthday()));
 
         // Check if user has rejected gym owner request (for reapplication button)
         // Only show if user has NO pending request
@@ -170,4 +170,3 @@ public class ProfileController {
         return "redirect:/profile";
     }
 }
-

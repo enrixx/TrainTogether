@@ -3,6 +3,7 @@ package de.othr.traintogether.dto;
 import de.othr.traintogether.model.User;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Set;
 
 public class UserDto {
@@ -12,6 +13,8 @@ public class UserDto {
     private String username;
     private String firstName;
     private String lastName;
+    private String gender;
+    private LocalDate birthday;
     private String profilePictureUrl;
     private Instant createdAt;
     private Set<String> authorities;
@@ -19,12 +22,14 @@ public class UserDto {
     public UserDto() {
     }
 
-    public UserDto(Long id, String email, String username, String firstName, String lastName, String profilePictureUrl, Instant createdAt, Set<String> authorities) {
+    public UserDto(Long id, String email, String username, String firstName, String lastName, String gender, LocalDate birthday, String profilePictureUrl, Instant createdAt, Set<String> authorities) {
         this.id = id;
         this.email = email;
         this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
+        this.gender = gender;
+        this.birthday = birthday;
         this.profilePictureUrl = profilePictureUrl;
         this.createdAt = createdAt;
         this.authorities = authorities;
@@ -36,6 +41,8 @@ public class UserDto {
         this.username = user.getUsername();
         this.firstName = user.getFirstName();
         this.lastName = user.getLastName();
+        this.gender = user.getGender();
+        this.birthday = user.getBirthday();
         this.profilePictureUrl = user.getProfilePictureUrl();
         this.createdAt = user.getCreatedAt();
         this.authorities = user.getAuthorities();
@@ -81,6 +88,22 @@ public class UserDto {
         this.lastName = lastName;
     }
 
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public LocalDate getBirthday() {
+        return birthday;
+    }
+
+    public void setBirthday(LocalDate birthday) {
+        this.birthday = birthday;
+    }
+
     public String getProfilePictureUrl() {
         return profilePictureUrl;
     }
@@ -105,4 +128,3 @@ public class UserDto {
         this.authorities = authorities;
     }
 }
-

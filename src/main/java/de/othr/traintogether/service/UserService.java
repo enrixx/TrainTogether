@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Locale;
 import java.util.UUID;
@@ -62,6 +63,8 @@ public class UserService {
         String userName = registerDto.getUsername();
         String firstName = registerDto.getFirstName();
         String lastName = registerDto.getLastName();
+        String gender = registerDto.getGender();
+        LocalDate birthday = registerDto.getBirthday();
 
         if(userRepository.findByEmail(email).isPresent()) {
             throw new EmailAlreadyRegisteredException("{error.email.exists}");
@@ -73,6 +76,8 @@ public class UserService {
         }
         user.setFirstName(firstName);
         user.setLastName(lastName);
+        user.setGender(gender);
+        user.setBirthday(birthday);
 
         userRepository.save(user);
 
@@ -89,6 +94,8 @@ public class UserService {
         String userName = registerDto.getUsername();
         String firstName = registerDto.getFirstName();
         String lastName = registerDto.getLastName();
+        String gender = registerDto.getGender();
+        LocalDate birthday = registerDto.getBirthday();
 
         if(userRepository.findByEmail(email).isPresent()) {
             throw new EmailAlreadyRegisteredException("{error.email.exists}");
@@ -101,6 +108,8 @@ public class UserService {
         }
         user.setFirstName(firstName);
         user.setLastName(lastName);
+        user.setGender(gender);
+        user.setBirthday(birthday);
 
 
         userRepository.save(user);
@@ -166,6 +175,8 @@ public class UserService {
 
         user.setFirstName(updateDto.getFirstName());
         user.setLastName(updateDto.getLastName());
+        user.setGender(updateDto.getGender());
+        user.setBirthday(updateDto.getBirthday());
 
         userRepository.save(user);
     }

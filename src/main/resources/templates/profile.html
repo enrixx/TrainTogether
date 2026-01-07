@@ -112,6 +112,24 @@
                             </div>
 
                             <div class="mb-3">
+                                <label for="gender" class="form-label" th:text="#{auth.gender}">Gender</label>
+                                <select th:field="*{gender}" id="gender" class="form-select" required>
+                                    <option value="" disabled selected th:text="#{auth.gender.placeholder}">Select Gender</option>
+                                    <option value="male" th:text="#{auth.gender.male}">Male</option>
+                                    <option value="female" th:text="#{auth.gender.female}">Female</option>
+                                    <option value="divers" th:text="#{auth.gender.divers}">Divers</option>
+                                </select>
+                                <div class="text-danger" th:if="${#fields.hasErrors('gender')}" th:errors="*{gender}"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="birthday" class="form-label" th:text="#{auth.birthday}">Birthday</label>
+                                <input type="date" th:field="*{birthday}" id="birthday" class="form-control"
+                                       th:placeholder="#{auth.birthday}" required>
+                                <div class="text-danger" th:if="${#fields.hasErrors('birthday')}" th:errors="*{birthday}"></div>
+                            </div>
+
+                            <div class="mb-3">
                                 <label class="form-label" th:text="#{profile.member.since}">Member Since</label>
                                 <p class="form-control-plaintext" th:text="${#temporals.format(user.createdAt, 'dd.MM.yyyy HH:mm')}">01.01.2024</p>
                             </div>
@@ -195,4 +213,3 @@
 </div>
 </body>
 </html>
-

@@ -18,6 +18,7 @@ import de.othr.traintogether.service.chat.ChatRoomService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.Set;
 
@@ -52,10 +53,10 @@ public class DataInitializer implements CommandLineRunner {
         }
 
         // Regular users
-        userService.registerUser(new RegisterDto("user@u", "user", "Normal User", "Deez", "Nuts"), Role.USER);
-        userService.registerUser(new RegisterDto("admin@a", "admin", "Administrator", "Nick", "Gurs"), Role.ADMIN);
-        userService.registerUser(new RegisterDto("owner@o", "owner", "Gym Owner", "Ben", "Dover"), Role.GYM_OWNER);
-        userService.registerUser(new RegisterDto("worker@w", "worker", "Gym Worker", "Mike", "Coxlong"), Role.GYM_WORKER);
+        userService.registerUser(new RegisterDto("user@u", "user", "Normal User", "Deez", "Nuts", "male", LocalDate.of(1990, 1, 1)), Role.USER);
+        userService.registerUser(new RegisterDto("admin@a", "admin", "Administrator", "Nick", "Gurs", "male", LocalDate.of(1990, 1, 1)), Role.ADMIN);
+        userService.registerUser(new RegisterDto("owner@o", "owner", "Gym Owner", "Ben", "Dover", "male", LocalDate.of(1990, 1, 1)), Role.GYM_OWNER);
+        userService.registerUser(new RegisterDto("worker@w", "worker", "Gym Worker", "Mike", "Coxlong", "male", LocalDate.of(1990, 1, 1)), Role.GYM_WORKER);
 
         // Pending gym owner
         GymOwnerRegisterDto pendingOwnerDto = new GymOwnerRegisterDto();
@@ -64,6 +65,8 @@ public class DataInitializer implements CommandLineRunner {
         pendingOwnerDto.setUsername("Pending Gym Owner");
         pendingOwnerDto.setFirstName("Mike");
         pendingOwnerDto.setLastName("Literus");
+        pendingOwnerDto.setGender("male");
+        pendingOwnerDto.setBirthday(LocalDate.of(1990, 1, 1));
         pendingOwnerDto.setGymName("FitCenter");
         pendingOwnerDto.setGymAddress("123 Fitness Street");
         pendingOwnerDto.setCity("Munich");
@@ -72,7 +75,7 @@ public class DataInitializer implements CommandLineRunner {
         pendingOwnerDto.setGymDescription("A modern fitness center with state-of-the-art equipment.");
         userService.registerGymOwner(pendingOwnerDto);
 
-        userService.registerUser(new RegisterDto("Pworker@o", "Pworker", "Pending Gym Worker", "Hue G.", "Rection"), Role.PENDING_GYM_WORKER);
+        userService.registerUser(new RegisterDto("Pworker@o", "Pworker", "Pending Gym Worker", "Hue G.", "Rection", "male", LocalDate.of(1990, 1, 1)), Role.PENDING_GYM_WORKER);
     }
 
     private void seedGyms() {

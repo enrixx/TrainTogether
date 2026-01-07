@@ -48,6 +48,25 @@
         <label for="registerLastName" th:text="#{auth.lastname}">Last Name</label>
         <div class="text-danger" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}"></div>
     </div>
+
+    <div class="form-floating mb-3">
+        <select th:field="*{gender}" id="registerGender" class="form-select" required>
+            <option value="" disabled selected th:text="#{auth.gender.placeholder}">Select Gender</option>
+            <option value="male" th:text="#{auth.gender.male}">Male</option>
+            <option value="female" th:text="#{auth.gender.female}">Female</option>
+            <option value="divers" th:text="#{auth.gender.divers}">Divers</option>
+        </select>
+        <label for="registerGender" th:text="#{auth.gender}">Gender</label>
+        <div class="text-danger" th:if="${#fields.hasErrors('gender')}" th:errors="*{gender}"></div>
+    </div>
+
+    <div class="form-floating mb-3">
+        <input type="date" th:field="*{birthday}" id="registerBirthday" class="form-control"
+               th:placeholder="#{auth.birthday}" required>
+        <label for="registerBirthday" th:text="#{auth.birthday}">Birthday</label>
+        <div class="text-danger" th:if="${#fields.hasErrors('birthday')}" th:errors="*{birthday}"></div>
+    </div>
+
     <button class="btn btn-primary w-100 py-2 mb-2" type="submit" th:text="#{auth.register}">Register</button>
     
     <div class="d-grid gap-2 mt-3">
