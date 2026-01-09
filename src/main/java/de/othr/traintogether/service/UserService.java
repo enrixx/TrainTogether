@@ -177,6 +177,7 @@ public class UserService {
         user.setLastName(updateDto.getLastName());
         user.setGender(updateDto.getGender());
         user.setBirthday(updateDto.getBirthday());
+        user.setBio(updateDto.getBio());
 
         userRepository.save(user);
     }

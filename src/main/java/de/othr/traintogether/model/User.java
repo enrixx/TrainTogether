@@ -42,6 +42,9 @@ public class User {
     @Column
     private LocalDate birthday;
 
+    @Column(length = 500)
+    private String bio;
+
     @Column(name = "profile_picture_url", length = 500)
     private String profilePictureUrl;
 

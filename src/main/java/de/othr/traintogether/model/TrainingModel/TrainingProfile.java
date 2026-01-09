@@ -63,12 +63,10 @@ public class TrainingProfile {
         if(activeTraininSplitId == null){
             this.activeTraininSplitId = 1L;
         }
-        TrainingSplit activeSplit = splits.stream()
-                .filter(s -> s.getId() == this.activeTraininSplitId)
+        return splits.stream()
+                .filter(s -> s.getId() != null && s.getId().equals(this.activeTraininSplitId))
                 .findFirst()
                 .orElse(null);
-
-        return activeSplit;
 
     }
 

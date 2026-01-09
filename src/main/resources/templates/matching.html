@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:replace="~{layout :: layout(~{::content})}">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{matching.title}">Find Training Partners</title>
+    <style>
+        .card-stack {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            height: 600px;
+            margin: 0 auto;
+        }
+        .matching-card {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        /* Hide all cards except the first one */
+        .matching-card:not(:last-child) {
+            display: none;
+        }
+        .card-image {
+            height: 60%;
+            background-color: #f0f0f0;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card-content {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .card-actions {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            padding: 20px;
+        }
+        .action-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .action-btn:hover {
+            transform: scale(1.1);
+        }
+        .btn-dislike {
+            background-color: #fff;
+            color: #ff4b4b;
+            border: 2px solid #ff4b4b;
+        }
+        .btn-like {
+            background-color: #fff;
+            color: #4caf50;
+            border: 2px solid #4caf50;
+        }
+        .no-matches {
+            text-align: center;
+            margin-top: 100px;
+        }
+        .filter-section {
+            max-width: 800px;
+            margin: 0 auto 20px auto;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+<div th:fragment="content" class="container mt-4">
+    <h2 class="text-center mb-4" th:text="#{matching.title}">Find Training Partners</h2>
+
+    <div th:if="${missingBio}" class="alert alert-warning text-center">
+        <h4 th:text="#{matching.bio.missing.title}">Bio Missing</h4>
+        <p th:text="#{matching.bio.missing.desc}">Please add a bio to your profile before finding training partners.</p>
+        <a th:href="@{/profile}" class="btn btn-primary" th:text="#{matching.bio.add}">Add Bio</a>
+    </div>
+
+    <div th:unless="${missingBio}">
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <form method="get" th:action="@{/matching}" class="row g-3">
+                <div class="col-md-3">
+                    <label for="minAge" class="form-label" th:text="#{matching.filter.minAge}">Min Age</label>
+                    <input type="number" class="form-control" id="minAge" name="minAge" th:value="${minAge}" min="16" max="100">
+                </div>
+                <div class="col-md-3">
+                    <label for="maxAge" class="form-label" th:text="#{matching.filter.maxAge}">Max Age</label>
+                    <input type="number" class="form-control" id="maxAge" name="maxAge" th:value="${maxAge}" min="16" max="100">
+                </div>
+                <div class="col-md-3">
+                    <label for="gender" class="form-label" th:text="#{auth.gender}">Gender</label>
+                    <select class="form-select" id="gender" name="gender">
+                        <option value="all" th:selected="${gender == 'all' or gender == null}" th:text="#{matching.filter.gender.all}">All</option>
+                        <option value="male" th:selected="${gender == 'male'}" th:text="#{auth.gender.male}">Male</option>
+                        <option value="female" th:selected="${gender == 'female'}" th:text="#{auth.gender.female}">Female</option>
+                        <option value="divers" th:selected="${gender == 'divers'}" th:text="#{auth.gender.divers}">Divers</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Training Days</label>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            Select Days
+                        </button>
+                        <ul class="dropdown-menu p-2" aria-labelledby="dropdownMenuButton">
+                            <li th:each="day : ${T(java.time.DayOfWeek).values()}">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="trainingDays"
+                                           th:value="${day.name()}"
+                                           th:id="${'day-' + day.name()}"
+                                           th:checked="${trainingDays != null and trainingDays.contains(day.name())}">
+                                    <label class="form-check-label" th:for="${'day-' + day.name()}"
+                                           th:text="${#strings.capitalize(day.name().toLowerCase())}">
+                                        Monday
+                                    </label>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-12 text-end">
+                    <a th:href="@{/matching}" class="btn btn-outline-secondary me-2" th:text="#{matching.filter.reset}">Reset</a>
+                    <button type="submit" class="btn btn-primary" th:text="#{matching.filter.apply}">Apply Filters</button>
+                </div>
+            </form>
+        </div>
+
+        <div th:if="${#lists.isEmpty(potentialMatches)}" class="no-matches">
+            <h3 th:text="#{matching.none.title}">No more profiles</h3>
+            <p th:text="#{matching.none.desc}">Check back later for more potential training partners.</p>
+        </div>
+
+        <div th:unless="${#lists.isEmpty(potentialMatches)}" class="card-stack" id="cardStack">
+            <div th:each="user, iterStat : ${potentialMatches}"
+                 class="matching-card"
+                 th:id="'card-' + ${user.id}"
+                 th:data-userid="${user.id}"
+                 style="display: none;">
+
+                <div class="card-image"
+                     th:style="${user.profilePictureUrl != null} ? 'background-image: url(' + ${user.profilePictureUrl} + ')' : ''">
+                    <img th:unless="${user.profilePictureUrl != null}"
+                         th:src="@{/images/svg/person-circle.svg}"
+                         alt="Profile Picture"
+                         style="width: 100px; height: 100px; opacity: 0.5;">
+                </div>
+
+                <div class="card-content">
+                    <h3>
+                        <span th:text="${user.firstName}">Name</span>,
+                        <span th:text="${user.age}">Age</span>
+                    </h3>
+                    <p class="text-muted">
+                        <span th:text="${user.gender}">Gender</span>
+                    </p>
+                    <div th:if="${user.trainingDays != null and !user.trainingDays.empty}" class="mb-2">
+                        <small class="text-muted">Trains on:</small><br>
+                        <span th:each="day, iter : ${user.trainingDays}" class="badge bg-secondary me-1"
+                              th:text="${#strings.capitalize(day.toLowerCase())}">Mon</span>
+                    </div>
+                    <p th:text="${user.bio}">Bio description...</p>
+                </div>
+
+                <div class="card-actions">
+                    <button class="action-btn btn-dislike" th:onclick="'handleAction(' + ${user.id} + ', \'DISLIKE\')'">
+                        <i class="bi bi-x-lg"></i> &#10005;
+                    </button>
+                    <button class="action-btn btn-like" th:onclick="'handleAction(' + ${user.id} + ', \'LIKE\')'">
+                        <i class="bi bi-heart-fill"></i> &#10003;
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const csrfToken = document.querySelector("meta[name='_csrf']").getAttribute("content");
+        const csrfHeader = document.querySelector("meta[name='_csrf_header']").getAttribute("content");
+
+        document.addEventListener('DOMContentLoaded', function() {
+            showNextCard();
+        });
+
+        function showNextCard() {
+            const stack = document.getElementById('cardStack');
+            if (!stack) return;
+
+            const cards = stack.querySelectorAll('.matching-card');
+            if (cards.length > 0) {
+                cards[0].style.display = 'flex';
+            } else {
+                location.reload();
+            }
+        }
+
+        function handleAction(userId, action) {
+            const card = document.getElementById('card-' + userId);
+            if (!card) return;
+
+            // Animate card
+            if (action === 'LIKE') {
+                card.style.transform = 'translate(100px, 20px) rotate(20deg)';
+            } else {
+                card.style.transform = 'translate(-100px, 20px) rotate(-20deg)';
+            }
+            card.style.opacity = '0';
+
+            // Send request
+            fetch('/matching/action', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    [csrfHeader]: csrfToken
+                },
+                body: `targetUserId=${userId}&action=${action}`
+            }).then(response => {
+                if (response.ok) {
+                    setTimeout(() => {
+                        card.remove();
+                        showNextCard();
+                    }, 300);
+                }
+            });
+        }
+        /*]]>*/
+    </script>
+</div>
+</body>
+</html>

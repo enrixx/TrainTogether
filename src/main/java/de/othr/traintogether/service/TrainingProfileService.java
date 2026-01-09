@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -28,9 +29,10 @@ public class TrainingProfileService {
     @Transactional(readOnly = true)
     public TrainingProfile getTrainingProfile(String email) {
         UserDto user = userService.findUserDTOByEmail(email);
-        TrainingProfile profile = profileRepo.findByUserId(user.getId());
+        Optional<TrainingProfile> profileOpt = profileRepo.findFirstByUserId(user.getId());
 
-        if (profile != null) {
+        if (profileOpt.isPresent()) {
+            TrainingProfile profile = profileOpt.get();
             Hibernate.initialize(profile.getSplits());
             Hibernate.initialize(profile.getMeasurements());
             if (profile.getSplits() != null) {
@@ -43,8 +45,9 @@ public class TrainingProfileService {
                     }
                 });
             }
+            return profile;
         }
-        return profile;
+        return null;
     }
 
     @Transactional(readOnly = true)
@@ -56,44 +59,52 @@ public class TrainingProfileService {
     @Transactional
     public void updateDescription(String email, String description) {
         UserDto user = userService.findUserDTOByEmail(email);
-        TrainingProfile profile = profileRepo.findByUserId(user.getId());
-        profile.setDescription(description);
-        profileRepo.save(profile);
+        TrainingProfile profile = profileRepo.findFirstByUserId(user.getId()).orElse(null);
+        if (profile != null) {
+            profile.setDescription(description);
+            profileRepo.save(profile);
+        }
     }
 
     @Transactional
     public void createSplit(String email, String splitName) {
         UserDto user = userService.findUserDTOByEmail(email);
-        TrainingProfile profile = profileRepo.findByUserId(user.getId());
-        profile.addSplit(new TrainingSplit(splitName));
-        profileRepo.save(profile);
+        TrainingProfile profile = profileRepo.findFirstByUserId(user.getId()).orElse(null);
+        if (profile != null) {
+            profile.addSplit(new TrainingSplit(splitName));
+            profileRepo.save(profile);
+        }
     }
 
     @Transactional
     public void setActiveSplit(String email, Long splitId) {
         UserDto user = userService.findUserDTOByEmail(email);
-        TrainingProfile profile = profileRepo.findByUserId(user.getId());
-        profile.setActiveTraininSplitId(splitId);
-        profileRepo.save(profile);
+        TrainingProfile profile = profileRepo.findFirstByUserId(user.getId()).orElse(null);
+        if (profile != null) {
+            profile.setActiveTraininSplitId(splitId);
+            profileRepo.save(profile);
+        }
     }
 
     @Transactional
     public void deleteSplit(String email, Long splitId) {
         UserDto user = userService.findUserDTOByEmail(email);
-        TrainingProfile profile = profileRepo.findByUserId(user.getId());
+        TrainingProfile profile = profileRepo.findFirstByUserId(user.getId()).orElse(null);
 
-        profile.getSplits().removeIf(s -> s.getId().equals(splitId));
+        if (profile != null) {
+            profile.getSplits().removeIf(s -> s.getId().equals(splitId));
 
-        // If active split was deleted, reset active split
-        if (profile.getActiveTraininSplitId() != null && profile.getActiveTraininSplitId().equals(splitId)) {
-            if (!profile.getSplits().isEmpty()) {
-                profile.setActiveTraininSplitId(profile.getSplits().get(0).getId());
-            } else {
-                profile.setActiveTraininSplitId(null);
+            // If active split was deleted, reset active split
+            if (profile.getActiveTraininSplitId() != null && profile.getActiveTraininSplitId().equals(splitId)) {
+                if (!profile.getSplits().isEmpty()) {
+                    profile.setActiveTraininSplitId(profile.getSplits().get(0).getId());
+                } else {
+                    profile.setActiveTraininSplitId(null);
+                }
             }
-        }
 
-        profileRepo.save(profile);
+            profileRepo.save(profile);
+        }
     }
 
     @Transactional
@@ -146,27 +157,29 @@ public class TrainingProfileService {
                                    Double brust, Double schulter,
                                    Double taille, Double huefte) {
         UserDto user = userService.findUserDTOByEmail(email);
-        TrainingProfile profile = profileRepo.findByUserId(user.getId());
+        TrainingProfile profile = profileRepo.findFirstByUserId(user.getId()).orElse(null);
 
-        BodyMeasurements measurements = new BodyMeasurements();
-        measurements.setGewicht(gewicht);
-        measurements.setGroesse(groesse);
-        measurements.setArmLinks(new Measurement(armLinks));
-        measurements.setArmRechts(new Measurement(armRechts));
-        measurements.setUnterarmLinks(new Measurement(unterarmLinks));
-        measurements.setUnterarmRechts(new Measurement(unterarmRechts));
-        measurements.setBeinLinks(new Measurement(beinLinks));
-        measurements.setBeinRechts(new Measurement(beinRechts));
-        measurements.setBrust(new Measurement(brust));
-        measurements.setSchulter(new Measurement(schulter));
-        measurements.setTaille(new Measurement(taille));
-        measurements.setHuefte(new Measurement(huefte));
+        if (profile != null) {
+            BodyMeasurements measurements = new BodyMeasurements();
+            measurements.setGewicht(gewicht);
+            measurements.setGroesse(groesse);
+            measurements.setArmLinks(new Measurement(armLinks));
+            measurements.setArmRechts(new Measurement(armRechts));
+            measurements.setUnterarmLinks(new Measurement(unterarmLinks));
+            measurements.setUnterarmRechts(new Measurement(unterarmRechts));
+            measurements.setBeinLinks(new Measurement(beinLinks));
+            measurements.setBeinRechts(new Measurement(beinRechts));
+            measurements.setBrust(new Measurement(brust));
+            measurements.setSchulter(new Measurement(schulter));
+            measurements.setTaille(new Measurement(taille));
+            measurements.setHuefte(new Measurement(huefte));
 
-        double heightInMeters = measurements.getGroesse() / 100.0;
-        double bmi = measurements.getGewicht() / (heightInMeters * heightInMeters);
-        measurements.setBmi(Math.round(bmi * 10.0) / 10.0);
+            double heightInMeters = measurements.getGroesse() / 100.0;
+            double bmi = measurements.getGewicht() / (heightInMeters * heightInMeters);
+            measurements.setBmi(Math.round(bmi * 10.0) / 10.0);
 
-        profile.addMeasurements(measurements);
-        profileRepo.save(profile);
+            profile.addMeasurements(measurements);
+            profileRepo.save(profile);
+        }
     }
 }

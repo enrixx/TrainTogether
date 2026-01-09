@@ -33,6 +33,9 @@ public class UpdateProfileDto {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthday;
 
+    @Size(max = 500, message = "{error.bio.max.length}")
+    private String bio;
+
     @Size(min = 6, message = "{error.password.min.length}")
     private String currentPassword;
 
@@ -45,13 +48,14 @@ public class UpdateProfileDto {
     public UpdateProfileDto() {
     }
 
-    public UpdateProfileDto(String email, String username, String firstName, String lastName, String gender, LocalDate birthday) {
+    public UpdateProfileDto(String email, String username, String firstName, String lastName, String gender, LocalDate birthday, String bio) {
         this.email = email;
         this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
         this.gender = gender;
         this.birthday = birthday;
+        this.bio = bio;
     }
 
     public String getEmail() {
@@ -100,6 +104,14 @@ public class UpdateProfileDto {
 
     public void setBirthday(LocalDate birthday) {
         this.birthday = birthday;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
     }
 
     public String getCurrentPassword() {

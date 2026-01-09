@@ -1,0 +1,70 @@
+package de.othr.traintogether.controller;
+
+import de.othr.traintogether.dto.UserDto;
+import de.othr.traintogether.model.MatchingAction;
+import de.othr.traintogether.model.User;
+import de.othr.traintogether.service.MatchingService;
+import de.othr.traintogether.service.UserService;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@Controller
+@RequestMapping("/matching")
+@PreAuthorize("isAuthenticated()")
+public class MatchingController {
+
+    private final MatchingService matchingService;
+    private final UserService userService;
+
+    public MatchingController(MatchingService matchingService, UserService userService) {
+        this.matchingService = matchingService;
+        this.userService = userService;
+    }
+
+    @GetMapping
+    public String matchingPage(@RequestParam(required = false) Integer minAge,
+                               @RequestParam(required = false) Integer maxAge,
+                               @RequestParam(required = false) String gender,
+                               @RequestParam(required = false) List<String> trainingDays,
+                               Model model, Authentication authentication) {
+        User currentUser = userService.getUserByEmail(authentication.getName());
+        
+        // Check if user has a bio
+        if (currentUser.getBio() == null || currentUser.getBio().isBlank()) {
+            model.addAttribute("missingBio", true);
+            return "matching";
+        }
+
+        List<UserDto> potentialMatches = matchingService.findPotentialMatches(currentUser, minAge, maxAge, gender, trainingDays);
+        model.addAttribute("potentialMatches", potentialMatches);
+        
+        // Add filter values to model to repopulate form
+        model.addAttribute("minAge", minAge);
+        model.addAttribute("maxAge", maxAge);
+        model.addAttribute("gender", gender);
+        model.addAttribute("trainingDays", trainingDays);
+
+        return "matching";
+    }
+
+    @PostMapping("/action")
+    @ResponseBody
+    public String performAction(@RequestParam("targetUserId") Long targetUserId,
+                                @RequestParam("action") String action,
+                                Authentication authentication) {
+        User currentUser = userService.getUserByEmail(authentication.getName());
+        MatchingAction.ActionType actionType = MatchingAction.ActionType.valueOf(action.toUpperCase());
+        
+        try {
+            matchingService.performAction(currentUser, targetUserId, actionType);
+            return "success";
+        } catch (Exception e) {
+            return "error: " + e.getMessage();
+        }
+    }
+}

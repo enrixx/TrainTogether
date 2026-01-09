@@ -130,6 +130,19 @@
                             </div>
 
                             <div class="mb-3">
+                                <label for="bio" class="form-label" th:text="#{profile.bio.label}">Bio</label>
+                                <textarea class="form-control"
+                                          th:class="${#fields.hasErrors('bio')} ? 'form-control is-invalid' : 'form-control'"
+                                          id="bio"
+                                          th:field="*{bio}"
+                                          rows="3"
+                                          th:placeholder="#{profile.bio.placeholder}"></textarea>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('bio')}" th:errors="*{bio}">
+                                    Bio error
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
                                 <label class="form-label" th:text="#{profile.member.since}">Member Since</label>
                                 <p class="form-control-plaintext" th:text="${#temporals.format(user.createdAt, 'dd.MM.yyyy HH:mm')}">01.01.2024</p>
                             </div>

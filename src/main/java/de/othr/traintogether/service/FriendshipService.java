@@ -195,4 +195,35 @@ public class FriendshipService {
                 .map(f -> f.getStatus() == FriendshipStatus.ACCEPTED)
                 .orElse(false);
     }
+
+    public void createFriendship(User user1, User user2) {
+        if (user1.getId().equals(user2.getId())) {
+            throw new IllegalArgumentException("Cannot create friendship with yourself");
+        }
+
+        // Lock users in consistent order to prevent race conditions
+        if (user1.getId() < user2.getId()) {
+            userRepository.findByIdWithLock(user1.getId());
+            userRepository.findByIdWithLock(user2.getId());
+        } else {
+            userRepository.findByIdWithLock(user2.getId());
+            userRepository.findByIdWithLock(user1.getId());
+        }
+
+        Optional<Friendship> existing = friendshipRepository.findBetweenUsers(user1, user2);
+        if (existing.isPresent()) {
+            Friendship friendship = existing.get();
+            if (friendship.getStatus() == FriendshipStatus.BLOCKED) {
+                throw new IllegalStateException("Cannot create friendship: Blocked");
+            }
+            if (friendship.getStatus() == FriendshipStatus.ACCEPTED) {
+                return; // Already friends
+            }
+            friendship.setStatus(FriendshipStatus.ACCEPTED);
+            friendshipRepository.save(friendship);
+        } else {
+            Friendship friendship = new Friendship(user1, user2, FriendshipStatus.ACCEPTED);
+            friendshipRepository.save(friendship);
+        }
+    }
 }
