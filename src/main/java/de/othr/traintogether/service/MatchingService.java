@@ -2,6 +2,7 @@ package de.othr.traintogether.service;
 
 import de.othr.traintogether.dto.UserDto;
 import de.othr.traintogether.model.MatchingAction;
+import de.othr.traintogether.model.TrainingModel.ExerciseName;
 import de.othr.traintogether.model.TrainingModel.TrainingProfile;
 import de.othr.traintogether.model.TrainingModel.TrainingSplit;
 import de.othr.traintogether.model.User;
@@ -9,6 +10,8 @@ import de.othr.traintogether.repository.MatchingActionRepository;
 import de.othr.traintogether.repository.TrainingProfileRepository;
 import de.othr.traintogether.repository.UserRepository;
 import jakarta.persistence.criteria.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -20,10 +23,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import de.othr.traintogether.model.TrainingModel.ExerciseName;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Service
 public class MatchingService {
@@ -43,7 +42,7 @@ public class MatchingService {
     }
 
     @Transactional
-    public void performAction(User actor, Long targetUserId, MatchingAction.ActionType actionType) {
+    public boolean performAction(User actor, Long targetUserId, MatchingAction.ActionType actionType) {
         User target = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new IllegalArgumentException("Target user not found"));
 
@@ -63,22 +62,26 @@ public class MatchingService {
         }
 
         if (actionType == MatchingAction.ActionType.LIKE) {
-            checkAndCreateMatch(actor, target);
+            return checkAndCreateMatch(actor, target);
         }
+        return false;
     }
 
-    private void checkAndCreateMatch(User user1, User user2) {
+    private boolean checkAndCreateMatch(User user1, User user2) {
         Optional<MatchingAction> reverseAction = matchingActionRepository.findByActorAndTarget(user2, user1);
         if (reverseAction.isPresent() && reverseAction.get().getActionType() == MatchingAction.ActionType.LIKE) {
             try {
                 // Check if they are already friends
                 if (!friendshipService.areFriends(user1, user2)) {
                     friendshipService.createFriendship(user1, user2);
+                    return true;
                 }
             } catch (Exception e) {
-                // Handle potential errors (e.g. already friends, blocked)
+                // matching with self or blocked user should not happen
+                return false;
             }
         }
+        return false;
     }
 
     @Transactional(readOnly = true)
@@ -93,11 +96,19 @@ public class MatchingService {
 
         LocalDateTime dislikeCutoff = LocalDateTime.now().minusDays(30);
         List<Long> excludedUserIds = matchingActionRepository.findExcludedUserIds(currentUser, dislikeCutoff);
+        System.out.println(excludedUserIds.toString());
         excludedUserIds.add(currentUser.getId());
-        
+
         // Also exclude existing friends
         List<User> friends = friendshipService.getFriends(currentUser);
         excludedUserIds.addAll(friends.stream().map(User::getId).toList());
+
+        // Also exclude blocked users (both ways)
+        List<User> blockedUsers = friendshipService.getBlockedUsers(currentUser);
+        excludedUserIds.addAll(blockedUsers.stream().map(User::getId).toList());
+
+        List<User> blockers = friendshipService.getBlockers(currentUser);
+        excludedUserIds.addAll(blockers.stream().map(User::getId).toList());
 
         // Exclude users currently shown on the client
         if (currentShownIds != null && !currentShownIds.isEmpty()) {
@@ -193,8 +204,6 @@ public class MatchingService {
                             .filter(day -> {
                                 boolean hasTrainingExercise = day.getExercises() != null && day.getExercises().stream()
                                         .anyMatch(e -> e != null && e.getExercise() != ExerciseName.RESTDAY);
-                                // For display purposes, we might want to still show all training days even if they are rest days?
-                                // The original code filtered them.
                                 boolean hasPersonalExercise = day.getPersonalExercises() != null && day.getPersonalExercises().stream()
                                         .anyMatch(e -> e != null && e.getName() != null && !e.getName().isBlank() && !ExerciseName.RESTDAY.name().equalsIgnoreCase(e.getName()));
                                 return hasTrainingExercise || hasPersonalExercise;
@@ -206,13 +215,6 @@ public class MatchingService {
             }
         }
 
-        // We don't need the in-memory filtering for trainingDays anymore as it's done in DB.
-        // But we still populate the DTO fields above for display.
-
-        // Apply limit after filtering - actually DB does the limit now.
-        // result = result.subList(0, limit); // Not needed as DB returns page size.
-
-        logger.info("Returning {} potential matches", result.size());
         return result;
     }
 }

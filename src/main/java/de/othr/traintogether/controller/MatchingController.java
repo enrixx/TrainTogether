@@ -12,6 +12,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 @Controller
 @RequestMapping("/matching")
@@ -61,17 +63,29 @@ public class MatchingController {
 
     @PostMapping("/action")
     @ResponseBody
-    public String performAction(@RequestParam("targetUserId") Long targetUserId,
+    public java.util.Map<String, Object> performAction(@RequestParam("targetUserId") Long targetUserId,
                                 @RequestParam("action") String action,
                                 Authentication authentication) {
         User currentUser = userService.getUserByEmail(authentication.getName());
         MatchingAction.ActionType actionType = MatchingAction.ActionType.valueOf(action.toUpperCase());
         
+        System.out.println("Processing action: " + action + " from user " + currentUser.getEmail() + " on target " + targetUserId);
+
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
         try {
-            matchingService.performAction(currentUser, targetUserId, actionType);
-            return "success";
+            boolean isMatch = matchingService.performAction(currentUser, targetUserId, actionType);
+            System.out.println("Action result: isMatch=" + isMatch);
+
+            response.put("status", "success");
+            response.put("isMatch", isMatch);
+            if (isMatch) {
+                User targetUser = userService.getUserById(targetUserId);
+                response.put("matchName", targetUser.getFirstName() + " " + targetUser.getLastName());
+            }
         } catch (Exception e) {
-            return "error: " + e.getMessage();
+            response.put("status", "error");
+            response.put("message", e.getMessage());
         }
+        return response;
     }
 }

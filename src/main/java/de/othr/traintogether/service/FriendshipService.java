@@ -104,6 +104,12 @@ public class FriendshipService {
                 .collect(Collectors.toList());
     }
 
+    public List<User> getBlockers(User user) {
+        return friendshipRepository.findByAddresseeAndStatus(user, FriendshipStatus.BLOCKED).stream()
+                .map(Friendship::getRequester)
+                .collect(Collectors.toList());
+    }
+
     public void acceptRequest(Long friendshipId, User user) {
         Friendship friendship = friendshipRepository.findById(friendshipId)
                 .orElseThrow(() -> new IllegalArgumentException("Friendship not found"));

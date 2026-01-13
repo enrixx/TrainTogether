@@ -14,6 +14,6 @@ public interface MatchingActionRepository extends JpaRepository<MatchingAction, 
 
     Optional<MatchingAction> findByActorAndTarget(User actor, User target);
 
-    @Query("SELECT ma.target.id FROM MatchingAction ma WHERE ma.actor = :actor AND (ma.actionType = 'LIKE' OR (ma.actionType = 'DISLIKE' AND ma.actionDate > :cutoffDate))")
+    @Query("SELECT ma.target.id FROM MatchingAction ma WHERE ma.actor = :actor AND ma.actionDate > :cutoffDate AND (ma.actionType = 'LIKE' OR ma.actionType = 'DISLIKE')")
     List<Long> findExcludedUserIds(@Param("actor") User actor, @Param("cutoffDate") LocalDateTime cutoffDate);
 }
