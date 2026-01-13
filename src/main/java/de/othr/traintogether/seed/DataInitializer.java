@@ -131,18 +131,23 @@ public class DataInitializer implements CommandLineRunner {
                 activeDays = Set.of(DayOfWeek.values());
             }
 
-            // Create personal exercise for active days
-            for (DayOfWeek day : activeDays) {
-                PersonalExercise exercise = new PersonalExercise();
-                exercise.setName("Training Exercise");
-                exercise.setUser(user);
-                personalExerciseRepository.save(exercise);
+            // Assign exercises to active days
+            int exIndex = 0;
+            ExerciseName[] possibleExercises = ExerciseName.values();
 
-                // Find the corresponding TrainingDay and add the exercise
-                split.getDays().stream()
-                        .filter(d -> d.getWeekday() == day)
-                        .findFirst()
-                        .ifPresent(trainingDay -> trainingDay.addPersonalExercise(exercise));
+            for (DayOfWeek day : activeDays) {
+                // Pick an exercise (excluding RESTDAY)
+                ExerciseName chosenEnum = possibleExercises[exIndex % (possibleExercises.length - 1)];
+                exIndex++;
+
+                personalExerciseRepository.findByNameAndUser_Id(chosenEnum.name(), user.getId())
+                        .ifPresent(exercise -> {
+                            // Find the corresponding TrainingDay and add the exercise
+                            split.getDays().stream()
+                                    .filter(d -> d.getWeekday() == day)
+                                    .findFirst()
+                                    .ifPresent(trainingDay -> trainingDay.addPersonalExercise(exercise));
+                        });
             }
             
             trainingProfileRepository.save(profile);

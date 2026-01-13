@@ -31,6 +31,9 @@ public class MatchingController {
                                @RequestParam(required = false) Integer maxAge,
                                @RequestParam(required = false) String gender,
                                @RequestParam(required = false) List<String> trainingDays,
+                               @RequestParam(defaultValue = "0") int page,
+                               @RequestParam(required = false) List<Long> excludedIds,
+                               @RequestHeader(value = "X-Requested-With", required = false) String requestedWith,
                                Model model, Authentication authentication) {
         User currentUser = userService.getUserByEmail(authentication.getName());
         
@@ -40,7 +43,7 @@ public class MatchingController {
             return "matching";
         }
 
-        List<UserDto> potentialMatches = matchingService.findPotentialMatches(currentUser, minAge, maxAge, gender, trainingDays);
+        List<UserDto> potentialMatches = matchingService.findPotentialMatches(currentUser, minAge, maxAge, gender, trainingDays, excludedIds, page, 5);
         model.addAttribute("potentialMatches", potentialMatches);
         
         // Add filter values to model to repopulate form
@@ -48,6 +51,10 @@ public class MatchingController {
         model.addAttribute("maxAge", maxAge);
         model.addAttribute("gender", gender);
         model.addAttribute("trainingDays", trainingDays);
+
+        if ("XMLHttpRequest".equals(requestedWith)) {
+            return "matching :: cardList";
+        }
 
         return "matching";
     }

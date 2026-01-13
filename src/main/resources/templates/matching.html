@@ -154,6 +154,7 @@
         </div>
 
         <div th:unless="${#lists.isEmpty(potentialMatches)}" class="card-stack" id="cardStack">
+            <th:block th:fragment="cardList">
             <div th:each="user, iterStat : ${potentialMatches}"
                  class="matching-card"
                  th:id="'card-' + ${user.id}"
@@ -176,7 +177,7 @@
                     <p class="text-muted">
                         <span th:text="${user.gender}">Gender</span>
                     </p>
-                    <div th:if="${user.trainingDays != null and !user.trainingDays.empty}" class="mb-2">
+                    <div th:if="${user.trainingDays != null and !#lists.isEmpty(user.trainingDays)}" class="mb-2">
                         <small class="text-muted">Trains on:</small><br>
                         <span th:each="day, iter : ${user.trainingDays}" class="badge bg-secondary me-1"
                               th:text="${#strings.capitalize(day.toLowerCase())}">Mon</span>
@@ -193,6 +194,7 @@
                     </button>
                 </div>
             </div>
+            </th:block>
         </div>
     </div>
 
@@ -200,6 +202,9 @@
         /*<![CDATA[*/
         const csrfToken = document.querySelector("meta[name='_csrf']").getAttribute("content");
         const csrfHeader = document.querySelector("meta[name='_csrf_header']").getAttribute("content");
+
+        let currentPage = 0;
+        let isFetching = false;
 
         document.addEventListener('DOMContentLoaded', function() {
             showNextCard();
@@ -210,11 +215,85 @@
             if (!stack) return;
 
             const cards = stack.querySelectorAll('.matching-card');
+            console.log(`Current cards in stack: ${cards.length}`);
+
             if (cards.length > 0) {
                 cards[0].style.display = 'flex';
-            } else {
-                location.reload();
             }
+
+            // Fetch more if we are running low (e.g., 2 or fewer left)
+            if (cards.length <= 2 && !isFetching) {
+                console.log('Stack running low, fetching more cards...');
+                fetchMoreCards();
+            }
+
+            if (cards.length === 0 && !isFetching) {
+                 // If absolutely no cards, show empty state (handled by fetchMoreCards or initial load)
+                 // But if we are here, it means we might have just removed the last one.
+                 // fetchMoreCards is already triggered above.
+            }
+        }
+
+        function fetchMoreCards() {
+            if (isFetching) return;
+            isFetching = true;
+
+            const urlParams = new URLSearchParams(window.location.search);
+
+            // We always ask for page 0 since we exclude the seen IDs
+            urlParams.set('page', 0);
+
+            // Collect IDs of currently loaded cards (including hidden ones)
+            const stack = document.getElementById('cardStack');
+            if (stack) {
+                const currentCards = stack.querySelectorAll('.matching-card');
+                currentCards.forEach(card => {
+                    urlParams.append('excludedIds', card.dataset.userid);
+                });
+            }
+
+            console.log('Fetching more candidates...');
+
+            fetch('/matching?' + urlParams.toString(), {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                isFetching = false;
+                const stack = document.getElementById('cardStack');
+                if (html.trim().length > 0) {
+                     const temp = document.createElement('div');
+                     temp.innerHTML = html;
+                     const newCards = temp.querySelectorAll('.matching-card');
+                     console.log(`Received ${newCards.length} new cards.`);
+
+                     if (newCards.length > 0) {
+                         stack.insertAdjacentHTML('beforeend', html);
+
+                         // If we were completely empty, we need to "activate" the first new card
+                         const visibleCards = stack.querySelectorAll('.matching-card[style*="display: flex"]');
+                         if (visibleCards.length === 0) {
+                             showNextCard();
+                         }
+                     } else {
+                         console.log('No actionable cards received.');
+                         if (stack.querySelectorAll('.matching-card').length === 0) {
+                             stack.innerHTML = '<div class="no-matches"><h3>No more profiles</h3><p>Check back later for more potential training partners.</p></div>';
+                         }
+                     }
+                } else {
+                     console.log('Received empty response.');
+                     if (stack.querySelectorAll('.matching-card').length === 0) {
+                         stack.innerHTML = '<div class="no-matches"><h3>No more profiles</h3><p>Check back later for more potential training partners.</p></div>';
+                     }
+                }
+            })
+            .catch(err => {
+                console.error('Error fetching matches:', err);
+                isFetching = false;
+            });
         }
 
         function handleAction(userId, action) {

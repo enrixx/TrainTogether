@@ -8,22 +8,27 @@ import de.othr.traintogether.model.User;
 import de.othr.traintogether.repository.MatchingActionRepository;
 import de.othr.traintogether.repository.TrainingProfileRepository;
 import de.othr.traintogether.repository.UserRepository;
+import jakarta.persistence.criteria.*;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import de.othr.traintogether.model.TrainingModel.ExerciseName;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class MatchingService {
+
+    private static final Logger logger = LoggerFactory.getLogger(MatchingService.class);
 
     private final MatchingActionRepository matchingActionRepository;
     private final UserRepository userRepository;
@@ -77,7 +82,7 @@ public class MatchingService {
     }
 
     @Transactional(readOnly = true)
-    public List<UserDto> findPotentialMatches(User currentUser, Integer minAge, Integer maxAge, String gender, List<String> trainingDays) {
+    public List<UserDto> findPotentialMatches(User currentUser, Integer minAge, Integer maxAge, String gender, List<String> trainingDays, List<Long> currentShownIds, int page, int limit) {
         // Logic to find users:
         // 1. Not the current user
         // 2. Not already friends
@@ -93,6 +98,11 @@ public class MatchingService {
         // Also exclude existing friends
         List<User> friends = friendshipService.getFriends(currentUser);
         excludedUserIds.addAll(friends.stream().map(User::getId).toList());
+
+        // Exclude users currently shown on the client
+        if (currentShownIds != null && !currentShownIds.isEmpty()) {
+            excludedUserIds.addAll(currentShownIds);
+        }
 
         // Prepare filters
         String genderFilter = (gender != null && !gender.isBlank() && !gender.equals("all")) ? gender : null;
@@ -122,7 +132,50 @@ public class MatchingService {
             spec = spec.and((root, query, cb) -> cb.not(root.get("id").in(excludedUserIds)));
         }
 
-        List<User> candidates = userRepository.findAll(spec);
+        if (trainingDays != null && !trainingDays.isEmpty()) {
+            spec = spec.and((root, query, cb) -> {
+                Subquery<Long> subquery = query.subquery(Long.class);
+                Root<TrainingProfile> profileRoot = subquery.from(TrainingProfile.class);
+                Join<TrainingProfile, TrainingSplit> splitJoin = profileRoot.join("splits");
+                Join<TrainingSplit, de.othr.traintogether.model.TrainingModel.TrainingDay> dayJoin = splitJoin.join("days");
+
+                // Check active split
+                Predicate activeSplit = cb.equal(profileRoot.get("activeTraininSplitId"), splitJoin.get("id"));
+
+                // Check user link
+                Predicate userLink = cb.equal(profileRoot.get("userId"), root.get("id"));
+
+                // Check weekdays
+                List<java.time.DayOfWeek> requestedDays = trainingDays.stream()
+                        .map(d -> java.time.DayOfWeek.valueOf(d.toUpperCase()))
+                        .collect(Collectors.toList());
+                Predicate dayMatch = dayJoin.get("weekday").in(requestedDays);
+
+                // Check Not RESTDAY
+                // We want to ensure that the matching day has at least one real exercise (not just "RESTDAY" or empty)
+
+                // 1. TrainingExercise != RESTDAY
+                Join<de.othr.traintogether.model.TrainingModel.TrainingDay, de.othr.traintogether.model.TrainingModel.TrainingExercise> teJoin = dayJoin.join("exercises", JoinType.LEFT);
+                Predicate teNotRest = cb.notEqual(teJoin.get("exercise"), ExerciseName.RESTDAY);
+
+                // 2. PersonalExercise != RESTDAY
+                Join<de.othr.traintogether.model.TrainingModel.TrainingDay, de.othr.traintogether.model.TrainingModel.PersonalExercise> peJoin = dayJoin.join("personalExercises", JoinType.LEFT);
+                Predicate peNotRest = cb.notEqual(cb.upper(peJoin.get("name")), ExerciseName.RESTDAY.name());
+
+                // Combine: Active Split AND User Link AND Day Match AND (Valid TE OR Valid PE)
+                // We use Left Joins to check existence.
+
+                Predicate teValid = cb.and(cb.isNotNull(teJoin.get("id")), teNotRest);
+                Predicate peValid = cb.and(cb.isNotNull(peJoin.get("id")), peNotRest);
+
+                return cb.exists(subquery.select(profileRoot.get("userId"))
+                        .where(activeSplit, userLink, dayMatch, cb.or(teValid, peValid)));
+            });
+        }
+
+        Pageable pageable = PageRequest.of(page, limit);
+        List<User> candidates = userRepository.findAll(spec, pageable).getContent();
+        logger.info("Found {} candidates from DB (limit: {}) with db-filters", candidates.size(), limit);
 
         List<UserDto> result = candidates.stream()
                 .map(UserDto::new)
@@ -140,6 +193,8 @@ public class MatchingService {
                             .filter(day -> {
                                 boolean hasTrainingExercise = day.getExercises() != null && day.getExercises().stream()
                                         .anyMatch(e -> e != null && e.getExercise() != ExerciseName.RESTDAY);
+                                // For display purposes, we might want to still show all training days even if they are rest days?
+                                // The original code filtered them.
                                 boolean hasPersonalExercise = day.getPersonalExercises() != null && day.getPersonalExercises().stream()
                                         .anyMatch(e -> e != null && e.getName() != null && !e.getName().isBlank() && !ExerciseName.RESTDAY.name().equalsIgnoreCase(e.getName()));
                                 return hasTrainingExercise || hasPersonalExercise;
@@ -151,24 +206,13 @@ public class MatchingService {
             }
         }
 
-        if (trainingDays != null && !trainingDays.isEmpty()) {
-            Set<String> requiredDays = new HashSet<>(trainingDays);
+        // We don't need the in-memory filtering for trainingDays anymore as it's done in DB.
+        // But we still populate the DTO fields above for display.
 
-            result = result.stream()
-                    .filter(dto -> {
-                        if (dto.getTrainingDays() != null && !dto.getTrainingDays().isEmpty()) {
-                            // Check if user trains on AT LEAST ONE of the required days
-                            for (String day : dto.getTrainingDays()) {
-                                if (requiredDays.contains(day)) {
-                                    return true;
-                                }
-                            }
-                        }
-                        return false;
-                    })
-                    .collect(Collectors.toList());
-        }
+        // Apply limit after filtering - actually DB does the limit now.
+        // result = result.subList(0, limit); // Not needed as DB returns page size.
 
+        logger.info("Returning {} potential matches", result.size());
         return result;
     }
 }
