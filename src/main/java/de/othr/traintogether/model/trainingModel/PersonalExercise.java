@@ -5,6 +5,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.context.i18n.LocaleContextHolder;
+
+import java.util.Locale;
 
 @Entity
 @Table(name = "personal_exercises")
@@ -43,8 +46,11 @@ public class PersonalExercise {
     
     public String getName() {
         if (standardExercise != null) {
-            // Hier könnte man noch Logik für die Sprache einbauen, aber erstmal Default (DE)
-            return standardExercise.getNameDe(); 
+            Locale locale = LocaleContextHolder.getLocale();
+            if (locale != null && locale.getLanguage().equals("de")) {
+                return standardExercise.getNameDe();
+            }
+            return standardExercise.getNameEn();
         } else if (customExercise != null) {
             return customExercise.getName();
         }

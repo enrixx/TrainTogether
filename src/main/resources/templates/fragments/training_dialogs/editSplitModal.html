@@ -4,7 +4,7 @@
             <div class="modal-content" >
 
                 <div class="modal-header">
-                    <h5 class="modal-title" th:text="#{workouts.split.edit}">Trainingssplit bearbeiten</h5>
+                    <h5 class="modal-title" th:text="#{trainingprofile.split.edit}">Trainingssplit bearbeiten</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
 
@@ -55,7 +55,7 @@
                                     id="new-split-tab"
                                     data-bs-toggle="tab"
                                     data-bs-target="#new-split-content"
-                                    type="button" role="tab" th:text="#{workouts.split.new}">
+                                    type="button" role="tab" th:text="#{trainingprofile.split.new}">
                                 + Neuer Split
                             </button>
                         </li>
@@ -73,7 +73,7 @@
                             <div class="row" >
                                 <div class="col day-column" th:each="weekday : ${T(java.time.DayOfWeek).values()}"
                                                  th:with="matchingDay=${split.days[weekday.ordinal()]}">
-                                    <h6 th:text="${weekday}"></h6>
+                                    <h6 th:text="#{'weekday.' + ${weekday}}"></h6>
 
                                     <ul class="list-group mb-2" th:if="${matchingDay != null}" th:data-day-id="${matchingDay.id}">
                                         <li class="list-group-item d-flex justify-content-between align-items-center exercise-item"
@@ -137,10 +137,10 @@
                         <!-- NEUEN SPLIT ANLEGEN -->
                         <div class="tab-pane fade"
                              id="new-split-content" role="tabpanel">
-                            <h5 th:text="#{workouts.split.new}">Neuen Split erstellen</h5>
+                            <h5 th:text="#{trainingprofile.split.new}">Neuen Split erstellen</h5>
 
                             <form th:action="@{/training/profile/me/create-split}" method="post">
-                                <label th:text="#{workouts.split.name}">Split-Name</label>
+                                <label th:text="#{trainingprofile.split.name}">Split-Name</label>
                                 <input type="text" name="splitName" class="form-control" minlength="1">
 
                                 <button type="submit" class="btn btn-success mt-3" th:text="#{workouts.create}">

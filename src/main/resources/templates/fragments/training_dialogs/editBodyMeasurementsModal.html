@@ -3,7 +3,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="editBodyMeasurementsModalLabel" th:text="#{profile.measurements.edit}">Body Measurements bearbeiten</h5>
+                    <h5 class="modal-title" id="editBodyMeasurementsModalLabel" th:text="#{trainingprofile.measurements.edit}">Body Measurements bearbeiten</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -11,54 +11,54 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="gewicht" class="form-label" th:text="#{profile.measurements.weight} + ' (kg)'">Weight (kg)</label>
-                                    <input type="number" class="form-control" id="gewicht" name="gewicht" step="0.5">
+                                    <label for="gewicht" class="form-label" th:text="#{trainingprofile.measurements.weight} + ' (kg)'">Weight (kg)</label>
+                                    <input type="number" class="form-control" id="gewicht" name="gewicht" step="0.5" min="0">
                                 </div>
                                 <div class="mb-3">
-                                    <label for="groesse" class="form-label" th:text="#{profile.measurements.height} + ' (cm)'">Height (cm)</label>
-                                    <input type="number" class="form-control" id="groesse" name="groesse" step="0.5">
+                                    <label for="groesse" class="form-label" th:text="#{trainingprofile.measurements.height} + ' (cm)'">Height (cm)</label>
+                                    <input type="number" class="form-control" id="groesse" name="groesse" step="0.5" min="0">
                                 </div>
                                 <div class="mb-3">
-                                    <label for="armLinks" class="form-label" th:text="#{profile.measurements.arm.left}">Arm Links</label>
-                                    <input type="number" class="form-control" id="armLinks" name="armLinks" step="0.5">
+                                    <label for="armLinks" class="form-label" th:text="#{trainingprofile.measurements.arm.left}">Arm Links</label>
+                                    <input type="number" class="form-control" id="armLinks" name="armLinks" step="0.5" min="0">
                                 </div>
                                 <div class="mb-3">
-                                    <label for="armRechts" class="form-label" th:text="#{profile.measurements.arm.right}">Arm Rechts</label>
-                                    <input type="number" class="form-control" id="armRechts" name="armRechts" step="0.5">
+                                    <label for="armRechts" class="form-label" th:text="#{trainingprofile.measurements.arm.right}">Arm Rechts</label>
+                                    <input type="number" class="form-control" id="armRechts" name="armRechts" step="0.5" min="0">
                                 </div>
                                 <div class="mb-3">
-                                    <label for="unterarmLinks" class="form-label" th:text="#{profile.measurements.forearm.left}">Unterarm Links</label>
-                                    <input type="number" class="form-control" id="unterarmLinks" name="unterarmLinks" step="0.5">
+                                    <label for="unterarmLinks" class="form-label" th:text="#{trainingprofile.measurements.forearm.left}">Unterarm Links</label>
+                                    <input type="number" class="form-control" id="unterarmLinks" name="unterarmLinks" step="0.5" min="0">
                                 </div>
                                 <div class="mb-3">
-                                    <label for="unterarmRechts" class="form-label" th:text="#{profile.measurements.forearm.right}">Unterarm Rechts</label>
-                                    <input type="number" class="form-control" id="unterarmRechts" name="unterarmRechts" step="0.5">
+                                    <label for="unterarmRechts" class="form-label" th:text="#{trainingprofile.measurements.forearm.right}">Unterarm Rechts</label>
+                                    <input type="number" class="form-control" id="unterarmRechts" name="unterarmRechts" step="0.5" min="0">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="beinLinks" class="form-label" th:text="#{profile.measurements.leg.left}">Bein Links</label>
-                                    <input type="number" class="form-control" id="beinLinks" name="beinLinks" step="0.5">
+                                    <label for="beinLinks" class="form-label" th:text="#{trainingprofile.measurements.leg.left}">Bein Links</label>
+                                    <input type="number" class="form-control" id="beinLinks" name="beinLinks" step="0.5" min="0">
                                 </div>
                                 <div class="mb-3">
-                                    <label for="beinRechts" class="form-label" th:text="#{profile.measurements.leg.right}">Bein Rechts</label>
-                                    <input type="number" class="form-control" id="beinRechts" name="beinRechts" step="0.5">
+                                    <label for="beinRechts" class="form-label" th:text="#{trainingprofile.measurements.leg.right}">Bein Rechts</label>
+                                    <input type="number" class="form-control" id="beinRechts" name="beinRechts" step="0.5" min="0">
                                 </div>
                                 <div class="mb-3">
-                                    <label for="brust" class="form-label" th:text="#{profile.measurements.chest}">Brust</label>
-                                    <input type="number" class="form-control" id="brust" name="brust" step="0.5">
+                                    <label for="brust" class="form-label" th:text="#{trainingprofile.measurements.chest}">Brust</label>
+                                    <input type="number" class="form-control" id="brust" name="brust" step="0.5" min="0">
                                 </div>
                                 <div class="mb-3">
-                                    <label for="schulter" class="form-label" th:text="#{profile.measurements.shoulder}">Schulter</label>
-                                    <input type="number" class="form-control" id="schulter" name="schulter" step="0.5">
+                                    <label for="schulter" class="form-label" th:text="#{trainingprofile.measurements.shoulder}">Schulter</label>
+                                    <input type="number" class="form-control" id="schulter" name="schulter" step="0.5" min="0">
                                 </div>
                                 <div class="mb-3">
-                                    <label for="taille" class="form-label" th:text="#{profile.measurements.waist}">Taille</label>
-                                    <input type="number" class="form-control" id="taille" name="taille" step="0.5">
+                                    <label for="taille" class="form-label" th:text="#{trainingprofile.measurements.waist}">Taille</label>
+                                    <input type="number" class="form-control" id="taille" name="taille" step="0.5" min="0">
                                 </div>
                                 <div class="mb-3">
-                                    <label for="huefte" class="form-label" th:text="#{profile.measurements.hips}">Hüfte</label>
-                                    <input type="number" class="form-control" id="huefte" name="huefte" step="0.5">
+                                    <label for="huefte" class="form-label" th:text="#{trainingprofile.measurements.hips}">Hüfte</label>
+                                    <input type="number" class="form-control" id="huefte" name="huefte" step="0.5" min="0">
                                 </div>
                             </div>
                         </div>

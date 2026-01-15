@@ -16,6 +16,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Locale;
 
 @Controller
 @RequiredArgsConstructor
@@ -25,11 +26,11 @@ public class TrainingProfileController {
     private final TrainingProfileService trainingProfileService;
 
     @GetMapping("/training/profile/me")
-    public String getTrainingProfile(Model model, Authentication authentication) {
+    public String getTrainingProfile(Model model, Authentication authentication, Locale locale) {
         String email = authentication.getName();
         TrainingProfile profile = trainingProfileService.getTrainingProfile(email);
         
-        List<ExerciseOptionDto> allExercises = trainingProfileService.getAvailableExercises(email);
+        List<ExerciseOptionDto> allExercises = trainingProfileService.getAvailableExercises(email, locale);
 
         if (profile == null) {
             model.addAttribute("error", "Kein Trainingsprofil gefunden.");

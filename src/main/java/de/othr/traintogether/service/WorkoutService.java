@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,7 +32,7 @@ public class WorkoutService {
     private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
-    public WorkoutPageDto getWorkoutPageData(String email) {
+    public WorkoutPageDto getWorkoutPageData(String email, Locale locale) {
         UserDto user = userService.findUserDTOByEmail(email);
         TrainingProfile profile = profileRepo.findByUserId(user.getId());
 
@@ -47,7 +48,6 @@ public class WorkoutService {
         Long loggedDayId = null;
         DayOfWeek loggedDayName = null;
         if (!todaysWorkoutDto.isEmpty()) {
-            // Try to find day info from the first exercise
             List<TrainingExercise> entities = trainingExerciseRepo.findByDateAndPersonalExercise_User_Id(LocalDate.now(), user.getId());
             if (!entities.isEmpty() && entities.get(0).getDay() != null) {
                 loggedDayId = entities.get(0).getDay().getId();
@@ -55,7 +55,7 @@ public class WorkoutService {
             }
         }
 
-        List<ExerciseOptionDto> allExercisesDto = trainingProfileService.getAvailableExercises(email);
+        List<ExerciseOptionDto> allExercisesDto = trainingProfileService.getAvailableExercises(email, locale);
 
         return WorkoutPageDto.builder()
                 .profile(profile)
@@ -95,6 +95,33 @@ public class WorkoutService {
         LocalDate date = LocalDate.parse(dateStr);
         List<TrainingExercise> exercises = trainingExerciseRepo.findByDateAndPersonalExercise_User_Id(date, user.getId());
         return exercises.stream().map(this::mapToLogResponse).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<WorkoutDaySummaryDto> getWorkoutHistory(String email, int page, int size) {
+        UserDto user = userService.findUserDTOByEmail(email);
+        List<WorkoutDaySummaryDto> history = new ArrayList<>();
+
+        LocalDate endDate = LocalDate.now().minusDays((long) page * size);
+        
+        for (int i = 0; i < size; i++) {
+            LocalDate currentDate = endDate.minusDays(i);
+            List<TrainingExercise> exercises = trainingExerciseRepo.findByDateAndPersonalExercise_User_Id(currentDate, user.getId());
+            
+            List<WorkoutLogResponseDto> exerciseDtos = exercises.stream()
+                    .map(this::mapToLogResponse)
+                    .collect(Collectors.toList());
+
+            boolean isRestDay = exerciseDtos.isEmpty();
+
+            history.add(new WorkoutDaySummaryDto(
+                    currentDate,
+                    currentDate.getDayOfWeek().name(),
+                    exerciseDtos,
+                    isRestDay
+            ));
+        }
+        return history;
     }
 
     private WorkoutLogResponseDto mapToLogResponse(TrainingExercise ex) {
@@ -179,7 +206,6 @@ public class WorkoutService {
             if (pe.getSets() == sets) return pe;
         }
 
-        // Create new
         if (exerciseValue.startsWith("S-")) {
             Long id = Long.parseLong(exerciseValue.substring(2));
             StandardExercise se = standardExerciseRepository.findById(id).orElse(null);

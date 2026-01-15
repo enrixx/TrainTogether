@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 @Service
@@ -56,14 +57,15 @@ public class TrainingProfileService {
     }
 
     @Transactional(readOnly = true)
-    public List<ExerciseOptionDto> getAvailableExercises(String email) {
+    public List<ExerciseOptionDto> getAvailableExercises(String email, Locale locale) {
         UserDto user = userService.findUserDTOByEmail(email);
         List<ExerciseOptionDto> options = new ArrayList<>();
 
         // Add Standard Exercises
         List<StandardExercise> standardExercises = standardExerciseRepository.findAll();
         for (StandardExercise ex : standardExercises) {
-            options.add(new ExerciseOptionDto("S-" + ex.getId(), ex.getNameDe(), "STANDARD"));
+            String name = (locale != null && locale.getLanguage().equals("de")) ? ex.getNameDe() : ex.getNameEn();
+            options.add(new ExerciseOptionDto("S-" + ex.getId(), name, "STANDARD"));
         }
 
         // Add Custom Exercises

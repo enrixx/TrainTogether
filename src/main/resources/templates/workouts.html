@@ -74,7 +74,7 @@
                              aria-expanded="false"
                              th:aria-controls="'collapse-day-' + ${day.id}">
 
-                            <strong th:text="${day.weekday}">Montag</strong>
+                            <strong th:text="#{'weekday.' + ${day.weekday}}">Montag</strong>
                             <ul class="list-unstyled mt-2 flex-grow-1">
                                 <li th:each="ex : ${day.personalExercises}" th:text="${ex.name} + ' - '   + 'X'  + ${ex.sets} "></li>
                                 <li th:if="${#lists.isEmpty(day.personalExercises)}" class="text-muted">RESTDAY</li>
@@ -92,7 +92,7 @@
                      th:id="'collapse-day-' + ${day.id}"
                      data-bs-parent="#workoutAccordion">
                     <div class="card card-body">
-                        <h4 th:text="#{workouts.log.header} + ': ' + ${day.weekday}"></h4>
+                        <h4 th:text="#{workouts.log.header} + ': ' + #{'weekday.' + ${day.weekday}}"></h4>
 
                         <form class="workout-log-form" th:action="@{/workouts/log}" method="post">
                             <input type="hidden" name="trainingDayId" th:value="${day.id}"/>
@@ -135,21 +135,21 @@
 
             <div class="row mb-3">
                 <div class="col-md-4">
-                    <label for="progressExerciseSelect1" class="form-label">Exercise 1 (Blue)</label>
+                    <label for="progressExerciseSelect1" class="form-label" th:text="#{workouts.progress.exercise1}">Exercise 1 (Blue)</label>
                     <select class="form-select progress-exercise-select" id="progressExerciseSelect1" data-color="blue">
                         <option value="" selected disabled th:text="#{workouts.progress.choose}">Choose exercise...</option>
                         <option th:each="ex : ${allExercises}" th:value="${ex.value}" th:text="${ex.name}"></option>
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label for="progressExerciseSelect2" class="form-label">Exercise 2 (Red)</label>
+                    <label for="progressExerciseSelect2" class="form-label" th:text="#{workouts.progress.exercise2}">Exercise 2 (Red)</label>
                     <select class="form-select progress-exercise-select" id="progressExerciseSelect2" data-color="red">
                         <option value="" selected th:text="#{workouts.progress.choose}">Choose exercise...</option>
                         <option th:each="ex : ${allExercises}" th:value="${ex.value}" th:text="${ex.name}"></option>
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label for="progressExerciseSelect3" class="form-label">Exercise 3 (Green)</label>
+                    <label for="progressExerciseSelect3" class="form-label" th:text="#{workouts.progress.exercise3}">Exercise 3 (Green)</label>
                     <select class="form-select progress-exercise-select" id="progressExerciseSelect3" data-color="green">
                         <option value="" selected th:text="#{workouts.progress.choose}">Choose exercise...</option>
                         <option th:each="ex : ${allExercises}" th:value="${ex.value}" th:text="${ex.name}"></option>
