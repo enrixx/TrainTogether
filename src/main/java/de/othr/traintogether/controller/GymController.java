@@ -64,7 +64,6 @@ public class GymController {
                 UserDto currentUser = userService.findUserDTOByEmail(authentication.getName());
 
                 if (gym.getOwner() == null || !gym.getOwner().getId().equals(currentUser.getId())) {
-                    // Redirect to error page to avoid infinite loop with MainLayoutController
                     return "redirect:/error?message=AccessDenied";
                 }
             }
@@ -188,7 +187,6 @@ public class GymController {
             course.setDateTime(dateTime);
             course.setMaxParticipants(maxParticipants);
             course.setOutdoors(isOutdoors);
-            // For now, assign the owner as the trainer. Later we can add a dropdown to select a GymWorker.
             course.setTrainer(userService.getUserByEmail(authentication.getName()));
 
             courseService.createCourse(course, gym);
@@ -204,7 +202,6 @@ public class GymController {
         try {
             courseService.joinCourse(courseId, user);
         } catch (Exception e) {
-            // Handle full course or other errors
         }
         return "redirect:/gym/" + id;
     }

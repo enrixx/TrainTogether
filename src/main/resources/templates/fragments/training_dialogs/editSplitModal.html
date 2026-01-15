@@ -117,7 +117,7 @@
                                                         onchange="addExerciseSelectIfNeeded(this)">
                                                     <option value="" th:text="#{workouts.add.exercise}">+ Übung hinzufügen...</option>
                                                     <option th:each="ex : ${allExercises}"
-                                                            th:value="${ex.id}"
+                                                            th:value="${ex.value}"
                                                             th:text="${ex.name}">
                                                     </option>
                                                 </select>

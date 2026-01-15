@@ -1,11 +1,9 @@
 package de.othr.traintogether.service;
 
 import de.othr.traintogether.dto.*;
-import de.othr.traintogether.model.TrainingModel.*;
-import de.othr.traintogether.repository.PersonalExerciseRepository;
-import de.othr.traintogether.repository.TrainingDayRepository;
-import de.othr.traintogether.repository.TrainingExerciseRepository;
-import de.othr.traintogether.repository.TrainingProfileRepository;
+import de.othr.traintogether.model.trainingModel.*;
+import de.othr.traintogether.model.User;
+import de.othr.traintogether.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
@@ -27,6 +25,10 @@ public class WorkoutService {
     private final TrainingDayRepository dayRepo;
     private final PersonalExerciseRepository exerciseRepo;
     private final TrainingExerciseRepository trainingExerciseRepo;
+    private final TrainingProfileService trainingProfileService;
+    private final StandardExerciseRepository standardExerciseRepository;
+    private final CustomExerciseRepository customExerciseRepository;
+    private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
     public WorkoutPageDto getWorkoutPageData(String email) {
@@ -34,53 +36,26 @@ public class WorkoutService {
         TrainingProfile profile = profileRepo.findByUserId(user.getId());
 
         if (profile == null) {
-            throw new IllegalStateException("No training profile found. Please create one in your profile.");
+            throw new IllegalStateException("No training profile found.");
         }
 
-        TrainingSplit activeSplit = profile.getActiveTraininSplit();
-        if (activeSplit == null) {
-            throw new IllegalStateException("No active training split found. Please set one in your profile.");
-        }
+        TrainingSplit activeSplit = profile.getActiveTrainingSplit();
+        initializeProfileData(profile);
 
-        // Force initialization of lazy collections
-        Hibernate.initialize(profile.getSplits());
-        if (profile.getSplits() != null) {
-            profile.getSplits().forEach(split -> {
-                Hibernate.initialize(split.getDays());
-                if (split.getDays() != null) {
-                    split.getDays().forEach(day -> {
-                        Hibernate.initialize(day.getPersonalExercises());
-                    });
-                }
-            });
-        }
-
-        List<TrainingExercise> todaysWorkoutEntities = trainingExerciseRepo.findByDateAndPersonalExercise_User_Id(LocalDate.now(), user.getId());
-        List<WorkoutLogResponseDto> todaysWorkoutDto = new ArrayList<>();
+        List<WorkoutLogResponseDto> todaysWorkoutDto = getTodaysWorkoutDto(user.getId());
+        
         Long loggedDayId = null;
         DayOfWeek loggedDayName = null;
-
-        if (!todaysWorkoutEntities.isEmpty()) {
-            todaysWorkoutDto = todaysWorkoutEntities.stream()
-                    .map(ex -> new WorkoutLogResponseDto(
-                            ex.getPersonalExercise().getId(),
-                            ex.getPersonalExercise().getName(),
-                            ex.getSets(),
-                            ex.getReps(),
-                            ex.getWeight()
-                    ))
-                    .collect(Collectors.toList());
-
-            if (todaysWorkoutEntities.get(0).getDay() != null) {
-                loggedDayId = todaysWorkoutEntities.get(0).getDay().getId();
-                loggedDayName = todaysWorkoutEntities.get(0).getDay().getWeekday();
+        if (!todaysWorkoutDto.isEmpty()) {
+            // Try to find day info from the first exercise
+            List<TrainingExercise> entities = trainingExerciseRepo.findByDateAndPersonalExercise_User_Id(LocalDate.now(), user.getId());
+            if (!entities.isEmpty() && entities.get(0).getDay() != null) {
+                loggedDayId = entities.get(0).getDay().getId();
+                loggedDayName = entities.get(0).getDay().getWeekday();
             }
         }
 
-        List<PersonalExercise> allExercisesEntities = exerciseRepo.findAllByUserId(user.getId());
-        List<PersonalExerciseDto> allExercisesDto = allExercisesEntities.stream()
-                .map(ex -> new PersonalExerciseDto(ex.getId(), ex.getName()))
-                .collect(Collectors.toList());
+        List<ExerciseOptionDto> allExercisesDto = trainingProfileService.getAvailableExercises(email);
 
         return WorkoutPageDto.builder()
                 .profile(profile)
@@ -90,124 +65,160 @@ public class WorkoutService {
                 .loggedDayId(loggedDayId)
                 .loggedDayName(loggedDayName)
                 .allExercises(allExercisesDto)
-                .activeSplitId(profile.getActiveTraininSplitId())
+                .activeSplitId(profile.getActiveTrainingSplitId())
                 .currentDayOfWeek(LocalDate.now().getDayOfWeek().name())
                 .build();
+    }
+
+    private void initializeProfileData(TrainingProfile profile) {
+        Hibernate.initialize(profile.getSplits());
+        if (profile.getSplits() != null) {
+            profile.getSplits().forEach(split -> {
+                Hibernate.initialize(split.getDays());
+                if (split.getDays() != null) {
+                    split.getDays().forEach(day -> Hibernate.initialize(day.getPersonalExercises()));
+                }
+            });
+        }
+    }
+
+    private List<WorkoutLogResponseDto> getTodaysWorkoutDto(Long userId) {
+        List<TrainingExercise> entities = trainingExerciseRepo.findByDateAndPersonalExercise_User_Id(LocalDate.now(), userId);
+        return entities.stream()
+                .map(this::mapToLogResponse)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<WorkoutLogResponseDto> getWorkoutsByDate(String email, String dateStr) {
         UserDto user = userService.findUserDTOByEmail(email);
         LocalDate date = LocalDate.parse(dateStr);
-
         List<TrainingExercise> exercises = trainingExerciseRepo.findByDateAndPersonalExercise_User_Id(date, user.getId());
+        return exercises.stream().map(this::mapToLogResponse).collect(Collectors.toList());
+    }
 
-        return exercises.stream()
-                .map(ex -> new WorkoutLogResponseDto(
-                        ex.getPersonalExercise().getId(),
-                        ex.getPersonalExercise().getName(),
-                        ex.getSets(),
-                        ex.getReps(),
-                        ex.getWeight()
-                ))
-                .collect(Collectors.toList());
+    private WorkoutLogResponseDto mapToLogResponse(TrainingExercise ex) {
+        return new WorkoutLogResponseDto(
+                ex.getPersonalExercise().getId(),
+                ex.getPersonalExercise().getName(),
+                ex.getSets(),
+                ex.getReps(),
+                ex.getWeight()
+        );
     }
 
     @Transactional(readOnly = true)
-    public List<ProgressDataPointDto> getProgressData(String email, Long exerciseId) {
+    public List<ProgressDataPointDto> getProgressData(String email, String exerciseValue) {
         UserDto user = userService.findUserDTOByEmail(email);
+        List<PersonalExercise> personalExercises = findPersonalExercisesByValue(exerciseValue, user.getId());
+        
+        if (personalExercises.isEmpty()) return new ArrayList<>();
 
-        List<TrainingExercise> exercises = trainingExerciseRepo.findAllByPersonalExercise_IdAndPersonalExercise_User_IdOrderByDateAsc(exerciseId, user.getId());
-
-        List<ProgressDataPointDto> dataPoints = new ArrayList<>();
-
-        for (TrainingExercise ex : exercises) {
-            if (ex.getWeight() != null && !ex.getWeight().isEmpty()) {
-                try {
-                    double maxWeight = Arrays.stream(ex.getWeight().split(","))
-                            .map(String::trim)
-                            .filter(s -> !s.isEmpty())
-                            .mapToDouble(Double::parseDouble)
-                            .max()
-                            .orElse(0.0);
-
-                    if (maxWeight > 0) {
-                        dataPoints.add(new ProgressDataPointDto(ex.getDate().toString(), maxWeight));
-                    }
-                } catch (NumberFormatException e) {
-                    // Ignore malformed data
-                }
-            }
+        List<TrainingExercise> allExercises = new ArrayList<>();
+        for (PersonalExercise pe : personalExercises) {
+            allExercises.addAll(trainingExerciseRepo.findAllByPersonalExercise_IdAndPersonalExercise_User_IdOrderByDateAsc(pe.getId(), user.getId()));
         }
-        return dataPoints;
+        allExercises.sort((e1, e2) -> e1.getDate().compareTo(e2.getDate()));
+
+        return allExercises.stream()
+                .map(this::mapToDataPoint)
+                .filter(dp -> dp != null)
+                .collect(Collectors.toList());
+    }
+
+    private ProgressDataPointDto mapToDataPoint(TrainingExercise ex) {
+        if (ex.getWeight() == null || ex.getWeight().isEmpty()) return null;
+        try {
+            double maxWeight = Arrays.stream(ex.getWeight().split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .mapToDouble(Double::parseDouble)
+                    .max().orElse(0.0);
+            return maxWeight > 0 ? new ProgressDataPointDto(ex.getDate().toString(), maxWeight) : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     @Transactional
     public void logWorkout(String email, WorkoutLogRequestDto workoutRequest) {
-        UserDto user = userService.findUserDTOByEmail(email);
-
-        TrainingDay trainingDay = dayRepo.findById(workoutRequest.getTrainingDayId()).orElse(null);
-        if (trainingDay == null) {
-            throw new IllegalArgumentException("Training day not found");
-        }
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        TrainingDay trainingDay = dayRepo.findById(workoutRequest.getTrainingDayId())
+                .orElseThrow(() -> new IllegalArgumentException("Training day not found"));
 
         LocalDate date = LocalDate.now();
-
-        List<TrainingExercise> existingWorkout = trainingExerciseRepo.findByDateAndPersonalExercise_User_Id(date, user.getId());
-        if (!existingWorkout.isEmpty()) {
-            trainingExerciseRepo.deleteAll(existingWorkout);
-        }
+        
+        List<TrainingExercise> existing = trainingExerciseRepo.findByDateAndPersonalExercise_User_Id(date, user.getId());
+        if (!existing.isEmpty()) trainingExerciseRepo.deleteAll(existing);
 
         if (workoutRequest.getExercises() != null) {
-            for (WorkoutLogRequestDto.ExerciseLog exerciseLog : workoutRequest.getExercises()) {
-                PersonalExercise personalExercise = exerciseRepo.findById(exerciseLog.getPersonalExerciseId()).orElse(null);
-                if (personalExercise != null) {
-                    TrainingExercise trainingExercise = new TrainingExercise(
-                            personalExercise,
-                            exerciseLog.getSets(),
-                            exerciseLog.getReps(),
-                            exerciseLog.getWeight(),
-                            trainingDay,
-                            date
-                    );
-                    trainingExerciseRepo.save(trainingExercise);
+            for (WorkoutLogRequestDto.ExerciseLog log : workoutRequest.getExercises()) {
+                PersonalExercise pe = resolvePersonalExercise(log, user);
+                if (pe != null) {
+                    TrainingExercise te = new TrainingExercise(pe, log.getSets(), log.getReps(), log.getWeight(), trainingDay, date);
+                    trainingExerciseRepo.save(te);
                 }
             }
         }
+    }
+
+    private PersonalExercise resolvePersonalExercise(WorkoutLogRequestDto.ExerciseLog log, User user) {
+        if (log.getPersonalExerciseId() != null) {
+            return exerciseRepo.findById(log.getPersonalExerciseId()).orElse(null);
+        }
+        if (log.getExerciseValue() != null) {
+            return findOrCreatePersonalExercise(log.getExerciseValue(), log.getSets(), user);
+        }
+        return null;
+    }
+
+    private PersonalExercise findOrCreatePersonalExercise(String exerciseValue, int sets, User user) {
+        List<PersonalExercise> existing = findPersonalExercisesByValue(exerciseValue, user.getId());
+        
+        for (PersonalExercise pe : existing) {
+            if (pe.getSets() == sets) return pe;
+        }
+
+        // Create new
+        if (exerciseValue.startsWith("S-")) {
+            Long id = Long.parseLong(exerciseValue.substring(2));
+            StandardExercise se = standardExerciseRepository.findById(id).orElse(null);
+            if (se != null) {
+                PersonalExercise pe = new PersonalExercise(se, user);
+                pe.setSets(sets);
+                return exerciseRepo.save(pe);
+            }
+        } else if (exerciseValue.startsWith("C-")) {
+            Long id = Long.parseLong(exerciseValue.substring(2));
+            CustomExercise ce = customExerciseRepository.findById(id).orElse(null);
+            if (ce != null) {
+                PersonalExercise pe = new PersonalExercise(ce, user);
+                pe.setSets(sets);
+                return exerciseRepo.save(pe);
+            }
+        }
+        return null;
+    }
+
+    private List<PersonalExercise> findPersonalExercisesByValue(String exerciseValue, Long userId) {
+        if (exerciseValue == null) return new ArrayList<>();
+        if (exerciseValue.startsWith("S-")) {
+            Long id = Long.parseLong(exerciseValue.substring(2));
+            return exerciseRepo.findByStandardExercise_IdAndUser_Id(id, userId);
+        } else if (exerciseValue.startsWith("C-")) {
+            Long id = Long.parseLong(exerciseValue.substring(2));
+            return exerciseRepo.findByCustomExercise_IdAndUser_Id(id, userId);
+        }
+        return new ArrayList<>();
     }
 
     @Transactional
     public void logRestDay(String email, Long trainingDayId) {
         UserDto user = userService.findUserDTOByEmail(email);
-
-        TrainingDay trainingDay = dayRepo.findById(trainingDayId).orElse(null);
-        if (trainingDay == null) {
+        if (!dayRepo.existsById(trainingDayId)) {
             throw new IllegalArgumentException("Training day not found");
         }
-
-        LocalDate date = LocalDate.now();
-
-        List<TrainingExercise> existingWorkout = trainingExerciseRepo.findByDateAndPersonalExercise_User_Id(date, user.getId());
-        if (!existingWorkout.isEmpty()) {
-            trainingExerciseRepo.deleteAll(existingWorkout);
-        }
-
-        PersonalExercise restDayExercise = exerciseRepo.findByNameAndUser_Id("Restday", user.getId())
-                .or(() -> exerciseRepo.findByNameAndUser_Id("RESTDAY", user.getId()))
-                .orElse(null);
-
-        if (restDayExercise != null) {
-            TrainingExercise trainingExercise = new TrainingExercise(
-                    restDayExercise,
-                    0,
-                    "",
-                    "",
-                    trainingDay,
-                    date
-            );
-            trainingExerciseRepo.save(trainingExercise);
-        } else {
-            throw new IllegalStateException("Restday exercise not found");
-        }
+        List<TrainingExercise> existing = trainingExerciseRepo.findByDateAndPersonalExercise_User_Id(LocalDate.now(), user.getId());
+        if (!existing.isEmpty()) trainingExerciseRepo.deleteAll(existing);
     }
 }

@@ -13,7 +13,7 @@
     </style>
 </head>
 <body>
-<div th:fragment="content">
+<div th:fragment="content" class="h-100 overflow-auto">
     <main class="container-fluid p-5">
 
         <!-- Description / Kommentar -->
@@ -42,11 +42,12 @@
         </div>
 
         <!-- Trainingssplit -->
-        <div class="p-4 mb-4 bg-body-tertiary rounded-3" th:if="${split != null}">
+        <div class="p-4 mb-4 bg-body-tertiary rounded-3">
             <div class="container-fluid m-0">
                 <div class="row">
                     <div class="col d-flex justify-content-start">
-                        <h3 th:text="#{profile.split.title} + ': ' + ${split.splitName}">Push-Pull-Legs</h3>
+                        <h3 th:if="${split != null}" th:text="#{profile.split.title} + ': ' + ${split.splitName}">Push-Pull-Legs</h3>
+                        <h3 th:if="${split == null}" th:text="#{profile.split.notfound}">Kein aktiver Trainingssplit gefunden.</h3>
                     </div>
                     <div class="col d-flex justify-content-end">
                         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editSplitModal" th:text="#{profile.split.edit}">
@@ -57,7 +58,7 @@
                 <hr>
             </div>
 
-            <div class="row g-2 w-100">
+            <div class="row g-2 w-100" th:if="${split != null}">
                 <div class="col" th:each="day : ${split.days}">
                     <div class="p-2 border rounded-3 bg-body-secondary text-center h-100 d-flex flex-column w-100">
                         <strong th:text="${day.weekday}">Montag</strong>
@@ -68,9 +69,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-        <div th:if="${split == null}">
-            <p th:text="#{profile.split.notfound}">Kein aktiver Trainingssplit gefunden.</p>
         </div>
 
         <!-- Body Measurements -->

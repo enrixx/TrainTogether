@@ -1,12 +1,19 @@
 package de.othr.traintogether.repository;
 
-import de.othr.traintogether.model.TrainingModel.PersonalExercise;
+import de.othr.traintogether.model.trainingModel.PersonalExercise;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface PersonalExerciseRepository extends JpaRepository<PersonalExercise, Long> {
     List<PersonalExercise> findAllByUserId(Long userId);
-    Optional<PersonalExercise> findByNameAndUser_Id(String name, Long userId);
+
+    // Find by Standard Exercise - returning List to be safe against duplicates
+    List<PersonalExercise> findByStandardExercise_IdAndUser_Id(Long standardExerciseId, Long userId);
+
+    // Find by Custom Exercise - returning List to be safe against duplicates
+    List<PersonalExercise> findByCustomExercise_IdAndUser_Id(Long customExerciseId, Long userId);
 }

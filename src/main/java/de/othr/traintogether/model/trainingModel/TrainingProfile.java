@@ -1,4 +1,4 @@
-package de.othr.traintogether.model.TrainingModel;
+package de.othr.traintogether.model.trainingModel;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -35,7 +35,7 @@ public class TrainingProfile {
     @JoinColumn(name = "profile_id")
     private List<TrainingSplit> splits = new ArrayList<>();
 
-    private Long activeTraininSplitId;
+    private Long activeTrainingSplitId;
 
     public TrainingProfile(Long userId) {
         this.userId = userId;
@@ -46,34 +46,36 @@ public class TrainingProfile {
         splits.addFirst(newSplit);
     }
 
-    public void deleteSplit(int splitId){
-        splits.remove(splitId);
-    }
-
-    public Long getActiveTraininSplitId(){
-
-        if(activeTraininSplitId == null){
-            this.activeTraininSplitId = 1L;
+    public void deleteSplit(Long splitId){
+        if (splitId == null) return;
+        boolean removed = splits.removeIf(s -> s.getId().equals(splitId));
+        if (removed && splitId.equals(activeTrainingSplitId)) {
+            if (!splits.isEmpty()) {
+                this.activeTrainingSplitId = splits.getFirst().getId();
+            } else {
+                this.activeTrainingSplitId = null;
+            }
         }
-
-        return activeTraininSplitId;
     }
 
-    public TrainingSplit getActiveTraininSplit(){
-        if(activeTraininSplitId == null){
-            this.activeTraininSplitId = 1L;
+    public Long getActiveTrainingSplitId(){
+        return activeTrainingSplitId;
+    }
+
+    public TrainingSplit getActiveTrainingSplit(){
+        if(activeTrainingSplitId == null || splits == null){
+            return null;
         }
-        TrainingSplit activeSplit = splits.stream()
-                .filter(s -> s.getId() == this.activeTraininSplitId)
-                .findFirst()
-                .orElse(null);
-
-        return activeSplit;
-
+        for (TrainingSplit split : splits) {
+            if (activeTrainingSplitId.equals(split.getId())) {
+                return split;
+            }
+        }
+        return null;
     }
 
-    public void setActiveTraininSplitId(Long activeTraininSplitId){
-        this.activeTraininSplitId = activeTraininSplitId;
+    public void setActiveTrainingSplitId(Long activeTrainingSplitId){
+        this.activeTrainingSplitId = activeTrainingSplitId;
     }
 
     public void addMeasurements(BodyMeasurements measurements) {

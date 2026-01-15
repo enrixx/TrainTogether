@@ -1,8 +1,10 @@
 package de.othr.traintogether.controller;
 
 import de.othr.traintogether.dto.BatchExerciseUpdateRequestDto;
-import de.othr.traintogether.model.TrainingModel.PersonalExercise;
-import de.othr.traintogether.model.TrainingModel.TrainingProfile;
+import de.othr.traintogether.dto.BodyMeasurementsDto;
+import de.othr.traintogether.dto.ExerciseOptionDto;
+import de.othr.traintogether.model.trainingModel.PersonalExercise;
+import de.othr.traintogether.model.trainingModel.TrainingProfile;
 import de.othr.traintogether.service.TrainingProfileService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -26,7 +28,8 @@ public class TrainingProfileController {
     public String getTrainingProfile(Model model, Authentication authentication) {
         String email = authentication.getName();
         TrainingProfile profile = trainingProfileService.getTrainingProfile(email);
-        List<PersonalExercise> allExercises = trainingProfileService.getAllExercises(email);
+        
+        List<ExerciseOptionDto> allExercises = trainingProfileService.getAvailableExercises(email);
 
         if (profile == null) {
             model.addAttribute("error", "Kein Trainingsprofil gefunden.");
@@ -34,13 +37,13 @@ public class TrainingProfileController {
         }
 
         model.addAttribute("profile", profile);
-        model.addAttribute("split", profile.getActiveTraininSplit());
+        model.addAttribute("split", profile.getActiveTrainingSplit());
         model.addAttribute("splits", profile.getSplits());
         if (!profile.getMeasurements().isEmpty()) {
             model.addAttribute("latestBodyMeasurements", profile.getMeasurements().getLast());
         }
         model.addAttribute("allExercises", allExercises);
-        model.addAttribute("activeSplit", profile.getActiveTraininSplitId());
+        model.addAttribute("activeSplit", profile.getActiveTrainingSplitId());
 
         return "TrainingPages/TrainingProfile";
     }
@@ -104,17 +107,10 @@ public class TrainingProfileController {
 
     @PostMapping("/training/profile/me/update-measurements")
     public String updateMeasurements(
-            @RequestParam Double gewicht, @RequestParam Double groesse,
-            @RequestParam Double armLinks, @RequestParam Double armRechts,
-            @RequestParam Double unterarmLinks, @RequestParam Double unterarmRechts,
-            @RequestParam Double beinLinks, @RequestParam Double beinRechts,
-            @RequestParam Double brust, @RequestParam Double schulter,
-            @RequestParam Double taille, @RequestParam Double huefte,
+            @ModelAttribute BodyMeasurementsDto bodyMeasurementsDto,
             Authentication authentication
     ) {
-        trainingProfileService.updateMeasurements(authentication.getName(), gewicht, groesse,
-                armLinks, armRechts, unterarmLinks, unterarmRechts,
-                beinLinks, beinRechts, brust, schulter, taille, huefte);
+        trainingProfileService.updateMeasurements(authentication.getName(), bodyMeasurementsDto);
         return "redirect:/training/profile/me?success=measurements-updated";
     }
 }

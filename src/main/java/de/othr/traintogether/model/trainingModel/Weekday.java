@@ -1,4 +1,4 @@
-package de.othr.traintogether.model.TrainingModel;
+package de.othr.traintogether.model.trainingModel;
 
 public enum Weekday {
     MONDAY,

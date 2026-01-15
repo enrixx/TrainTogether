@@ -58,8 +58,8 @@ public class WorkoutController {
 
     @GetMapping("/api/progress")
     @ResponseBody
-    public ResponseEntity<List<ProgressDataPointDto>> getProgressData(@RequestParam("exerciseId") Long exerciseId, Authentication authentication) {
-        return ResponseEntity.ok(workoutService.getProgressData(authentication.getName(), exerciseId));
+    public ResponseEntity<List<ProgressDataPointDto>> getProgressData(@RequestParam("exerciseId") String exerciseValue, Authentication authentication) {
+        return ResponseEntity.ok(workoutService.getProgressData(authentication.getName(), exerciseValue));
     }
 
     @GetMapping("/fragments/adhoc-row")

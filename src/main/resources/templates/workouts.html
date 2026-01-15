@@ -7,7 +7,7 @@
     <!-- This head section is ignored by Thymeleaf layout -->
 </head>
 <body>
-<div th:fragment="content">
+<div th:fragment="content" class="h-100 overflow-auto">
     <!-- Include Chart.js script here so it gets rendered -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -49,6 +49,7 @@
                     <div class="row">
                         <div class="col d-flex justify-content-start">
                             <h3 th:if="${split != null}" th:text="#{workouts.split.title} + ': ' + ${split.splitName}">Push-Pull-Legs</h3>
+                            <h3 th:if="${split == null}" th:text="#{profile.split.notfound}">Kein aktiver Trainingssplit gefunden.</h3>
                         </div>
                         <div class="col d-flex justify-content-end gap-2">
                             <a th:href="@{/workouts/previous}" class="btn btn-secondary" th:if="${todaysWorkout == null or todaysWorkout.isEmpty()}" th:text="#{workouts.previous}">See Previous Workouts</a>
@@ -64,8 +65,8 @@
                     <hr>
                 </div>
 
-                <div class="row g-2 w-100">
-                    <div class="col" th:each="day : ${split?.days}">
+                <div class="row g-2 w-100" th:if="${split != null}">
+                    <div class="col" th:each="day : ${split.days}">
                         <div class="p-2 border rounded-3 bg-body-secondary text-center h-100 d-flex flex-column w-100"
                              style="cursor: pointer;"
                              data-bs-toggle="collapse"
@@ -84,8 +85,8 @@
             </div>
 
             <!-- Collapsible Forms for Logging Workouts -->
-            <div class="accordion" id="workoutAccordion">
-                <div th:each="day : ${split?.days}"
+            <div class="accordion" id="workoutAccordion" th:if="${split != null}">
+                <div th:each="day : ${split.days}"
                      class="collapse mt-3"
                      th:classappend="${day.weekday.name() == currentDayOfWeek ? 'show' : ''}"
                      th:id="'collapse-day-' + ${day.id}"
@@ -131,13 +132,38 @@
         <!-- Progress Graph Section -->
         <div class="p-4 mt-4 bg-body-tertiary rounded-3">
             <h3 th:text="#{workouts.progress.title}">Progress Tracker</h3>
-            <div class="mb-3" style="max-width: 400px;">
-                <label for="progressExerciseSelect" class="form-label" th:text="#{workouts.progress.select}">Select Exercise</label>
-                <select class="form-select" id="progressExerciseSelect">
-                    <option value="" selected disabled th:text="#{workouts.progress.choose}">Choose exercise...</option>
-                    <option th:each="ex : ${allExercises}" th:value="${ex.id}" th:text="${ex.name}"></option>
-                </select>
+
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="progressExerciseSelect1" class="form-label">Exercise 1 (Blue)</label>
+                    <select class="form-select progress-exercise-select" id="progressExerciseSelect1" data-color="blue">
+                        <option value="" selected disabled th:text="#{workouts.progress.choose}">Choose exercise...</option>
+                        <option th:each="ex : ${allExercises}" th:value="${ex.value}" th:text="${ex.name}"></option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="progressExerciseSelect2" class="form-label">Exercise 2 (Red)</label>
+                    <select class="form-select progress-exercise-select" id="progressExerciseSelect2" data-color="red">
+                        <option value="" selected th:text="#{workouts.progress.choose}">Choose exercise...</option>
+                        <option th:each="ex : ${allExercises}" th:value="${ex.value}" th:text="${ex.name}"></option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="progressExerciseSelect3" class="form-label">Exercise 3 (Green)</label>
+                    <select class="form-select progress-exercise-select" id="progressExerciseSelect3" data-color="green">
+                        <option value="" selected th:text="#{workouts.progress.choose}">Choose exercise...</option>
+                        <option th:each="ex : ${allExercises}" th:value="${ex.value}" th:text="${ex.name}"></option>
+                    </select>
+                </div>
             </div>
+
+            <div class="mb-3 d-flex gap-2 justify-content-center">
+                <button class="btn btn-outline-secondary time-filter-btn active" data-range="all">Gesamt</button>
+                <button class="btn btn-outline-secondary time-filter-btn" data-range="year">1 Jahr</button>
+                <button class="btn btn-outline-secondary time-filter-btn" data-range="month">1 Monat</button>
+                <button class="btn btn-outline-secondary time-filter-btn" data-range="week">1 Woche</button>
+            </div>
+
             <div style="height: 400px; position: relative;">
                 <canvas id="progressChart"></canvas>
                 <div id="chartMessage" class="position-absolute top-50 start-50 translate-middle text-muted" style="display: none;" th:text="#{workouts.progress.nodata}">

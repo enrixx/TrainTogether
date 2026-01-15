@@ -5,8 +5,9 @@ import de.othr.traintogether.dto.RegisterDto;
 import de.othr.traintogether.dto.chat.SendChatMessageDto;
 import de.othr.traintogether.model.Gym;
 import de.othr.traintogether.model.Role;
+import de.othr.traintogether.model.trainingModel.StandardExercise;
 import de.othr.traintogether.model.User;
-import de.othr.traintogether.model.chat.ChatRole;
+import de.othr.traintogether.repository.StandardExerciseRepository;
 import de.othr.traintogether.repository.UserRepository;
 import de.othr.traintogether.repository.chat.ChatMessageRepository;
 import de.othr.traintogether.repository.chat.ChatRoomMemberRepository;
@@ -18,6 +19,7 @@ import de.othr.traintogether.service.chat.ChatRoomService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -29,21 +31,81 @@ public class DataInitializer implements CommandLineRunner {
     private final ChatRoomService chatRoomService;
     private final ChatMessageService chatMessageService;
     private final GymService gymService;
+    private final StandardExerciseRepository standardExerciseRepository;
 
-    public DataInitializer(UserRepository repo, UserService userService, ChatRoomRepository chatRoomRepository, ChatRoomService chatRoomService, ChatRoomMemberRepository chatRoomMemberRepository, ChatMessageRepository chatMessageRepository, ChatMessageService chatMessageService, GymService gymService) {
+    public DataInitializer(UserRepository repo, UserService userService, ChatRoomRepository chatRoomRepository, ChatRoomService chatRoomService, ChatRoomMemberRepository chatRoomMemberRepository, ChatMessageRepository chatMessageRepository, ChatMessageService chatMessageService, GymService gymService, StandardExerciseRepository standardExerciseRepository) {
         this.userRepository = repo;
         this.userService = userService;
         this.chatRoomRepository = chatRoomRepository;
         this.chatRoomService = chatRoomService;
         this.chatMessageService = chatMessageService;
         this.gymService = gymService;
+        this.standardExerciseRepository = standardExerciseRepository;
     }
 
     @Override
     public void run(String... args) {
+        seedStandardExercises(); // Exercises first!
         seedUsers();
         seedGyms();
         seedExampleChats();
+    }
+
+    private void seedStandardExercises() {
+        if (standardExerciseRepository.count() > 0) {
+            return;
+        }
+
+        List<StandardExercise> exercises = List.of(
+                // Brust
+                new StandardExercise("Bankdrücken", "Bench Press"),
+                new StandardExercise("Schrägbankdrücken", "Incline Bench Press"),
+                new StandardExercise("Liegestütze", "Push-ups"),
+                new StandardExercise("Dips", "Dips"),
+                new StandardExercise("Kabelzug über Kreuz", "Cable Crossover"),
+
+                // Rücken
+                new StandardExercise("Kreuzheben", "Deadlift"),
+                new StandardExercise("Klimmzüge", "Pull-ups"),
+                new StandardExercise("Latziehen", "Lat Pulldown"),
+                new StandardExercise("Langhantelrudern", "Barbell Row"),
+                new StandardExercise("Einarmiges Rudern", "One-Arm Dumbbell Row"),
+                new StandardExercise("Hyperextensions", "Hyperextensions"),
+
+                // Beine
+                new StandardExercise("Kniebeugen", "Squat"),
+                new StandardExercise("Beinpresse", "Leg Press"),
+                new StandardExercise("Ausfallschritte", "Lunges"),
+                new StandardExercise("Beinstrecker", "Leg Extension"),
+                new StandardExercise("Beinbeuger", "Leg Curl"),
+                new StandardExercise("Wadenheben", "Calf Raise"),
+
+                // Schultern
+                new StandardExercise("Schulterdrücken", "Overhead Press"),
+                new StandardExercise("Seitheben", "Lateral Raise"),
+                new StandardExercise("Frontheben", "Front Raise"),
+                new StandardExercise("Face Pulls", "Face Pulls"),
+                new StandardExercise("Shrugs", "Shrugs"),
+
+                // Bizeps
+                new StandardExercise("Bizepscurls", "Bicep Curls"),
+                new StandardExercise("Hammercurls", "Hammer Curls"),
+                new StandardExercise("Preacher Curls", "Preacher Curls"),
+
+                // Trizeps
+                new StandardExercise("Trizepsdrücken", "Tricep Pushdown"),
+                new StandardExercise("Schädelbrecher", "Skullcrushers"),
+                new StandardExercise("Enges Bankdrücken", "Close-Grip Bench Press"),
+                new StandardExercise("Kickbacks", "Tricep Kickbacks"),
+
+                // Bauch
+                new StandardExercise("Crunches", "Crunches"),
+                new StandardExercise("Beinheben", "Leg Raise"),
+                new StandardExercise("Plank", "Plank"),
+                new StandardExercise("Russian Twist", "Russian Twist")
+        );
+
+        standardExerciseRepository.saveAll(exercises);
     }
 
     private void seedUsers() {

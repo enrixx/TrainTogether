@@ -1,12 +1,8 @@
 package de.othr.traintogether.service;
 
-import de.othr.traintogether.model.TrainingModel.*;
+import de.othr.traintogether.model.trainingModel.*;
 import de.othr.traintogether.model.User;
-import de.othr.traintogether.repository.BodyMeasurementsRepository;
-import de.othr.traintogether.repository.PersonalExerciseRepository;
-import de.othr.traintogether.repository.TrainingExerciseRepository;
-import de.othr.traintogether.repository.TrainingProfileRepository;
-import de.othr.traintogether.repository.TrainingSplitRepository;
+import de.othr.traintogether.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +25,8 @@ public class TrainingProfileInitializer {
     private final TrainingSplitRepository splitRepo;
     private final PersonalExerciseRepository peRepo;
     private final TrainingExerciseRepository teRepo;
+    private final StandardExerciseRepository standardExerciseRepository;
+    private final TrainingDayRepository trainingDayRepo;
 
     @Transactional
     @EventListener
@@ -36,66 +34,104 @@ public class TrainingProfileInitializer {
         User user = event.getUser();
         logger.info("Initializing training profile for user: {}", user.getEmail());
 
+        List<StandardExercise> standardExercises = standardExerciseRepository.findAll();
         List<PersonalExercise> savedExercises = new ArrayList<>();
-        for (ExerciseName ex : ExerciseName.values()) {
-            PersonalExercise pe = new PersonalExercise(ex.name(), user);
+
+        for (StandardExercise ex : standardExercises) {
+            PersonalExercise pe = new PersonalExercise(ex, user);
             peRepo.save(pe);
             savedExercises.add(pe);
         }
 
-        // Create Training Profile
         TrainingProfile profile = new TrainingProfile(user.getId());
         
-        // Create initial Body Measurements
         BodyMeasurements bm = new BodyMeasurements();
         bmRepo.save(bm);
         profile.addMeasurements(bm);
 
-        // Create Default Split
         TrainingSplit split = new TrainingSplit("Default Split");
         splitRepo.save(split);
         profile.addSplit(split);
 
-        // Save profile first to generate ID
         profile = profileRepo.save(profile);
 
-        // Set active split
-        profile.setActiveTraininSplitId(split.getId());
+        profile.setActiveTrainingSplitId(split.getId());
         profileRepo.save(profile);
 
-        // Dummy data for User ID 1 (Seed Data)
         if (user.getId() == 1L) {
-            createDummyData(user, split, savedExercises);
+            createDummyData(user, split);
         }
     }
 
-    private void createDummyData(User user, TrainingSplit split, List<PersonalExercise> exercises) {
-        LocalDate today = LocalDate.now();
-        
-        // Create data for the last 7 days
-        for (int i = 1; i <= 7; i++) {
-            LocalDate date = today.minusDays(i);
+    private void createDummyData(User user, TrainingSplit split) {
+        List<String> pushExercises = List.of("Bankdrücken", "Schulterdrücken", "Dips");
+        List<String> pullExercises = List.of("Kreuzheben", "Klimmzüge", "Langhantelrudern");
+        List<String> legExercises = List.of("Kniebeugen", "Beinpresse", "Wadenheben");
+
+        List<StandardExercise> allStandards = standardExerciseRepository.findAll();
+
+        for (int i = 100; i >= 0; i--) {
+            LocalDate date = LocalDate.now().minusDays(i);
+            int splitDayIndex = i % 3;
             
-            // Find the TrainingDay corresponding to this date's weekday
-            String dayName = date.getDayOfWeek().name();
+            List<String> todaysNames;
+            if (splitDayIndex == 0) todaysNames = pushExercises;
+            else if (splitDayIndex == 1) todaysNames = pullExercises;
+            else todaysNames = legExercises;
+
+            java.time.DayOfWeek dayOfWeek = date.getDayOfWeek();
             TrainingDay trainingDay = split.getDays().stream()
-                    .filter(d -> d.getWeekday().name().equals(dayName))
+                    .filter(d -> d.getWeekday() == dayOfWeek)
                     .findFirst()
                     .orElse(null);
 
-            if (trainingDay != null && !exercises.isEmpty()) {
-                // Add a dummy exercise (e.g., the first one, or random)
-                PersonalExercise pe = exercises.get(i % exercises.size()); // Rotate through exercises
+            if (trainingDay == null) continue;
+
+            for (String name : todaysNames) {
+                StandardExercise se = allStandards.stream()
+                        .filter(e -> e.getNameDe().equals(name))
+                        .findFirst()
+                        .orElse(null);
+
+                if (se == null) continue;
+
+                PersonalExercise pe = peRepo.findByStandardExercise_IdAndUser_Id(se.getId(), user.getId())
+                        .stream().findFirst().orElse(null);
+
+                if (pe == null) {
+                    pe = new PersonalExercise(se, user);
+                    pe.setSets(3);
+                    pe = peRepo.save(pe);
+                }
+
+                double baseWeight = 40.0;
+                if (name.equals("Kreuzheben") || name.equals("Kniebeugen")) baseWeight = 80.0;
+                if (name.equals("Dips") || name.equals("Klimmzüge")) baseWeight = 0.0;
+                if (name.equals("Wadenheben")) baseWeight = 60.0;
+
+                double progress = (100 - i) * 0.5;
+                double weight = baseWeight + progress;
                 
+                if (i % 7 == 0) weight -= 2.5;
+
+                String weightStr = String.format("%.1f,%.1f,%.1f", weight, weight, weight);
+
                 TrainingExercise te = new TrainingExercise(
                         pe,
-                        3, // sets
-                        "10,10,10", // reps
-                        "50,50,50", // weight
+                        3,
+                        "10,10,10",
+                        weightStr,
                         trainingDay,
                         date
                 );
                 teRepo.save(te);
+
+                if (i < 7) {
+                    if (!trainingDay.getPersonalExercises().contains(pe)) {
+                        trainingDay.addPersonalExercise(pe);
+                        trainingDayRepo.save(trainingDay);
+                    }
+                }
             }
         }
     }
