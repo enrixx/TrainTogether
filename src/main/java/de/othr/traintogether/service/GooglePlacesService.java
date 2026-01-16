@@ -15,14 +15,8 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.Locale;
-import java.util.Arrays;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,9 +27,6 @@ public class GooglePlacesService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private final Map<String, CachedReviews> cache = new ConcurrentHashMap<>();
-
-    private record CachedReviews(List<ReviewDto> reviews, Instant timestamp) {}
-
     @Value("${google.places.api-key:}")
     private String apiKey;
 
@@ -79,8 +70,8 @@ public class GooglePlacesService {
                     }
                 }
             } else {
-                 String errorMessage = root.path("error_message").asText();
-                 log.warn("Google Places FindPlace (with loc bias) status: {}. Message: {}", status, errorMessage);
+                String errorMessage = root.path("error_message").asText();
+                log.warn("Google Places FindPlace (with loc bias) status: {}. Message: {}", status, errorMessage);
             }
         } catch (IOException e) {
             log.error("Error calling Google Places FindPlace API", e);
@@ -129,8 +120,8 @@ public class GooglePlacesService {
                     }
                 }
             } else {
-                 String errorMessage = root.path("error_message").asText();
-                 log.warn("Google Places FindPlace status: {}. Message: {}", status, errorMessage);
+                String errorMessage = root.path("error_message").asText();
+                log.warn("Google Places FindPlace status: {}. Message: {}", status, errorMessage);
             }
         } catch (IOException e) {
             log.error("Error calling Google Places FindPlace API", e);
@@ -210,9 +201,9 @@ public class GooglePlacesService {
                         dto.setProfilePhotoUrl(r.path("profile_photo_url").asText());
                         dto.setRating(r.path("rating").asInt());
                         if (r.has("original_text")) {
-                             dto.setText(r.path("original_text").asText());
+                            dto.setText(r.path("original_text").asText());
                         } else {
-                             dto.setText(r.path("text").asText());
+                            dto.setText(r.path("text").asText());
                         }
                         dto.setRelativeTimeDescription(r.path("relative_time_description").asText());
                         reviews.add(dto);
@@ -223,8 +214,8 @@ public class GooglePlacesService {
                 cache.put(placeId, new CachedReviews(reviews, Instant.now()));
 
             } else {
-                 String errorMessage = root.path("error_message").asText();
-                 log.warn("Google Places Details status: {}. Message: {}", status, errorMessage);
+                String errorMessage = root.path("error_message").asText();
+                log.warn("Google Places Details status: {}. Message: {}", status, errorMessage);
             }
         } catch (IOException e) {
             log.error("Error calling Google Places Details API", e);
@@ -239,5 +230,8 @@ public class GooglePlacesService {
             return true;
         }
         return false;
+    }
+
+    private record CachedReviews(List<ReviewDto> reviews, Instant timestamp) {
     }
 }
