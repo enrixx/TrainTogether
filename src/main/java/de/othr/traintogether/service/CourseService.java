@@ -1,8 +1,6 @@
 package de.othr.traintogether.service;
 
-import de.othr.traintogether.model.Course;
-import de.othr.traintogether.model.Gym;
-import de.othr.traintogether.model.User;
+import de.othr.traintogether.model.*;
 import de.othr.traintogether.model.chat.ChatRole;
 import de.othr.traintogether.repository.CourseRepository;
 import de.othr.traintogether.service.chat.ChatRoomService;
@@ -18,10 +16,12 @@ public class CourseService {
 
     private final CourseRepository courseRepository;
     private final ChatRoomService chatRoomService;
+    private final de.othr.traintogether.repository.CourseSkipRepository courseSkipRepository;
 
-    public CourseService(CourseRepository courseRepository, ChatRoomService chatRoomService) {
+    public CourseService(CourseRepository courseRepository, ChatRoomService chatRoomService, de.othr.traintogether.repository.CourseSkipRepository courseSkipRepository) {
         this.courseRepository = courseRepository;
         this.chatRoomService = chatRoomService;
+        this.courseSkipRepository = courseSkipRepository;
     }
 
     @Transactional
@@ -101,6 +101,29 @@ public class CourseService {
                 if (course.getChatRoomId() != null) {
                     chatRoomService.removeUserFromRoom(course.getChatRoomId(), user.getEmail());
                 }
+            }
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Course> getCourseById(Long id) {
+        return courseRepository.findById(id);
+    }
+
+    @Transactional
+    public void skipCourse(Long courseId, User user) {
+        Optional<Course> courseOpt = courseRepository.findById(courseId);
+        if (courseOpt.isPresent()) {
+            Course course = courseOpt.get();
+            Optional<CourseSkip> existingSkip = courseSkipRepository.findByUserAndCourse(user, course);
+
+            if (existingSkip.isPresent()) {
+                CourseSkip skip = existingSkip.get();
+                skip.setSkippedAt(java.time.LocalDateTime.now());
+                courseSkipRepository.save(skip);
+            } else {
+                CourseSkip skip = new CourseSkip(user, course);
+                courseSkipRepository.save(skip);
             }
         }
     }

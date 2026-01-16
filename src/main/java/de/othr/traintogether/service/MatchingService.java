@@ -1,9 +1,11 @@
 package de.othr.traintogether.service;
 
+import de.othr.traintogether.dto.MatchingCardDto;
 import de.othr.traintogether.dto.UserDto;
 import de.othr.traintogether.model.MatchingAction;
-import de.othr.traintogether.model.trainingModel.*;
+import de.othr.traintogether.model.TrainingModel.*;
 import de.othr.traintogether.model.User;
+import de.othr.traintogether.repository.CourseRepository;
 import de.othr.traintogether.repository.MatchingActionRepository;
 import de.othr.traintogether.repository.TrainingProfileRepository;
 import de.othr.traintogether.repository.UserRepository;
@@ -12,31 +14,37 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class MatchingService {
 
     private static final Logger logger = LoggerFactory.getLogger(MatchingService.class);
+    private static final int DISLIKE_COOLDOWN_DAYS = 30;
+    private static final int COURSE_SKIP_COOLDOWN_DAYS = 1;
 
     private final MatchingActionRepository matchingActionRepository;
     private final UserRepository userRepository;
     private final FriendshipService friendshipService;
     private final TrainingProfileRepository trainingProfileRepository;
+    private final CourseRepository courseRepository;
+    private final de.othr.traintogether.repository.CourseSkipRepository courseSkipRepository;
 
-    public MatchingService(MatchingActionRepository matchingActionRepository, UserRepository userRepository, FriendshipService friendshipService, TrainingProfileRepository trainingProfileRepository) {
+    public MatchingService(MatchingActionRepository matchingActionRepository, UserRepository userRepository, FriendshipService friendshipService, TrainingProfileRepository trainingProfileRepository, CourseRepository courseRepository, de.othr.traintogether.repository.CourseSkipRepository courseSkipRepository) {
         this.matchingActionRepository = matchingActionRepository;
         this.userRepository = userRepository;
         this.friendshipService = friendshipService;
         this.trainingProfileRepository = trainingProfileRepository;
+        this.courseRepository = courseRepository;
+        this.courseSkipRepository = courseSkipRepository;
     }
 
     @Transactional
@@ -69,7 +77,6 @@ public class MatchingService {
         Optional<MatchingAction> reverseAction = matchingActionRepository.findByActorAndTarget(user2, user1);
         if (reverseAction.isPresent() && reverseAction.get().getActionType() == MatchingAction.ActionType.LIKE) {
             try {
-                // Check if they are already friends
                 if (!friendshipService.areFriends(user1, user2)) {
                     friendshipService.createFriendship(user1, user2);
                     logger.info("Created friendship match between user {} and user {}", user1.getId(), user2.getId());
@@ -77,11 +84,11 @@ public class MatchingService {
                 }
             } catch (IllegalArgumentException e) {
                 logger.error("Failed to create friendship match between user {} and user {}: {}",
-                    user1.getId(), user2.getId(), e.getMessage(), e);
+                        user1.getId(), user2.getId(), e.getMessage(), e);
                 return false;
             } catch (IllegalStateException e) {
                 logger.warn("Cannot create friendship match between user {} and user {} - blocked or invalid state: {}",
-                    user1.getId(), user2.getId(), e.getMessage());
+                        user1.getId(), user2.getId(), e.getMessage());
                 return false;
             }
         }
@@ -98,7 +105,7 @@ public class MatchingService {
         // 5. Must have a bio
         // 6. Apply filters
 
-        LocalDateTime dislikeCutoff = LocalDateTime.now().minusDays(30);
+        LocalDateTime dislikeCutoff = LocalDateTime.now().minusDays(DISLIKE_COOLDOWN_DAYS);
         List<Long> excludedUserIds = matchingActionRepository.findExcludedUserIds(currentUser, dislikeCutoff);
         logger.debug("Excluded user IDs: {}", excludedUserIds);
         excludedUserIds.add(currentUser.getId());
@@ -175,10 +182,10 @@ public class MatchingService {
                 // If TrainingExercise is used, it's usually not a rest day unless explicitly marked.
                 // But wait, TrainingExercise is deprecated/old model? No, it's used for logging.
                 // The profile uses PersonalExercise.
-                
+
                 // Let's check PersonalExercise
                 Join<TrainingDay, PersonalExercise> peJoin = dayJoin.join("personalExercises", JoinType.LEFT);
-                
+
                 // We just check if there is ANY personal exercise assigned to that day.
                 // If the list is empty, it's a rest day.
                 Predicate peValid = cb.isNotNull(peJoin.get("id"));
@@ -213,6 +220,54 @@ public class MatchingService {
             }
         }
 
-        return result;
+        // MIX IN COURSES
+        List<MatchingCardDto> finalCards = new ArrayList<>();
+
+        for (UserDto u : result) {
+            finalCards.add(new MatchingCardDto(u));
+        }
+
+        // Only if Users are found also add Courses else it will be a Course matching instead of training partners matching
+        if (!finalCards.isEmpty()) {
+            // Use Sort here to ensure ordering in the DB query
+            Pageable coursePage = PageRequest.of(page, 2, Sort.by("dateTime").ascending());
+
+            LocalDateTime cutoff = LocalDateTime.now().minusDays(COURSE_SKIP_COOLDOWN_DAYS);
+            List<Long> skippedCourseIds = courseSkipRepository.findSkippedCourseIdsByUser(currentUser, cutoff);
+
+            Specification<de.othr.traintogether.model.Course> courseSpec = (root, query, cb) -> {
+                List<Predicate> predicates = new ArrayList<>();
+
+                // 1. Future courses
+                predicates.add(cb.greaterThan(root.get("dateTime"), LocalDateTime.now()));
+
+                // 2. Exclude skipped
+                if (!skippedCourseIds.isEmpty()) {
+                    predicates.add(cb.not(root.get("id").in(skippedCourseIds)));
+                }
+
+                // 3. Not Trainer (Owner)
+                predicates.add(cb.notEqual(root.get("trainer").get("id"), currentUser.getId()));
+
+                // 4. Not Joined (User is not a participant)
+                predicates.add(cb.isNotMember(currentUser, root.get("participants")));
+
+                // 5. Not Full
+                predicates.add(cb.lessThan(cb.size(root.get("participants")), root.get("maxParticipants")));
+
+                return cb.and(predicates.toArray(new Predicate[0]));
+            };
+
+            // Fetch courses that match ALL criteria directly from DB
+            List<de.othr.traintogether.model.Course> courses = courseRepository.findAll(courseSpec, coursePage).getContent();
+
+            for (de.othr.traintogether.model.Course c : courses) {
+                finalCards.add(new MatchingCardDto(new de.othr.traintogether.dto.CourseDto(c)));
+            }
+        }
+
+        Collections.shuffle(finalCards, new Random(187));
+
+        return finalCards;
     }
 }

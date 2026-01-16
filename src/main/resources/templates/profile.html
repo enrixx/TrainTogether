@@ -209,6 +209,25 @@
                 </div>
             </div>
         </div>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                if (window.location.hash) {
+                    const targetId = window.location.hash.substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    if (targetElement) {
+                        setTimeout(() => {
+                            targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            targetElement.classList.add('border', 'border-primary', 'border-3');
+                            setTimeout(() => {
+                                targetElement.classList.remove('border', 'border-primary', 'border-3');
+                            }, 2000);
+                            targetElement.focus();
+                        }, 300);
+                    }
+                }
+            });
+        </script>
     </div>
 </div>
 </body>
