@@ -1,8 +1,6 @@
 package de.othr.traintogether.service;
 
-import de.othr.traintogether.model.Course;
-import de.othr.traintogether.model.Gym;
-import de.othr.traintogether.model.User;
+import de.othr.traintogether.model.*;
 import de.othr.traintogether.model.chat.ChatRole;
 import de.othr.traintogether.repository.CourseRepository;
 import de.othr.traintogether.service.chat.ChatRoomService;
@@ -116,8 +114,17 @@ public class CourseService {
     public void skipCourse(Long courseId, User user) {
         Optional<Course> courseOpt = courseRepository.findById(courseId);
         if (courseOpt.isPresent()) {
-            de.othr.traintogether.model.CourseSkip skip = new de.othr.traintogether.model.CourseSkip(user, courseOpt.get());
-            courseSkipRepository.save(skip);
+            Course course = courseOpt.get();
+            Optional<CourseSkip> existingSkip = courseSkipRepository.findByUserAndCourse(user, course);
+
+            if (existingSkip.isPresent()) {
+                CourseSkip skip = existingSkip.get();
+                skip.setSkippedAt(java.time.LocalDateTime.now());
+                courseSkipRepository.save(skip);
+            } else {
+                CourseSkip skip = new CourseSkip(user, course);
+                courseSkipRepository.save(skip);
+            }
         }
     }
 }

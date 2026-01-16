@@ -23,16 +23,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class MatchingService {
 
     private static final Logger logger = LoggerFactory.getLogger(MatchingService.class);
+    private static final int DISLIKE_COOLDOWN_DAYS = 30;
+    private static final int COURSE_SKIP_COOLDOWN_DAYS = 1;
 
     private final MatchingActionRepository matchingActionRepository;
     private final UserRepository userRepository;
@@ -40,6 +39,7 @@ public class MatchingService {
     private final TrainingProfileRepository trainingProfileRepository;
     private final CourseRepository courseRepository;
     private final de.othr.traintogether.repository.CourseSkipRepository courseSkipRepository;
+
 
     public MatchingService(MatchingActionRepository matchingActionRepository, UserRepository userRepository, FriendshipService friendshipService, TrainingProfileRepository trainingProfileRepository, CourseRepository courseRepository, de.othr.traintogether.repository.CourseSkipRepository courseSkipRepository) {
         this.matchingActionRepository = matchingActionRepository;
@@ -103,7 +103,10 @@ public class MatchingService {
     @Transactional(readOnly = true)
     public List<MatchingCardDto> findPotentialMatches(User currentUser, Integer minAge, Integer maxAge, String gender, List<String> trainingDays, List<Long> currentShownIds, int page, int limit) {
         // ... (existing User filtering logic logic remains unchanged) ...
-        LocalDateTime dislikeCutoff = LocalDateTime.now().minusDays(30);
+        // 5. Must have a bio
+        // 6. Apply filters
+
+        LocalDateTime dislikeCutoff = LocalDateTime.now().minusDays(DISLIKE_COOLDOWN_DAYS);
         List<Long> excludedUserIds = matchingActionRepository.findExcludedUserIds(currentUser, dislikeCutoff);
         logger.debug("Excluded user IDs: {}", excludedUserIds);
         excludedUserIds.add(currentUser.getId());
@@ -215,7 +218,7 @@ public class MatchingService {
             // Use Sort here to ensure ordering in the DB query
             Pageable coursePage = PageRequest.of(page, 2, Sort.by("dateTime").ascending());
 
-            LocalDateTime cutoff = LocalDateTime.now().minusDays(1);
+            LocalDateTime cutoff = LocalDateTime.now().minusDays(COURSE_SKIP_COOLDOWN_DAYS);
             List<Long> skippedCourseIds = courseSkipRepository.findSkippedCourseIdsByUser(currentUser, cutoff);
 
             Specification<de.othr.traintogether.model.Course> courseSpec = (root, query, cb) -> {
@@ -249,7 +252,7 @@ public class MatchingService {
             }
         }
 
-        Collections.shuffle(finalCards);
+        Collections.shuffle(finalCards, new Random(187));
 
         return finalCards;
     }
