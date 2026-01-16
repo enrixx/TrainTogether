@@ -207,7 +207,7 @@ function addMarker(lat, lon, name, isInternal, id) {
 
     if (isInternal) {
         marker = L.marker([lat, lon], { icon: redIcon() });
-        popupContent += `<br><a href="/gym/${id}" class="btn btn-sm btn-primary mt-2">View Details</a>`;
+        popupContent += `<br><a href="/gym/${id}" class="btn btn-sm btn-primary mt-2 text-white">View Details</a>`;
     } else {
         marker = L.marker([lat, lon], { icon: blueIcon() });
         popupContent += `<br><span class="text-muted">External Gym</span>`;
@@ -244,14 +244,31 @@ function startSearch(lat, lon, radiusKm) {
     fetchGymsFromOverpass();
 }
 
-// Initial load
 loadInternalGyms().then(() => {
-    // 1. Start with default location search immediately
     const radiusKm = parseFloat(document.getElementById("search-radius").value) || 5;
-    startSearch(defaultLat, defaultLon, radiusKm);
-
-    // 2. Try to upgrade to user location if available
-    // Removed automatic geolocation as requested
+    
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const userLat = position.coords.latitude;
+                const userLon = position.coords.longitude;
+                
+                // Update map view to user location
+                map.setView([userLat, userLon], 13);
+                
+                // Start search at user location
+                startSearch(userLat, userLon, radiusKm);
+            },
+            (error) => {
+                console.warn("Geolocation denied or failed, using default location:", error);
+                // Fallback to default location
+                startSearch(defaultLat, defaultLon, radiusKm);
+            }
+        );
+    } else {
+        // Fallback if geolocation is not supported
+        startSearch(defaultLat, defaultLon, radiusKm);
+    }
 });
 
 // Reload when map moves, but only if not in an active search

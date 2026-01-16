@@ -3,6 +3,7 @@ package de.othr.traintogether.config;
 import de.othr.traintogether.filter.JwtAuthFilter;
 import de.othr.traintogether.security.JwtAuthenticationEntryPoint;
 import de.othr.traintogether.service.UserDetailsServiceImpl;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -46,6 +47,13 @@ public class SecurityConfig {
     }
 
     @Bean
+    public FilterRegistrationBean<JwtAuthFilter> jwtAuthFilterRegistration(JwtAuthFilter filter) {
+        FilterRegistrationBean<JwtAuthFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    @Bean
     @Order(1)
     public SecurityFilterChain apiFilterChain(HttpSecurity http,
                                              JwtAuthFilter jwtAuthFilter,
@@ -83,7 +91,7 @@ public class SecurityConfig {
                                          "/forgot-password", "/reset-password", "/error", "/error/**").permitAll()
                         .requestMatchers("/js/**", "/images/**","/css/**", "/webjars/**","/favicon.ico").permitAll()
                         // Specific rules first - Allow all variations of the role
-                        .requestMatchers("/gym/edit/**").hasAnyAuthority("GYM_OWNER", "ROLE_GYM_OWNER", "OWNER")
+                        .requestMatchers("/gym/edit/**").hasAnyAuthority("GYM_OWNER", "ROLE_GYM_OWNER", "OWNER", "GYM_WORKER")
                         // General rules later - Allow public access to view gyms
                         .requestMatchers("/gym/**").authenticated()
                         // public MVC endpoints + allow swagger/ui and openapi JSON for browser access

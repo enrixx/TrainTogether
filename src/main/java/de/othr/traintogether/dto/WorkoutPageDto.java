@@ -1,7 +1,7 @@
 package de.othr.traintogether.dto;
 
-import de.othr.traintogether.model.TrainingModel.TrainingProfile;
-import de.othr.traintogether.model.TrainingModel.TrainingSplit;
+import de.othr.traintogether.model.trainingModel.TrainingProfile;
+import de.othr.traintogether.model.trainingModel.TrainingSplit;
 import lombok.Builder;
 import lombok.Data;
 
@@ -17,7 +17,7 @@ public class WorkoutPageDto {
     private List<WorkoutLogResponseDto> todaysWorkout;
     private Long loggedDayId;
     private DayOfWeek loggedDayName;
-    private List<PersonalExerciseDto> allExercises;
+    private List<ExerciseOptionDto> allExercises;
     private Long activeSplitId;
     private String currentDayOfWeek;
 }

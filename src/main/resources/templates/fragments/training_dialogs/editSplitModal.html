@@ -4,7 +4,7 @@
             <div class="modal-content" >
 
                 <div class="modal-header">
-                    <h5 class="modal-title" th:text="#{workouts.split.edit}">Trainingssplit bearbeiten</h5>
+                    <h5 class="modal-title" th:text="#{trainingprofile.split.edit}">Trainingssplit bearbeiten</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
 
@@ -33,11 +33,10 @@
                                       style="cursor: pointer;"
                                       title="Als aktiv setzen">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-star" viewBox="0 0 16 16">
-                                      <path d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.565.565 0 0 0-.163-.505L1.71 6.745l4.052-.576a.525.525 0 0 0 .393-.288L8 2.223l1.847 3.658a.525.525 0 0 0 .393.288l4.052.575-2.906 2.77a.565.565 0 0 0-.163.506l.694 3.957-3.686-1.894a.503.503 0 0 0-.461 0z"/>
+                                      <path d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898-.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.565.565 0 0 0-.163-.505L1.71 6.745l4.052-.576a.525.525 0 0 0 .393-.288L8 2.223l1.847 3.658a.525.525 0 0 0 .393.288l4.052.575-2.906 2.77a.565.565 0 0 0-.163.506l.694 3.957-3.686-1.894a.503.503 0 0 0-.461 0z"/>
                                     </svg>
                                 </span>
 
-                                <!-- Delete Split Icon -->
                                 <span class="text-danger delete-split-btn"
                                       th:data-split-id="${split.id}"
                                       style="cursor: pointer;"
@@ -55,7 +54,7 @@
                                     id="new-split-tab"
                                     data-bs-toggle="tab"
                                     data-bs-target="#new-split-content"
-                                    type="button" role="tab" th:text="#{workouts.split.new}">
+                                    type="button" role="tab" th:text="#{trainingprofile.split.new}">
                                 + Neuer Split
                             </button>
                         </li>
@@ -73,13 +72,13 @@
                             <div class="row" >
                                 <div class="col day-column" th:each="weekday : ${T(java.time.DayOfWeek).values()}"
                                                  th:with="matchingDay=${split.days[weekday.ordinal()]}">
-                                    <h6 th:text="${weekday}"></h6>
+                                    <h6 th:text="#{'weekday.' + ${weekday}}"></h6>
 
                                     <ul class="list-group mb-2" th:if="${matchingDay != null}" th:data-day-id="${matchingDay.id}">
                                         <li class="list-group-item d-flex justify-content-between align-items-center exercise-item"
                                             th:each="ex : ${matchingDay.personalExercises}"
                                             th:data-exercise-id="${ex.id}">
-                                            <span class="exercise-name" th:text="${ex.name}"></span>
+                                            <span class="exercise-name" th:text="${ex.getName(#locale)}"></span>
                                             <div class="d-flex align-items-center gap-2">
                                                 <span class="badge bg-primary rounded-pill" th:text="${ex.sets} + ' ' + #{workouts.sets}"></span>
 
@@ -115,9 +114,9 @@
                                             <div class="col-8">
                                                 <select class="form-select form-select-sm exercise-dropdown"
                                                         onchange="addExerciseSelectIfNeeded(this)">
-                                                    <option value="" th:text="#{workouts.add.exercise}">+ Übung hinzufügen...</option>
+                                                    <option value="" disabled selected th:text="#{workouts.add.exercise}">+ Übung hinzufügen...</option>
                                                     <option th:each="ex : ${allExercises}"
-                                                            th:value="${ex.id}"
+                                                            th:value="${ex.value}"
                                                             th:text="${ex.name}">
                                                     </option>
                                                 </select>
@@ -137,10 +136,10 @@
                         <!-- NEUEN SPLIT ANLEGEN -->
                         <div class="tab-pane fade"
                              id="new-split-content" role="tabpanel">
-                            <h5 th:text="#{workouts.split.new}">Neuen Split erstellen</h5>
+                            <h5 th:text="#{trainingprofile.split.new}">Neuen Split erstellen</h5>
 
                             <form th:action="@{/training/profile/me/create-split}" method="post">
-                                <label th:text="#{workouts.split.name}">Split-Name</label>
+                                <label th:text="#{trainingprofile.split.name}">Split-Name</label>
                                 <input type="text" name="splitName" class="form-control" minlength="1">
 
                                 <button type="submit" class="btn btn-success mt-3" th:text="#{workouts.create}">

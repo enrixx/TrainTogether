@@ -1,5 +1,6 @@
 package de.othr.traintogether.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,6 +25,7 @@ public class GymWorker {
 
     @ManyToOne
     @JoinColumn(name = "gym_id", nullable = false)
+    @JsonIgnore
     private Gym gym;
 
     @ManyToOne
@@ -42,4 +44,3 @@ public class GymWorker {
         this.createdBy = createdBy;
     }
 }
-

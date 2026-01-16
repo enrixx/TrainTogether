@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/gym-workers")
+@RequestMapping("/gym/api/workers")
 @PreAuthorize("hasAnyAuthority('ADMIN', 'GYM_OWNER')")
 public class GymWorkerController {
 
@@ -127,4 +127,3 @@ public class GymWorkerController {
         return ResponseEntity.noContent().build();
     }
 }
-

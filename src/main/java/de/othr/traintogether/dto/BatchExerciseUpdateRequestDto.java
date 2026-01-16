@@ -16,7 +16,7 @@ public class BatchExerciseUpdateRequestDto {
 
     @Data
     public static class ExerciseUpdate {
-        private Long exerciseId;
+        private String exerciseValue;
         private int sets;
     }
 }

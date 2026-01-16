@@ -33,13 +33,15 @@ public class GymController {
     private final CourseService courseService;
     private final OpenWeatherMapService openWeatherMapService;
     private final GooglePlacesService googlePlacesService;
+    private final GymWorkerService gymWorkerService;
 
-    public GymController(GymService gymService, UserService userService, MinioService minioService, CourseService courseService, OpenWeatherMapService openWeatherMapService, GooglePlacesService googlePlacesService) {
+    public GymController(GymService gymService, UserService userService, MinioService minioService, CourseService courseService, OpenWeatherMapService openWeatherMapService, GooglePlacesService googlePlacesService, GymWorkerService gymWorkerService) {
         this.gymService = gymService;
         this.userService = userService;
         this.minioService = minioService;
         this.courseService = courseService;
         this.openWeatherMapService = openWeatherMapService;
+        this.gymWorkerService = gymWorkerService;
         this.googlePlacesService = googlePlacesService;
     }
 
@@ -62,18 +64,14 @@ public class GymController {
 
             model.addAttribute("highlightCourseId", highlightCourseId);
 
-            if (authentication != null && authentication.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("GYM_OWNER") || a.getAuthority().equals("ROLE_GYM_OWNER"))) {
-
-                UserDto currentUser = userService.findUserDTOByEmail(authentication.getName());
-
-                if (gym.getOwner() == null || !gym.getOwner().getId().equals(currentUser.getId())) {
-                    // Redirect to error page to avoid infinite loop with MainLayoutController
-                    return "redirect:/error?message=AccessDenied";
-                }
-            }
-
             model.addAttribute("gym", gym);
+
+            boolean canEdit = false;
+            if (authentication != null) {
+                UserDto currentUser = userService.findUserDTOByEmail(authentication.getName());
+                canEdit = hasAccessToGym(gym, currentUser, authentication);
+            }
+            model.addAttribute("canEdit", canEdit);
 
             // Fetch Google Reviews
             if (gym.getGooglePlaceId() == null) {
@@ -133,7 +131,7 @@ public class GymController {
     }
 
     @GetMapping("/edit/{id}")
-    @PreAuthorize("hasAuthority('GYM_OWNER')")
+    @PreAuthorize("hasAnyAuthority('GYM_OWNER', 'GYM_WORKER')")
     public String showEditGymPage(@PathVariable Long id, Model model, Authentication authentication) {
         Optional<Gym> gymOpt = gymService.findById(id);
         if (gymOpt.isPresent()) {
@@ -141,7 +139,7 @@ public class GymController {
 
             UserDto currentUser = userService.findUserDTOByEmail(authentication.getName());
 
-            if (gym.getOwner() == null || !gym.getOwner().getId().equals(currentUser.getId())) {
+            if (!hasAccessToGym(gym, currentUser, authentication)) {
                 return "redirect:/error?message=AccessDenied";
             }
 
@@ -153,7 +151,7 @@ public class GymController {
     }
 
     @PostMapping("/edit/{id}")
-    @PreAuthorize("hasAuthority('GYM_OWNER')")
+    @PreAuthorize("hasAnyAuthority('GYM_OWNER', 'GYM_WORKER')")
     public String editGym(@PathVariable Long id,
                           @ModelAttribute Gym gym,
                           @RequestParam(value = "bannerImage", required = false) MultipartFile bannerImage,
@@ -164,7 +162,7 @@ public class GymController {
 
             UserDto currentUser = userService.findUserDTOByEmail(authentication.getName());
 
-            if (existingGym.getOwner() == null || !existingGym.getOwner().getId().equals(currentUser.getId())) {
+            if (!hasAccessToGym(existingGym, currentUser, authentication)) {
                 return "redirect:/error?message=AccessDenied";
             }
 
@@ -208,7 +206,7 @@ public class GymController {
     // --- Course Management ---
 
     @PostMapping("/{id}/course/create")
-    @PreAuthorize("hasAuthority('GYM_OWNER')")
+    @PreAuthorize("hasAnyAuthority('GYM_OWNER', 'GYM_WORKER')")
     public String createCourse(@PathVariable Long id,
                                @RequestParam("name") String name,
                                @RequestParam("description") String description,
@@ -221,7 +219,7 @@ public class GymController {
             Gym gym = gymOpt.get();
             UserDto currentUser = userService.findUserDTOByEmail(authentication.getName());
 
-            if (gym.getOwner() == null || !gym.getOwner().getId().equals(currentUser.getId())) {
+            if (!hasAccessToGym(gym, currentUser, authentication)) {
                 return "redirect:/error?message=AccessDenied";
             }
 
@@ -231,7 +229,6 @@ public class GymController {
             course.setDateTime(dateTime);
             course.setMaxParticipants(maxParticipants);
             course.setOutdoors(isOutdoors);
-            // For now, assign the owner as the trainer. Later we can add a dropdown to select a GymWorker.
             course.setTrainer(userService.getUserByEmail(authentication.getName()));
 
             courseService.createCourse(course, gym);
@@ -247,7 +244,6 @@ public class GymController {
         try {
             courseService.joinCourse(courseId, user);
         } catch (Exception e) {
-            // Handle full course or other errors
         }
         return "redirect:/gym/" + id;
     }
@@ -261,14 +257,14 @@ public class GymController {
     }
 
     @PostMapping("/{id}/course/{courseId}/delete")
-    @PreAuthorize("hasAuthority('GYM_OWNER')")
+    @PreAuthorize("hasAnyAuthority('GYM_OWNER', 'GYM_WORKER')")
     public String deleteCourse(@PathVariable Long id, @PathVariable Long courseId, Authentication authentication) {
         Optional<Gym> gymOpt = gymService.findById(id);
         if (gymOpt.isPresent()) {
             Gym gym = gymOpt.get();
             UserDto currentUser = userService.findUserDTOByEmail(authentication.getName());
 
-            if (gym.getOwner() == null || !gym.getOwner().getId().equals(currentUser.getId())) {
+            if (!hasAccessToGym(gym, currentUser, authentication)) {
                 return "redirect:/error?message=AccessDenied";
             }
 
@@ -276,5 +272,17 @@ public class GymController {
             return "redirect:/gym/" + id;
         }
         return "redirect:/map";
+    }
+
+    private boolean hasAccessToGym(Gym gym, UserDto currentUser, Authentication authentication) {
+        if (gym.getOwner() != null && gym.getOwner().getId().equals(currentUser.getId())) {
+            return true;
+        }
+        if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("GYM_WORKER"))) {
+            return gymWorkerService.findByUserId(currentUser.getId())
+                    .map(worker -> worker.getGym().getId().equals(gym.getId()))
+                    .orElse(false);
+        }
+        return false;
     }
 }

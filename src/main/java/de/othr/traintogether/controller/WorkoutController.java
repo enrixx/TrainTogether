@@ -1,9 +1,6 @@
 package de.othr.traintogether.controller;
 
-import de.othr.traintogether.dto.ProgressDataPointDto;
-import de.othr.traintogether.dto.WorkoutLogRequestDto;
-import de.othr.traintogether.dto.WorkoutLogResponseDto;
-import de.othr.traintogether.dto.WorkoutPageDto;
+import de.othr.traintogether.dto.*;
 import de.othr.traintogether.service.WorkoutService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Locale;
 
 @Controller
 @RequestMapping("/workouts")
@@ -22,9 +20,9 @@ public class WorkoutController {
     private final WorkoutService workoutService;
 
     @GetMapping
-    public String showWorkoutsPage(Model model, Authentication authentication) {
+    public String showWorkoutsPage(Model model, Authentication authentication, Locale locale) {
         try {
-            WorkoutPageDto pageData = workoutService.getWorkoutPageData(authentication.getName());
+            WorkoutPageDto pageData = workoutService.getWorkoutPageData(authentication.getName(), locale);
             
             model.addAttribute("profile", pageData.getProfile());
             model.addAttribute("split", pageData.getActiveSplit());
@@ -56,15 +54,24 @@ public class WorkoutController {
         return ResponseEntity.ok(workoutService.getWorkoutsByDate(authentication.getName(), dateStr));
     }
 
+    @GetMapping("/api/history")
+    @ResponseBody
+    public ResponseEntity<List<WorkoutDaySummaryDto>> getWorkoutHistory(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Authentication authentication) {
+        return ResponseEntity.ok(workoutService.getWorkoutHistory(authentication.getName(), page, size));
+    }
+
     @GetMapping("/api/progress")
     @ResponseBody
-    public ResponseEntity<List<ProgressDataPointDto>> getProgressData(@RequestParam("exerciseId") Long exerciseId, Authentication authentication) {
-        return ResponseEntity.ok(workoutService.getProgressData(authentication.getName(), exerciseId));
+    public ResponseEntity<List<ProgressDataPointDto>> getProgressData(@RequestParam("exerciseId") String exerciseValue, Authentication authentication) {
+        return ResponseEntity.ok(workoutService.getProgressData(authentication.getName(), exerciseValue));
     }
 
     @GetMapping("/fragments/adhoc-row")
-    public String getAdHocRowFragment(Model model, Authentication authentication) {
-        WorkoutPageDto pageData = workoutService.getWorkoutPageData(authentication.getName());
+    public String getAdHocRowFragment(Model model, Authentication authentication, Locale locale) {
+        WorkoutPageDto pageData = workoutService.getWorkoutPageData(authentication.getName(), locale);
         model.addAttribute("allExercises", pageData.getAllExercises());
         return "fragments/adhoc-row";
     }

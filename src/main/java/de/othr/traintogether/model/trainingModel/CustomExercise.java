@@ -1,4 +1,4 @@
-package de.othr.traintogether.model.TrainingModel;
+package de.othr.traintogether.model.trainingModel;
 
 import de.othr.traintogether.model.User;
 import jakarta.persistence.*;
@@ -7,11 +7,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "personal_exercises")
+@Table(name = "custom_exercises")
 @Getter
 @Setter
 @NoArgsConstructor
-public class PersonalExercise {
+public class CustomExercise {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,15 +19,12 @@ public class PersonalExercise {
 
     private String name;
 
-    private int sets;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    private User user;
+    private User createdBy;
 
-    public PersonalExercise(String name, User user) {
+    public CustomExercise(String name, User createdBy) {
         this.name = name;
-        this.user = user;
+        this.createdBy = createdBy;
     }
-
 }

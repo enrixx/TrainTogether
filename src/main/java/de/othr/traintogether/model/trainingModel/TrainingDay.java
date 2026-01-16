@@ -1,4 +1,4 @@
-package de.othr.traintogether.model.TrainingModel;
+package de.othr.traintogether.model.trainingModel;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -20,7 +20,7 @@ public class TrainingDay {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Enumerated(EnumType.STRING)
+    @Enumerated(EnumType.ORDINAL)
     private DayOfWeek weekday;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -42,19 +42,8 @@ public class TrainingDay {
         this.weekday = weekday;
     }
 
-    public void addExercise(TrainingExercise exercise) {
-        exercises.add(exercise);
-    }
-
-    public void removeExercise(TrainingExercise exercise) {
-        exercises.remove(exercise);
-    }
-
     public void addPersonalExercise(PersonalExercise personalExercise) {
         personalExercises.add(personalExercise);
     }
 
-    public void removePersonalExercise(PersonalExercise personalExercise) {
-        personalExercises.remove(personalExercise);
-    }
 }
