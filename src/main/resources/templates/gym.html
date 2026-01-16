@@ -14,10 +14,9 @@
     </div>
 
     <div class="container mt-5">
-        <!-- Edit Button for Owner -->
-        <div class="d-flex justify-content-end mb-3" sec:authorize="hasAuthority('GYM_OWNER')">
-            <!-- Check if current user is actually the owner of THIS gym -->
-            <a th:if="${#authentication.name == gym.owner.email}" th:href="@{/gym/edit/{id}(id=${gym.id})}" class="btn btn-outline-primary">
+        <!-- Edit Button for Owner/Worker -->
+        <div class="d-flex justify-content-end mb-3" th:if="${canEdit}">
+            <a th:href="@{/gym/edit/{id}(id=${gym.id})}" class="btn btn-outline-primary">
                 <i class="bi bi-pencil"></i> <span th:text="#{gym.edit.button}">Edit Gym</span>
             </a>
         </div>
@@ -90,16 +89,23 @@
                                                 </div>
 
                                                 <!-- Actions -->
-                                                <div th:if="${currentUser != null}">
+                                                <div th:if="${currentUser != null}" sec:authorize="!hasAnyAuthority('GYM_OWNER', 'GYM_WORKER')">
                                                     <form th:if="${!course.participants.contains(currentUser) && course.participants.size() < course.maxParticipants}"
                                                           th:action="@{/gym/{id}/course/{courseId}/join(id=${gym.id}, courseId=${course.id})}" method="post">
                                                         <button type="submit" class="btn btn-primary" th:text="#{gym.courses.join}">Join Now</button>
                                                     </form>
 
-                                                    <form th:if="${course.participants.contains(currentUser)}"
-                                                          th:action="@{/gym/{id}/course/{courseId}/leave(id=${gym.id}, courseId=${course.id})}" method="post">
-                                                        <button type="submit" class="btn btn-outline-secondary" th:text="#{gym.courses.leave}">Leave</button>
-                                                    </form>
+                                                    <div th:if="${course.participants.contains(currentUser)}" class="d-flex gap-2">
+                                                        <form th:action="@{/gym/{id}/course/{courseId}/leave(id=${gym.id}, courseId=${course.id})}" method="post">
+                                                            <button type="submit" class="btn btn-outline-secondary" th:text="#{gym.courses.leave}">Leave</button>
+                                                        </form>
+
+                                                        <a th:if="${course.chatRoomId != null}"
+                                                           th:href="@{/chat/{chatId}(chatId=${course.chatRoomId})}"
+                                                           class="btn btn-info text-white">
+                                                            <i class="bi bi-chat-dots"></i> Go to Chat
+                                                        </a>
+                                                    </div>
 
                                                     <button th:if="${!course.participants.contains(currentUser) && course.participants.size() >= course.maxParticipants}"
                                                             class="btn btn-secondary" disabled th:text="#{gym.courses.full}">Course Full</button>

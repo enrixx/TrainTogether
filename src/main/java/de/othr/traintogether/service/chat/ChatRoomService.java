@@ -72,7 +72,7 @@ public class ChatRoomService {
     }
 
     @Transactional
-    public void createGroup(String name, String pictureUrl, Set<String> userEmails, String ownerEmail) {
+    public Long createGroup(String name, String pictureUrl, Set<String> userEmails, String ownerEmail) {
 
         User owner = chatAuthService.getUser(ownerEmail);
         ChatRoom room = new ChatRoom(ChatRoomType.GROUP, name, pictureUrl);
@@ -84,6 +84,7 @@ public class ChatRoomService {
             room.addMember(member);
         }
         chatRoomRepository.save(room);
+        return room.getId();
     }
 
     @Transactional
@@ -141,6 +142,7 @@ public class ChatRoomService {
     @Transactional
     public void deleteChatRoom(Long chatRoomId) {
         if (chatRoomId != null) {
+            chatMessageRepository.deleteByChatRoomId(chatRoomId);
             chatRoomRepository.deleteById(chatRoomId);
         }
     }

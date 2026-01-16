@@ -63,7 +63,7 @@
                     <div class="p-2 border rounded-3 bg-body-secondary text-center h-100 d-flex flex-column w-100">
                         <strong th:text="${day.weekday.getDisplayName(T(java.time.format.TextStyle).FULL, #locale)}">Montag</strong>
                         <ul class="list-unstyled mt-2 flex-grow-1">
-                            <li th:each="ex : ${day.personalExercises}" th:text="${ex.name} + ' - '   + 'X'  + ${ex.sets} "></li>
+                            <li th:each="ex : ${day.personalExercises}" th:text="${ex.getName(#locale)} + ' - '   + 'X'  + ${ex.sets} "></li>
                             <li th:if="${#lists.isEmpty(day.personalExercises)}" class="text-muted">RESTDAY</li>
                         </ul>
                     </div>
@@ -177,10 +177,6 @@
         <div th:replace="~{fragments/training_dialogs/edit-description :: editDescriptionModal}"></div>
         <div th:replace="~{fragments/training_dialogs/editSplitModal :: editSplitModal}"></div>
         <div th:replace="~{fragments/training_dialogs/editBodyMeasurementsModal :: editBodyMeasurementsModal}"></div>
-
-        <!-- Hidden Forms for Split Actions -->
-        <!-- These are now dynamically created by split-editor.js, so we can remove them or keep them as fallback.
-             The JS creates them on the fly, so removing them is cleaner. -->
 
     </main>
 </div>

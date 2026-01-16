@@ -28,6 +28,7 @@ public class TrainingProfileService {
     private final UserRepository userRepository;
     private final StandardExerciseRepository standardExerciseRepository;
     private final CustomExerciseRepository customExerciseRepository;
+    private final ExerciseServiceHelper exerciseServiceHelper;
 
     @Transactional(readOnly = true)
     public TrainingProfile getTrainingProfile(String email) {
@@ -157,58 +158,12 @@ public class TrainingProfileService {
         TrainingDay trainingDay = trainingDayRepo.findById(trainingDayId).orElse(null);
         if (trainingDay == null || exerciseValue == null) return;
 
-        PersonalExercise personalExercise = null;
-
-        if (exerciseValue.startsWith("S-")) {
-            personalExercise = handleStandardExercise(exerciseValue, sets, user);
-        } else if (exerciseValue.startsWith("C-")) {
-            personalExercise = handleCustomExercise(exerciseValue, sets, user);
-        }
+        PersonalExercise personalExercise = exerciseServiceHelper.findOrCreatePersonalExercise(exerciseValue, sets, user);
 
         if (personalExercise != null) {
             trainingDay.addPersonalExercise(personalExercise);
             trainingDayRepo.save(trainingDay);
         }
-    }
-
-    private PersonalExercise handleStandardExercise(String exerciseValue, int sets, User user) {
-        Long standardId = Long.parseLong(exerciseValue.substring(2));
-        StandardExercise standardExercise = standardExerciseRepository.findById(standardId).orElse(null);
-        if (standardExercise == null) return null;
-
-        List<PersonalExercise> existing = exerciseRepo.findByStandardExercise_IdAndUser_Id(standardId, user.getId());
-        return findOrCreatePersonalExercise(existing, sets, user, standardExercise, null);
-    }
-
-    private PersonalExercise handleCustomExercise(String exerciseValue, int sets, User user) {
-        Long customId = Long.parseLong(exerciseValue.substring(2));
-        CustomExercise customExercise = customExerciseRepository.findById(customId).orElse(null);
-        if (customExercise == null) return null;
-
-        List<PersonalExercise> existing = exerciseRepo.findByCustomExercise_IdAndUser_Id(customId, user.getId());
-        return findOrCreatePersonalExercise(existing, sets, user, null, customExercise);
-    }
-
-    private PersonalExercise findOrCreatePersonalExercise(List<PersonalExercise> existing, int sets, User user, StandardExercise se, CustomExercise ce) {
-        if (!existing.isEmpty()) {
-            for (PersonalExercise pe : existing) {
-                if (pe.getSets() == sets) {
-                    return pe;
-                }
-            }
-        }
-        return createPersonalExercise(sets, user, se, ce);
-    }
-
-    private PersonalExercise createPersonalExercise(int sets, User user, StandardExercise se, CustomExercise ce) {
-        PersonalExercise pe;
-        if (se != null) {
-            pe = new PersonalExercise(se, user);
-        } else {
-            pe = new PersonalExercise(ce, user);
-        }
-        pe.setSets(sets);
-        return exerciseRepo.save(pe);
     }
 
     @Transactional

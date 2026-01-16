@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.context.i18n.LocaleContextHolder;
 
 import java.util.Locale;
 
@@ -44,9 +43,8 @@ public class PersonalExercise {
         this.user = user;
     }
     
-    public String getName() {
+    public String getName(Locale locale) {
         if (standardExercise != null) {
-            Locale locale = LocaleContextHolder.getLocale();
             if (locale != null && locale.getLanguage().equals("de")) {
                 return standardExercise.getNameDe();
             }
@@ -55,5 +53,9 @@ public class PersonalExercise {
             return customExercise.getName();
         }
         return "Unknown Exercise";
+    }
+
+    public String getName() {
+        return getName(Locale.getDefault());
     }
 }
