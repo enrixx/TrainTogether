@@ -1,7 +1,9 @@
 package de.othr.traintogether.service;
 
+import de.othr.traintogether.dto.CourseDto;
 import de.othr.traintogether.dto.MatchingCardDto;
 import de.othr.traintogether.dto.UserDto;
+import de.othr.traintogether.model.Course;
 import de.othr.traintogether.model.MatchingAction;
 import de.othr.traintogether.model.TrainingModel.*;
 import de.othr.traintogether.model.User;
@@ -96,7 +98,7 @@ public class MatchingService {
     }
 
     @Transactional(readOnly = true)
-    public List<UserDto> findPotentialMatches(User currentUser, Integer minAge, Integer maxAge, String gender, List<String> trainingDays, List<Long> currentShownIds, int page, int limit) {
+    public List<MatchingCardDto> findPotentialMatches(User currentUser, Integer minAge, Integer maxAge, String gender, List<String> trainingDays, List<Long> currentShownIds, int page, int limit) {
         // Logic to find users:
         // 1. Not the current user
         // 2. Not already friends
@@ -173,22 +175,8 @@ public class MatchingService {
                         .collect(Collectors.toList());
                 Predicate dayMatch = dayJoin.get("weekday").in(requestedDays);
 
-                // Check Not RESTDAY
-                // We want to ensure that the matching day has at least one real exercise (not just "RESTDAY" or empty)
-
-                // 1. TrainingExercise != RESTDAY
-                Join<TrainingDay, TrainingExercise> teJoin = dayJoin.join("exercises", JoinType.LEFT);
-                // Assuming TrainingExercise has an enum or similar, but here we check if it exists.
-                // If TrainingExercise is used, it's usually not a rest day unless explicitly marked.
-                // But wait, TrainingExercise is deprecated/old model? No, it's used for logging.
-                // The profile uses PersonalExercise.
-
-                // Let's check PersonalExercise
-                Join<TrainingDay, PersonalExercise> peJoin = dayJoin.join("personalExercises", JoinType.LEFT);
-
-                // We just check if there is ANY personal exercise assigned to that day.
-                // If the list is empty, it's a rest day.
-                Predicate peValid = cb.isNotNull(peJoin.get("id"));
+                // Check if days have personal exercises (meaning it is not a RESTDAY)
+                Predicate peValid = cb.isNotEmpty(dayJoin.get("personalExercises"));
 
                 return cb.exists(subquery.select(profileRoot.get("userId"))
                         .where(activeSplit, userLink, dayMatch, peValid));
@@ -201,7 +189,7 @@ public class MatchingService {
 
         List<UserDto> result = candidates.stream()
                 .map(UserDto::new)
-                .collect(Collectors.toList());
+                .toList();
 
         // Populate training days for each user
         for (UserDto dto : result) {
@@ -235,7 +223,7 @@ public class MatchingService {
             LocalDateTime cutoff = LocalDateTime.now().minusDays(COURSE_SKIP_COOLDOWN_DAYS);
             List<Long> skippedCourseIds = courseSkipRepository.findSkippedCourseIdsByUser(currentUser, cutoff);
 
-            Specification<de.othr.traintogether.model.Course> courseSpec = (root, query, cb) -> {
+            Specification<Course> courseSpec = (root, query, cb) -> {
                 List<Predicate> predicates = new ArrayList<>();
 
                 // 1. Future courses
@@ -259,10 +247,10 @@ public class MatchingService {
             };
 
             // Fetch courses that match ALL criteria directly from DB
-            List<de.othr.traintogether.model.Course> courses = courseRepository.findAll(courseSpec, coursePage).getContent();
+            List<Course> courses = courseRepository.findAll(courseSpec, coursePage).getContent();
 
-            for (de.othr.traintogether.model.Course c : courses) {
-                finalCards.add(new MatchingCardDto(new de.othr.traintogether.dto.CourseDto(c)));
+            for (Course c : courses) {
+                finalCards.add(new MatchingCardDto(new CourseDto(c)));
             }
         }
 
