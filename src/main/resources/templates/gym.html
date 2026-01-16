@@ -157,6 +157,64 @@
             </div>
         </div>
 
+        <!-- Google Reviews Section -->
+        <div class="row mb-5" th:if="${(googleReviews != null and !googleReviews.isEmpty()) or gym.googlePlaceId != null}">
+            <div class="col-12 d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                <h2 class="mb-0" th:text="#{gym.reviews.title}">Google Reviews</h2>
+                <div th:if="${gym.googlePlaceId != null}">
+                    <a th:href="@{'https://search.google.com/local/reviews?placeid=' + ${gym.googlePlaceId}}"
+                       target="_blank"
+                       class="btn btn-outline-secondary btn-sm me-2">
+                        <i class="bi bi-google"></i> <span th:text="#{gym.reviews.read_more}">Read more on Google</span>
+                    </a>
+                    <a th:href="@{'https://search.google.com/local/writereview?placeid=' + ${gym.googlePlaceId}}"
+                       target="_blank"
+                       class="btn btn-sm text-white"
+                       style="background-color: #1a73e8; border-color: #1a73e8;">
+                        <i class="bi bi-pencil-square"></i> <span th:text="#{gym.reviews.write}">Write a Review</span>
+                    </a>
+                </div>
+            </div>
+            <div class="col-12" th:if="${googleReviews != null and !googleReviews.isEmpty()}">
+                <div class="row row-cols-1 row-cols-md-2 g-4">
+                    <div class="col" th:each="review : ${googleReviews}">
+                        <div class="card h-100 border-0 shadow-sm bg-body-tertiary">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <img th:if="${review.profilePhotoUrl != null}"
+                                         th:src="${review.profilePhotoUrl}"
+                                         referrerpolicy="no-referrer"
+                                         class="rounded-circle me-3"
+                                         style="width: 50px; height: 50px; object-fit: cover;"
+                                         alt="Reviewer">
+                                    <div th:unless="${review.profilePhotoUrl != null}"
+                                         class="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-3"
+                                         style="width: 50px; height: 50px;">
+                                        <span class="text-white fs-5" th:text="${#strings.substring(review.authorName, 0, 1)}">A</span>
+                                    </div>
+                                    <div>
+                                        <h5 class="card-title mb-0" th:text="${review.authorName}">Name</h5>
+                                        <small class="text-muted" th:text="${review.relativeTimeDescription}">Time</small>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <span th:each="i : ${#numbers.sequence(1, 5)}">
+                                        <i class="bi bi-star-fill text-warning" th:if="${i <= review.rating}"></i>
+                                        <i class="bi bi-star text-muted" th:if="${i > review.rating}"></i>
+                                    </span>
+                                </div>
+                                <p class="card-text" th:text="${review.text}">Review text...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12" th:if="${gym.googlePlaceId != null and (googleReviews == null or googleReviews.isEmpty())}">
+                <p class="text-muted text-center py-4" th:text="#{gym.reviews.empty}">No reviews yet. Be the first to write one!</p>
+            </div>
+        </div>
+
         <!-- Team Section -->
         <div class="row mb-5" th:if="${!#lists.isEmpty(gym.workers)}">
             <div class="col-12 border-bottom pb-2 mb-3">

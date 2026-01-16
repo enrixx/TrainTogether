@@ -32,13 +32,15 @@ public class GymController {
     private final MinioService minioService;
     private final CourseService courseService;
     private final OpenWeatherMapService openWeatherMapService;
+    private final GooglePlacesService googlePlacesService;
 
-    public GymController(GymService gymService, UserService userService, MinioService minioService, CourseService courseService, OpenWeatherMapService openWeatherMapService) {
+    public GymController(GymService gymService, UserService userService, MinioService minioService, CourseService courseService, OpenWeatherMapService openWeatherMapService, GooglePlacesService googlePlacesService) {
         this.gymService = gymService;
         this.userService = userService;
         this.minioService = minioService;
         this.courseService = courseService;
         this.openWeatherMapService = openWeatherMapService;
+        this.googlePlacesService = googlePlacesService;
     }
 
     // --- API for internal gym data ---
@@ -70,6 +72,28 @@ public class GymController {
             }
 
             model.addAttribute("gym", gym);
+
+            // Fetch Google Reviews
+            if (gym.getGooglePlaceId() == null) {
+               if (gym.getLat() != 0 || gym.getLon() != 0) {
+                     googlePlacesService.findPlaceId(gym.getName(), gym.getLat(), gym.getLon())
+                            .ifPresent(placeId -> {
+                                gym.setGooglePlaceId(placeId);
+                                gymService.update(gym.getId(), gym);
+                            });
+                } else {
+                     // Fallback to name + city search
+                     googlePlacesService.findPlaceId(gym.getName(), gym.getCity())
+                            .ifPresent(placeId -> {
+                                gym.setGooglePlaceId(placeId);
+                                gymService.update(gym.getId(), gym);
+                            });
+                }
+            }
+
+            if (gym.getGooglePlaceId() != null) {
+                model.addAttribute("googleReviews", googlePlacesService.fetchReviews(gym.getGooglePlaceId()));
+            }
 
             Map<Long, WeatherDto> courseWeather = new HashMap<>();
             double lat = gym.getLat();
