@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -36,12 +35,12 @@ public class TrainingProfileService {
         UserDto user = userService.findUserDTOByEmail(email);
         Optional<TrainingProfile> profileOpt = profileRepo.findFirstByUserId(user.getId());
 
-        if (profile == null) {
-            return null;
+        if (profileOpt.isPresent()) {
+            TrainingProfile profile = profileOpt.get();
+            initializeProfileDeeply(profile);
+            return profile;
         }
-
-        initializeProfileDeeply(profile);
-        return profile;
+        return null;
     }
 
     private void initializeProfileDeeply(TrainingProfile profile) {
@@ -77,23 +76,6 @@ public class TrainingProfileService {
         }
 
         return options;
-        if (profileOpt.isPresent()) {
-            TrainingProfile profile = profileOpt.get();
-            Hibernate.initialize(profile.getSplits());
-            Hibernate.initialize(profile.getMeasurements());
-            if (profile.getSplits() != null) {
-                profile.getSplits().forEach(split -> {
-                    Hibernate.initialize(split.getDays());
-                    if (split.getDays() != null) {
-                        split.getDays().forEach(day -> {
-                            Hibernate.initialize(day.getPersonalExercises());
-                        });
-                    }
-                });
-            }
-            return profile;
-        }
-        return null;
     }
 
     @Transactional(readOnly = true)
