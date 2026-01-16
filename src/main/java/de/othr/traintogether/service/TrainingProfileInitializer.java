@@ -1,6 +1,6 @@
 package de.othr.traintogether.service;
 
-import de.othr.traintogether.model.trainingModel.*;
+import de.othr.traintogether.model.TrainingModel.*;
 import de.othr.traintogether.model.User;
 import de.othr.traintogether.repository.*;
 import lombok.RequiredArgsConstructor;

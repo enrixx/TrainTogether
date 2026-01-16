@@ -1,7 +1,7 @@
 package de.othr.traintogether.dto;
 
-import de.othr.traintogether.model.trainingModel.TrainingProfile;
-import de.othr.traintogether.model.trainingModel.TrainingSplit;
+import de.othr.traintogether.model.TrainingModel.TrainingProfile;
+import de.othr.traintogether.model.TrainingModel.TrainingSplit;
 import lombok.Builder;
 import lombok.Data;
 

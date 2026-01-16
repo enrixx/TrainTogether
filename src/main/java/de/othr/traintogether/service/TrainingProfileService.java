@@ -4,7 +4,7 @@ import de.othr.traintogether.dto.BatchExerciseUpdateRequestDto;
 import de.othr.traintogether.dto.BodyMeasurementsDto;
 import de.othr.traintogether.dto.ExerciseOptionDto;
 import de.othr.traintogether.dto.UserDto;
-import de.othr.traintogether.model.trainingModel.*;
+import de.othr.traintogether.model.TrainingModel.*;
 import de.othr.traintogether.model.User;
 import de.othr.traintogether.repository.*;
 import lombok.RequiredArgsConstructor;

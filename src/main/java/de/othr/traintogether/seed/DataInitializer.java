@@ -6,7 +6,7 @@ import de.othr.traintogether.dto.UpdateProfileDto;
 import de.othr.traintogether.dto.chat.SendChatMessageDto;
 import de.othr.traintogether.model.Gym;
 import de.othr.traintogether.model.Role;
-import de.othr.traintogether.model.trainingModel.*;
+import de.othr.traintogether.model.TrainingModel.*;
 import de.othr.traintogether.model.User;
 import de.othr.traintogether.repository.*;
 import de.othr.traintogether.repository.chat.ChatRoomRepository;

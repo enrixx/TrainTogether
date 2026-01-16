@@ -1,9 +1,9 @@
 package de.othr.traintogether.service;
 
 import de.othr.traintogether.model.User;
-import de.othr.traintogether.model.trainingModel.CustomExercise;
-import de.othr.traintogether.model.trainingModel.PersonalExercise;
-import de.othr.traintogether.model.trainingModel.StandardExercise;
+import de.othr.traintogether.model.TrainingModel.CustomExercise;
+import de.othr.traintogether.model.TrainingModel.PersonalExercise;
+import de.othr.traintogether.model.TrainingModel.StandardExercise;
 import de.othr.traintogether.repository.CustomExerciseRepository;
 import de.othr.traintogether.repository.PersonalExerciseRepository;
 import de.othr.traintogether.repository.StandardExerciseRepository;

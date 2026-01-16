@@ -1,4 +1,4 @@
-package de.othr.traintogether.model.trainingModel;
+package de.othr.traintogether.model.TrainingModel;
 
 import jakarta.persistence.Embeddable;
 import lombok.Data;
