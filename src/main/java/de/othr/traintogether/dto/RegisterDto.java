@@ -1,9 +1,13 @@
-// java
 package de.othr.traintogether.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Size;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import java.time.LocalDate;
 
 public class RegisterDto {
 
@@ -26,14 +30,24 @@ public class RegisterDto {
     @Size(max = 50, message = "{error.lastname.max.length}")
     private String lastName;
 
+    @NotBlank(message = "{error.gender.required}")
+    private String gender;
+
+    @NotNull(message = "{error.birthday.required}")
+    @Past(message = "{error.birthday.past}")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    private LocalDate birthday;
+
     public RegisterDto() {}
 
-    public RegisterDto(String email, String password, String username, String firstName, String lastName) {
+    public RegisterDto(String email, String password, String username, String firstName, String lastName, String gender, LocalDate birthday) {
         this.email = email;
         this.password = password;
         this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
+        this.gender = gender;
+        this.birthday = birthday;
     }
 
     public String getEmail() { return email; }
@@ -50,5 +64,11 @@ public class RegisterDto {
 
     public String getLastName() { return lastName; }
     public void setLastName(String lastName) { this.lastName = lastName; }
+
+    public String getGender() { return gender; }
+    public void setGender(String gender) { this.gender = gender; }
+
+    public LocalDate getBirthday() { return birthday; }
+    public void setBirthday(LocalDate birthday) { this.birthday = birthday; }
 
 }

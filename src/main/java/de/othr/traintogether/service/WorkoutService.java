@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,11 +32,12 @@ public class WorkoutService {
     @Transactional(readOnly = true)
     public WorkoutPageDto getWorkoutPageData(String email) {
         UserDto user = userService.findUserDTOByEmail(email);
-        TrainingProfile profile = profileRepo.findByUserId(user.getId());
+        Optional<TrainingProfile> profileOpt = profileRepo.findFirstByUserId(user.getId());
 
-        if (profile == null) {
+        if (profileOpt.isEmpty()) {
             throw new IllegalStateException("No training profile found. Please create one in your profile.");
         }
+        TrainingProfile profile = profileOpt.get();
 
         TrainingSplit activeSplit = profile.getActiveTraininSplit();
         if (activeSplit == null) {

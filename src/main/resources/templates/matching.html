@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:replace="~{layout :: layout(~{::content})}">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{matching.title}">Find Training Partners</title>
+</head>
+<body>
+<div th:fragment="content" class="container mt-4 pb-1 overflow-auto h-100">
+    <style>
+        body {
+            background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 25%, #EC4899 50%, #F59E0B 75%, #EF4444 100%);
+            background-size: 400% 400%;
+            animation: gymGradient 20s ease infinite;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated background with gym energy */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(circle at 20% 80%, rgba(236, 72, 153, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(245, 158, 11, 0.2) 0%, transparent 50%);
+            animation: pulse 10s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes gymGradient {
+            0% { background-position: 0% 50%; }
+            25% { background-position: 50% 50%; }
+            50% { background-position: 100% 50%; }
+            75% { background-position: 50% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.1); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+        }
+
+        .page-header {
+            text-align: center;
+            padding: 30px 20px 20px;
+            position: relative;
+        }
+
+        .page-header h2 {
+            color: white;
+            font-size: 2.8rem;
+            font-weight: 900;
+            margin: 0;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #ffffff 0%, #ffd700 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: titleShine 3s ease-in-out infinite;
+        }
+
+        @keyframes titleShine {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.2); }
+        }
+
+        .page-subtitle {
+            color: rgba(255,255,255,0.95);
+            font-size: 1.1rem;
+            margin-top: 8px;
+            font-weight: 500;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .card-stack-container {
+            max-width: 420px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+        }
+
+        .card-stack {
+            position: relative;
+            width: 100%;
+            height: 620px;
+            perspective: 1200px;
+            margin-bottom: 20px;
+        }
+
+        .matching-card {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 25px 70px rgba(0,0,0,0.35);
+            transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+                        opacity 0.3s ease,
+                        box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
+            border: 3px solid rgba(255,255,255,0.3);
+        }
+
+        .matching-card:active {
+            cursor: grabbing;
+        }
+
+        /* Hide ALL cards except the first one by default */
+        .matching-card:not(:first-child) {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        /* Only show the second card when the first is being swiped away */
+        .matching-card:first-child.swiping-away + .matching-card {
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .card-image {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Vibrant gradient overlay */
+        .card-image::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                to bottom,
+                rgba(99, 102, 241, 0.15) 0%,
+                transparent 30%,
+                transparent 50%,
+                rgba(0,0,0,0.4) 80%,
+                rgba(0,0,0,0.85) 100%
+            );
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Gym energy accent */
+        .card-image::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.3) 0%, transparent 50%);
+            animation: energyPulse 8s ease-in-out infinite;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        @keyframes energyPulse {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+            50% { transform: translate(-20%, 20%) scale(1.2); opacity: 0.5; }
+        }
+
+        .default-profile-icon {
+            width: 160px;
+            height: 160px;
+            opacity: 0.3;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.4));
+            z-index: 0;
+        }
+
+        .card-info-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 30px 28px 20px 28px;
+            z-index: 2;
+            color: white;
+            background: linear-gradient(to top, rgba(0,0,0,0.3) 0%, transparent 100%);
+            max-height: 50%;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .card-info-overlay::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .card-info-overlay::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+
+        .card-info-overlay::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+        }
+
+        .card-info-overlay h3 {
+            margin: 0;
+            font-size: 2.3rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 3px 12px rgba(0,0,0,0.5);
+            letter-spacing: -0.8px;
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .card-info-overlay h3 .age {
+            font-size: 1.8rem;
+            font-weight: 600;
+            opacity: 0.9;
+        }
+
+        .card-info-overlay .user-details {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 0;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+
+        .card-info-overlay .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 1rem;
+            color: rgba(255,255,255,0.95);
+            text-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            font-weight: 500;
+            background: rgba(255,255,255,0.15);
+            padding: 6px 12px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .training-days-compact {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin: 0;
+            flex-shrink: 0;
+        }
+
+        .day-badge {
+            padding: 5px 10px;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.9), rgba(239, 68, 68, 0.8));
+            backdrop-filter: blur(10px);
+            border-radius: 14px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: white;
+            border: 2px solid rgba(255,255,255,0.4);
+            text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .bio-preview {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.95);
+            line-height: 1.4;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            margin: 0;
+            font-weight: 400;
+            flex-shrink: 1;
+        }
+
+        /* Action buttons - ALWAYS VISIBLE */
+        .card-actions {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            padding: 25px 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Hide actions when no cards are available */
+        .card-stack:has(.no-matches) ~ .card-actions,
+        .card-stack:not(:has(.matching-card)) ~ .card-actions {
+            display: none;
+        }
+
+        .card-stack:has(.no-matches) ~ .shortcut-hints,
+        .card-stack:not(:has(.matching-card)) ~ .shortcut-hints {
+            display: none;
+        }
+
+        .action-btn {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+            position: relative;
+            font-weight: bold;
+        }
+
+        .action-btn::before {
+            content: '';
+            position: absolute;
+            inset: -6px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0.1));
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.18) translateY(-6px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.45);
+        }
+
+        .action-btn:hover::before {
+            opacity: 1;
+        }
+
+        .action-btn:active {
+            transform: scale(0.9);
+        }
+
+        .btn-dislike {
+            background: linear-gradient(135deg, #EF4444, #DC2626);
+            color: white;
+            box-shadow: 0 10px 30px rgba(239, 68, 68, 0.5);
+        }
+
+        .btn-dislike:hover {
+            background: linear-gradient(135deg, #DC2626, #B91C1C);
+            box-shadow: 0 15px 40px rgba(239, 68, 68, 0.6);
+        }
+
+        .btn-like {
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: white;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.5);
+        }
+
+        .btn-like:hover {
+            background: linear-gradient(135deg, #059669, #047857);
+            box-shadow: 0 15px 40px rgba(16, 185, 129, 0.6);
+        }
+
+        /* Swipe indicator overlays */
+        .swipe-indicator {
+            position: absolute;
+            top: 100px;
+            padding: 16px 32px;
+            font-size: 3rem;
+            font-weight: 900;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 10;
+            pointer-events: none;
+            border: 5px solid;
+            border-radius: 12px;
+            transform: rotate(-20deg);
+            letter-spacing: 3px;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            backdrop-filter: blur(5px);
+        }
+
+        .swipe-like {
+            right: 50px;
+            color: #10B981;
+            border-color: #10B981;
+            background: rgba(16, 185, 129, 0.15);
+            transform: rotate(20deg);
+        }
+
+        .swipe-nope {
+            left: 50px;
+            color: #EF4444;
+            border-color: #EF4444;
+            background: rgba(239, 68, 68, 0.15);
+        }
+
+        .matching-card.swiping-right .swipe-like {
+            opacity: 1;
+        }
+
+        .matching-card.swiping-left .swipe-nope {
+            opacity: 1;
+        }
+
+        .no-matches {
+            text-align: center;
+            margin-top: 60px;
+            color: white;
+            padding: 60px 40px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 24px;
+            backdrop-filter: blur(30px);
+            border: 2px solid rgba(255,255,255,0.3);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .no-matches h3 {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+            font-weight: 900;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .no-matches p {
+            font-size: 1.2rem;
+            opacity: 0.95;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .filter-section {
+            max-width: 900px;
+            margin: 0 auto 30px auto;
+            padding: 30px;
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+            border: 2px solid rgba(255,255,255,0.6);
+            backdrop-filter: blur(20px);
+        }
+
+        .filter-section .form-label {
+            font-weight: 700;
+            color: #1F2937;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-section .btn-primary {
+            background: linear-gradient(135deg, #6366F1, #8B5CF6);
+            border: none;
+            font-weight: 700;
+            padding: 12px 30px;
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .filter-section .btn-primary:hover {
+            background: linear-gradient(135deg, #4F46E5, #7C3AED);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
+        }
+
+        /* Match Modal/Overlay Styles */
+        .match-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.95), rgba(236, 72, 153, 0.95));
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            animation: fadeIn 0.4s ease-out;
+            backdrop-filter: blur(15px);
+        }
+
+        .match-content {
+            background: white;
+            padding: 60px 50px;
+            border-radius: 30px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+            animation: bounceIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 30px 100px rgba(0,0,0,0.5);
+            border: 3px solid rgba(255,255,255,0.3);
+        }
+
+        .match-title {
+            background: linear-gradient(135deg, #F59E0B, #EF4444, #EC4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 24px;
+            letter-spacing: -1.5px;
+            animation: titlePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes titlePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .match-text {
+            font-size: 1.5rem;
+            margin-bottom: 40px;
+            color: #1F2937;
+            line-height: 1.6;
+            font-weight: 600;
+        }
+
+        .match-btn {
+            background: linear-gradient(135deg, #6366F1, #8B5CF6);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 50px;
+            font-size: 1.15rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin: 8px;
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .match-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 35px rgba(99, 102, 241, 0.6);
+            color: white;
+            background: linear-gradient(135deg, #4F46E5, #7C3AED);
+        }
+
+        .match-btn-secondary {
+            background: white;
+            color: #6B7280;
+            border: 3px solid #E5E7EB;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .match-btn-secondary:hover {
+            background: #F9FAFB;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            border-color: #D1D5DB;
+        }
+
+        /* Error message styling */
+        .error-toast {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            background: white;
+            color: #EF4444;
+            padding: 20px 32px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+            z-index: 3000;
+            animation: slideInRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-width: 420px;
+            border: 3px solid #EF4444;
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+
+        .error-toast.success {
+            color: #10B981;
+            border-color: #10B981;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes bounceIn {
+            0% {
+                transform: scale(0.3) rotate(-12deg);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.1) rotate(3deg);
+                opacity: 1;
+            }
+            70% {
+                transform: scale(0.95) rotate(-2deg);
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(500px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(500px);
+                opacity: 0;
+            }
+        }
+
+        /* Keyboard shortcut hints */
+        .shortcut-hints {
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            color: rgba(255,255,255,0.8);
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .shortcut-hints kbd {
+            background: rgba(255,255,255,0.25);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-weight: 700;
+            border: 2px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 576px) {
+            .card-stack {
+                height: 580px;
+            }
+
+            .card-stack-container {
+                max-width: 100%;
+                padding: 15px;
+            }
+
+            .card-info-overlay h3 {
+                font-size: 1.9rem;
+            }
+
+            .action-btn {
+                width: 64px;
+                height: 64px;
+                font-size: 28px;
+            }
+
+            .match-title {
+                font-size: 3rem;
+            }
+
+            .swipe-indicator {
+                font-size: 2.2rem;
+                padding: 12px 24px;
+            }
+
+            .page-header h2 {
+                font-size: 2.2rem;
+            }
+        }
+    </style>
+
+    <div class="page-header">
+        <h2 th:text="#{matching.title}">💪 Find Your Gym Partner</h2>
+        <p class="page-subtitle">Swipe to find your perfect workout buddy</p>
+    </div>
+
+    <div th:if="${missingBio}" class="alert alert-warning text-center">
+        <h4 th:text="#{matching.bio.missing.title}">Bio Missing</h4>
+        <p th:text="#{matching.bio.missing.desc}">Please add a bio to your profile before finding training partners.</p>
+        <a th:href="@{/profile}" class="btn btn-primary" th:text="#{matching.bio.add}">Add Bio</a>
+    </div>
+
+    <div th:unless="${missingBio}">
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <form method="get" th:action="@{/matching}" class="row g-3">
+                <div class="col-md-3">
+                    <label for="minAge" class="form-label" th:text="#{matching.filter.minAge}">Min Age</label>
+                    <input type="number" class="form-control" id="minAge" name="minAge" th:value="${minAge}" min="16" max="100">
+                </div>
+                <div class="col-md-3">
+                    <label for="maxAge" class="form-label" th:text="#{matching.filter.maxAge}">Max Age</label>
+                    <input type="number" class="form-control" id="maxAge" name="maxAge" th:value="${maxAge}" min="16" max="100">
+                </div>
+                <div class="col-md-3">
+                    <label for="gender" class="form-label" th:text="#{auth.gender}">Gender</label>
+                    <select class="form-select" id="gender" name="gender">
+                        <option value="all" th:selected="${gender == 'all' or gender == null}" th:text="#{matching.filter.gender.all}">All</option>
+                        <option value="male" th:selected="${gender == 'male'}" th:text="#{auth.gender.male}">Male</option>
+                        <option value="female" th:selected="${gender == 'female'}" th:text="#{auth.gender.female}">Female</option>
+                        <option value="divers" th:selected="${gender == 'divers'}" th:text="#{auth.gender.divers}">Divers</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Training Days</label>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            Select Days
+                        </button>
+                        <ul class="dropdown-menu p-2" aria-labelledby="dropdownMenuButton">
+                            <li th:each="day : ${T(java.time.DayOfWeek).values()}">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="trainingDays"
+                                           th:value="${day.name()}"
+                                           th:id="${'day-' + day.name()}"
+                                           th:checked="${trainingDays != null and trainingDays.contains(day.name())}">
+                                    <label class="form-check-label" th:for="${'day-' + day.name()}"
+                                           th:text="${#strings.capitalize(day.name().toLowerCase())}">
+                                        Monday
+                                    </label>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-12 text-end">
+                    <a th:href="@{/matching}" class="btn btn-outline-secondary me-2" th:text="#{matching.filter.reset}">Reset</a>
+                    <button type="submit" class="btn btn-primary" th:text="#{matching.filter.apply}">Apply Filters</button>
+                </div>
+            </form>
+        </div>
+
+        <div th:if="${#lists.isEmpty(potentialMatches)}" class="no-matches">
+            <h3 th:text="#{matching.none.title}">No more profiles</h3>
+            <p th:text="#{matching.none.desc}">Check back later for more potential training partners.</p>
+        </div>
+
+        <div th:unless="${#lists.isEmpty(potentialMatches)}" class="card-stack-container">
+            <div class="card-stack" id="cardStack">
+                <th:block th:fragment="cardList">
+                <div th:each="user, iterStat : ${potentialMatches}"
+                     class="matching-card"
+                     th:id="'card-' + ${user.id}"
+                     th:data-userid="${user.id}">
+
+                    <!-- Swipe indicators -->
+                    <div class="swipe-indicator swipe-like">LIKE</div>
+                    <div class="swipe-indicator swipe-nope">NOPE</div>
+
+                    <div class="card-image"
+                         th:style="${user.profilePictureUrl != null} ? 'background-image: url(' + ${user.profilePictureUrl} + ')' : ''">
+                        <img th:unless="${user.profilePictureUrl != null}"
+                             th:src="@{/images/default-profile.png}"
+                             alt="Default Profile"
+                             class="default-profile-icon">
+
+                        <!-- Info overlay on image -->
+                        <div class="card-info-overlay">
+                            <h3>
+                                <span th:text="${user.firstName}">Name</span>, <span th:text="${user.age}">25</span>
+                            </h3>
+
+                            <div class="user-details">
+                                <div class="detail-item">
+                                    <span th:text="${user.gender}">Gender</span>
+                                </div>
+                            </div>
+
+                            <div th:if="${user.trainingDays != null and !#lists.isEmpty(user.trainingDays)}" class="training-days-compact">
+                                <span th:each="day, iter : ${user.trainingDays}" class="day-badge"
+                                      th:text="${#strings.substring(day, 0, 3)}">Mon</span>
+                            </div>
+
+                            <p class="bio-preview" th:text="${user.bio}">Bio description goes here...</p>
+                        </div>
+                    </div>
+                </div>
+                </th:block>
+
+                <!-- Action buttons outside cards -->
+                <div class="card-actions">
+                    <button class="action-btn btn-dislike" onclick="handleCurrentCardAction('DISLIKE')">
+                        ✗
+                    </button>
+                    <button class="action-btn btn-like" onclick="handleCurrentCardAction('LIKE')">
+                        ❤
+                    </button>
+                </div>
+            </div>
+            <div class="shortcut-hints">
+                💡 Use keyboard: <kbd>←</kbd> to pass, <kbd>→</kbd> to like
+            </div>
+        </div>
+    </div>
+
+    <!-- Match Notification Overlay -->
+    <div id="matchOverlay" class="match-overlay" style="display: none;">
+        <div class="match-content">
+            <div class="match-title">It's a Match! <i class="bi bi-heart-fill"></i></div>
+            <p class="match-text">You and <span id="matchName" style="font-weight: bold;">User</span> want to train together!</p>
+            <div class="d-flex justify-content-center flex-wrap">
+                <a th:href="@{/friends}" class="match-btn">Send Message</a>
+                <button onclick="closeMatchOverlay()" class="match-btn match-btn-secondary">Keep Swiping</button>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const csrfToken = document.querySelector("meta[name='_csrf']").getAttribute("content");
+        const csrfHeader = document.querySelector("meta[name='_csrf_header']").getAttribute("content");
+
+        let isFetching = false;
+        let noMoreMatches = false; // Flag to prevent infinite fetching when no matches available
+        let currentCard = null;
+        let isDragging = false;
+        let startX = 0;
+        let startY = 0;
+        let currentX = 0;
+        let currentY = 0;
+
+        // Error/Success Toast Display
+        function showToast(message, isSuccess = false) {
+            const toast = document.createElement('div');
+            toast.className = 'error-toast' + (isSuccess ? ' success' : '');
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.3s ease-out';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCards();
+            showNextCard();
+        });
+
+
+        function initializeCards() {
+            const stack = document.getElementById('cardStack');
+            if (!stack) return;
+
+            const cards = stack.querySelectorAll('.matching-card');
+            cards.forEach((card, index) => {
+                if (index === 0) {
+                    setupSwipeListeners(card);
+                }
+            });
+        }
+
+        function setupSwipeListeners(card) {
+            if (!card) return;
+
+            // Mouse events
+            card.addEventListener('mousedown', handleDragStart);
+            document.addEventListener('mousemove', handleDragMove);
+            document.addEventListener('mouseup', handleDragEnd);
+
+            // Touch events
+            card.addEventListener('touchstart', handleDragStart, { passive: false });
+            document.addEventListener('touchmove', handleDragMove, { passive: false });
+            document.addEventListener('touchend', handleDragEnd);
+        }
+
+        function handleDragStart(e) {
+            if (e.target.closest('.action-btn')) return; // Don't drag when clicking buttons
+
+            currentCard = e.currentTarget;
+            isDragging = true;
+
+            if (e.type === 'mousedown') {
+                startX = e.clientX;
+                startY = e.clientY;
+            } else {
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                e.preventDefault();
+            }
+
+            currentCard.style.transition = 'none';
+        }
+
+        function handleDragMove(e) {
+            if (!isDragging || !currentCard) return;
+
+            if (e.type === 'mousemove') {
+                currentX = e.clientX - startX;
+                currentY = e.clientY - startY;
+            } else {
+                currentX = e.touches[0].clientX - startX;
+                currentY = e.touches[0].clientY - startY;
+            }
+
+            const rotation = currentX / 20;
+            currentCard.style.transform = `translate(${currentX}px, ${currentY}px) rotate(${rotation}deg)`;
+
+            // Show swipe indicators
+            if (currentX > 50) {
+                currentCard.classList.add('swiping-right');
+                currentCard.classList.remove('swiping-left');
+            } else if (currentX < -50) {
+                currentCard.classList.add('swiping-left');
+                currentCard.classList.remove('swiping-right');
+            } else {
+                currentCard.classList.remove('swiping-right', 'swiping-left');
+            }
+        }
+
+        function handleDragEnd(e) {
+            if (!isDragging || !currentCard) return;
+
+            isDragging = false;
+            currentCard.classList.remove('swiping-right', 'swiping-left');
+
+            const threshold = 120;
+            const userId = currentCard.dataset.userid;
+
+            if (Math.abs(currentX) > threshold) {
+                // Swipe completed - add swiping-away class
+                currentCard.classList.add('swiping-away');
+                const action = currentX > 0 ? 'LIKE' : 'DISLIKE';
+                const direction = currentX > 0 ? 1 : -1;
+
+                currentCard.style.transition = 'transform 0.5s ease, opacity 0.5s ease';
+                currentCard.style.transform = `translate(${direction * 800}px, ${currentY}px) rotate(${direction * 30}deg)`;
+                currentCard.style.opacity = '0';
+
+                sendAction(userId, action);
+            } else {
+                // Snap back
+                currentCard.style.transition = 'transform 0.3s ease';
+                currentCard.style.transform = '';
+            }
+
+            currentCard = null;
+            currentX = 0;
+            currentY = 0;
+        }
+
+        function showNextCard() {
+            const stack = document.getElementById('cardStack');
+            if (!stack) return;
+
+            const cards = stack.querySelectorAll('.matching-card');
+            const actionButtons = document.querySelector('.card-actions');
+            const shortcutHints = document.querySelector('.shortcut-hints');
+
+            if (cards.length > 0) {
+                // Setup swipe for the top card
+                setupSwipeListeners(cards[0]);
+
+                // Show buttons and hints
+                if (actionButtons) actionButtons.style.display = 'flex';
+                if (shortcutHints) shortcutHints.style.display = 'block';
+            } else {
+                // Hide buttons and hints immediately when no cards
+                if (actionButtons) actionButtons.style.display = 'none';
+                if (shortcutHints) shortcutHints.style.display = 'none';
+            }
+
+            // Fetch more if we are running low (e.g., 2 or fewer left) AND we haven't already determined there are no more matches
+            if (cards.length <= 2 && !isFetching && !noMoreMatches) {
+                fetchMoreCards();
+            }
+
+            // If no cards left and no more matches available, show the message dynamically
+            if (cards.length === 0 && noMoreMatches && !stack.querySelector('.no-matches')) {
+                // Clear the stack and show no matches message (client-side rendering needed since Thymeleaf is server-side)
+                stack.innerHTML = '<div class="no-matches"><h3>No more profiles</h3><p>Check back later for more potential training partners.</p></div>';
+            }
+        }
+
+        function fetchMoreCards() {
+            if (isFetching) return;
+            isFetching = true;
+
+            const urlParams = new URLSearchParams(window.location.search);
+
+            // Collect IDs of cards currently in the DOM (not yet swiped)
+            const stack = document.getElementById('cardStack');
+            if (stack) {
+                const currentCards = stack.querySelectorAll('.matching-card');
+                currentCards.forEach(card => {
+                    urlParams.append('excludedIds', card.dataset.userid);
+                });
+            }
+
+            fetch('/matching?' + urlParams.toString(), {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(html => {
+                isFetching = false;
+                const stack = document.getElementById('cardStack');
+                if (html.trim().length > 0) {
+                    const temp = document.createElement('div');
+                    temp.innerHTML = html;
+                    const newCards = temp.querySelectorAll('.matching-card');
+
+                    if (newCards.length > 0) {
+                        // Insert new cards before action buttons
+                        const actionButtons = stack.querySelector('.card-actions');
+                        if (actionButtons) {
+                            actionButtons.insertAdjacentHTML('beforebegin', html);
+                        } else {
+                            stack.insertAdjacentHTML('beforeend', html);
+                        }
+
+                        // If we were completely empty, show the first card
+                        const allCards = stack.querySelectorAll('.matching-card');
+                        if (allCards.length === newCards.length) {
+                            showNextCard();
+                        }
+                    } else {
+                        // No new cards returned from server
+                        noMoreMatches = true; // Set flag to stop fetching
+                        showNextCard();
+                    }
+                } else {
+                    // Empty response from server
+                    noMoreMatches = true; // Set flag to stop fetching
+                    showNextCard();
+                }
+            })
+            .catch(err => {
+                showToast('Error fetching matches: ' + err.message);
+                isFetching = false;
+            });
+        }
+
+        function handleCurrentCardAction(action) {
+            const stack = document.getElementById('cardStack');
+            if (!stack) return;
+
+            const card = stack.querySelector('.matching-card');
+            if (!card) return;
+
+            const userId = card.dataset.userid;
+            handleAction(userId, action);
+        }
+
+        function handleAction(userId, action) {
+            const card = document.getElementById('card-' + userId);
+            if (!card) return;
+
+            // Add swiping-away class to reveal next card
+            card.classList.add('swiping-away');
+
+            // Animate card
+            const direction = action === 'LIKE' ? 1 : -1;
+            card.style.transition = 'transform 0.5s ease, opacity 0.5s ease';
+            card.style.transform = `translate(${direction * 800}px, 50px) rotate(${direction * 30}deg)`;
+            card.style.opacity = '0';
+
+            sendAction(userId, action);
+        }
+
+        function sendAction(userId, action) {
+            // Send request
+            fetch('/matching/action', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    [csrfHeader]: csrfToken
+                },
+                body: `targetUserId=${userId}&action=${action}`
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    // Check for match
+                    if (data.isMatch) {
+                        const overlay = document.getElementById('matchOverlay');
+                        const nameSpan = document.getElementById('matchName');
+                        if (overlay && nameSpan) {
+                            nameSpan.textContent = data.matchName || 'User';
+                            overlay.style.display = 'flex';
+                        }
+                    }
+
+                    setTimeout(() => {
+                        const card = document.getElementById('card-' + userId);
+                        if (card) card.remove();
+                        showNextCard();
+                    }, 500);
+                } else {
+                    showToast('Action failed: ' + (data.message || 'Unknown error'));
+                    setTimeout(() => {
+                        const card = document.getElementById('card-' + userId);
+                        if (card) card.remove();
+                        showNextCard();
+                    }, 500);
+                }
+            })
+            .catch(err => {
+                showToast('Error sending action: ' + err.message);
+                setTimeout(() => {
+                    const card = document.getElementById('card-' + userId);
+                    if (card) card.remove();
+                    showNextCard();
+                }, 500);
+            });
+        }
+
+        function closeMatchOverlay() {
+            const overlay = document.getElementById('matchOverlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            const stack = document.getElementById('cardStack');
+            if (!stack) return;
+
+            const card = stack.querySelector('.matching-card');
+            if (!card) return;
+
+            const userId = card.dataset.userid;
+
+            if (e.key === 'ArrowLeft') {
+                handleAction(userId, 'DISLIKE');
+            } else if (e.key === 'ArrowRight') {
+                handleAction(userId, 'LIKE');
+            }
+        });
+
+        /*]]>*/
+    </script>
+</div>
+</body>
+</html>

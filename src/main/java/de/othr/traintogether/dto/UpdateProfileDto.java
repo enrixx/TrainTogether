@@ -2,7 +2,12 @@ package de.othr.traintogether.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Size;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import java.time.LocalDate;
 
 public class UpdateProfileDto {
 
@@ -20,6 +25,17 @@ public class UpdateProfileDto {
     @Size(max = 50, message = "{error.lastname.max.length}")
     private String lastName;
 
+    @NotBlank(message = "{error.gender.required}")
+    private String gender;
+
+    @NotNull(message = "{error.birthday.required}")
+    @Past(message = "{error.birthday.past}")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    private LocalDate birthday;
+
+    @Size(max = 500, message = "{error.bio.max.length}")
+    private String bio;
+
     @Size(min = 6, message = "{error.password.min.length}")
     private String currentPassword;
 
@@ -32,11 +48,14 @@ public class UpdateProfileDto {
     public UpdateProfileDto() {
     }
 
-    public UpdateProfileDto(String email, String username, String firstName, String lastName) {
+    public UpdateProfileDto(String email, String username, String firstName, String lastName, String gender, LocalDate birthday, String bio) {
         this.email = email;
         this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
+        this.gender = gender;
+        this.birthday = birthday;
+        this.bio = bio;
     }
 
     public String getEmail() {
@@ -71,6 +90,30 @@ public class UpdateProfileDto {
         this.lastName = lastName;
     }
 
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public LocalDate getBirthday() {
+        return birthday;
+    }
+
+    public void setBirthday(LocalDate birthday) {
+        this.birthday = birthday;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
+    }
+
     public String getCurrentPassword() {
         return currentPassword;
     }
@@ -95,4 +138,3 @@ public class UpdateProfileDto {
         this.confirmPassword = confirmPassword;
     }
 }
-

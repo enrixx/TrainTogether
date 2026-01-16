@@ -26,6 +26,31 @@ public class FriendshipService {
         this.userService = userService;
     }
 
+    private record LockedUserPair (User first, User second) {
+    }
+
+    private LockedUserPair lockUsersInOrder(Long userId1, Long userId2) {
+        User user1, user2;
+
+        if (userId1 < userId2) {
+            user1 = userRepository.findByIdWithLock(userId1)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId1));
+            user2 = userRepository.findByIdWithLock(userId2)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId2));
+        } else {
+            user2 = userRepository.findByIdWithLock(userId2)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId2));
+            user1 = userRepository.findByIdWithLock(userId1)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId1));
+        }
+
+        return new LockedUserPair(user1, user2);
+    }
+
+    private LockedUserPair lockUsersInOrder(User user1, User user2) {
+        return lockUsersInOrder(user1.getId(), user2.getId());
+    }
+
     public Friendship sendRequest(User sender, String receiverIdentifier) {
         return sendRequest(sender, receiverIdentifier, false);
     }
@@ -38,29 +63,26 @@ public class FriendshipService {
         }
 
         // Lock users in consistent order to prevent race conditions
-        if (sender.getId() < receiver.getId()) {
-            userRepository.findByIdWithLock(sender.getId());
-            userRepository.findByIdWithLock(receiver.getId());
-        } else {
-            userRepository.findByIdWithLock(receiver.getId());
-            userRepository.findByIdWithLock(sender.getId());
-        }
+        LockedUserPair locked =
+                lockUsersInOrder(sender, receiver);
+        User lockedSender = locked.first.getId().equals(sender.getId()) ? locked.first : locked.second;
+        User lockedReceiver = locked.first.getId().equals(receiver.getId()) ? locked.first : locked.second;
 
-        Optional<Friendship> existing = friendshipRepository.findBetweenUsers(sender, receiver);
+        Optional<Friendship> existing = friendshipRepository.findBetweenUsers(lockedSender, lockedReceiver);
         if (existing.isPresent()) {
             Friendship friendship = existing.get();
             if (friendship.getStatus() == FriendshipStatus.BLOCKED) {
-                if (friendship.getRequester().getId().equals(sender.getId())) {
+                if (friendship.getRequester().getId().equals(lockedSender.getId())) {
                     if (unblockIfBlocked) {
                         friendship.setStatus(FriendshipStatus.PENDING);
-                        friendship.setRequester(sender);
-                        friendship.setAddressee(receiver);
+                        friendship.setRequester(lockedSender);
+                        friendship.setAddressee(lockedReceiver);
                         return friendshipRepository.save(friendship);
                     }
                     throw new IllegalStateException("You have blocked this user");
                 } else {
                     // Shadow ban: If blocked by other, return fake friendship and dont save
-                    return new Friendship(sender, receiver, FriendshipStatus.PENDING);
+                    return new Friendship(lockedSender, lockedReceiver, FriendshipStatus.PENDING);
                 }
             }
             if (friendship.getStatus() == FriendshipStatus.ACCEPTED) {
@@ -70,13 +92,13 @@ public class FriendshipService {
                 throw new IllegalStateException("Request already pending");
             }
             // If DECLINED, we can re-request.
-            friendship.setRequester(sender);
-            friendship.setAddressee(receiver);
+            friendship.setRequester(lockedSender);
+            friendship.setAddressee(lockedReceiver);
             friendship.setStatus(FriendshipStatus.PENDING);
             return friendshipRepository.save(friendship);
         }
 
-        Friendship friendship = new Friendship(sender, receiver, FriendshipStatus.PENDING);
+        Friendship friendship = new Friendship(lockedSender, lockedReceiver, FriendshipStatus.PENDING);
         return friendshipRepository.save(friendship);
     }
 
@@ -101,6 +123,12 @@ public class FriendshipService {
     public List<User> getBlockedUsers(User user) {
         return friendshipRepository.findByRequesterAndStatus(user, FriendshipStatus.BLOCKED).stream()
                 .map(Friendship::getAddressee)
+                .collect(Collectors.toList());
+    }
+
+    public List<User> getBlockers(User user) {
+        return friendshipRepository.findByAddresseeAndStatus(user, FriendshipStatus.BLOCKED).stream()
+                .map(Friendship::getRequester)
                 .collect(Collectors.toList());
     }
 
@@ -141,27 +169,19 @@ public class FriendshipService {
             throw new IllegalArgumentException("Cannot block yourself");
         }
 
-        // Lock users in consistent order to prevent race conditions
-        if (blocker.getId() < userIdToBlock) {
-            userRepository.findByIdWithLock(blocker.getId());
-            userRepository.findByIdWithLock(userIdToBlock);
-        } else {
-            userRepository.findByIdWithLock(userIdToBlock);
-            userRepository.findByIdWithLock(blocker.getId());
-        }
+        LockedUserPair locked = lockUsersInOrder(blocker.getId(), userIdToBlock);
+        User lockedBlocker = locked.first.getId().equals(blocker.getId()) ? locked.first : locked.second;
+        User lockedToBlock = locked.first.getId().equals(userIdToBlock) ? locked.first : locked.second;
 
-        User toBlock = userRepository.findById(userIdToBlock)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        Optional<Friendship> existing = friendshipRepository.findBetweenUsers(blocker, toBlock);
+        Optional<Friendship> existing = friendshipRepository.findBetweenUsers(lockedBlocker, lockedToBlock);
         if (existing.isPresent()) {
             Friendship friendship = existing.get();
-            friendship.setRequester(blocker);
-            friendship.setAddressee(toBlock);
+            friendship.setRequester(lockedBlocker);
+            friendship.setAddressee(lockedToBlock);
             friendship.setStatus(FriendshipStatus.BLOCKED);
             friendshipRepository.save(friendship);
         } else {
-            Friendship friendship = new Friendship(blocker, toBlock, FriendshipStatus.BLOCKED);
+            Friendship friendship = new Friendship(lockedBlocker, lockedToBlock, FriendshipStatus.BLOCKED);
             friendshipRepository.save(friendship);
         }
     }
@@ -194,5 +214,31 @@ public class FriendshipService {
         return friendshipRepository.findBetweenUsers(user1, user2)
                 .map(f -> f.getStatus() == FriendshipStatus.ACCEPTED)
                 .orElse(false);
+    }
+
+    public void createFriendship(User user1, User user2) {
+        if (user1.getId().equals(user2.getId())) {
+            throw new IllegalArgumentException("Cannot create friendship with yourself");
+        }
+
+        LockedUserPair locked = lockUsersInOrder(user1, user2);
+        User lockedUser1 = locked.first.getId().equals(user1.getId()) ? locked.first : locked.second;
+        User lockedUser2 = locked.first.getId().equals(user2.getId()) ? locked.first : locked.second;
+
+        Optional<Friendship> existing = friendshipRepository.findBetweenUsers(lockedUser1, lockedUser2);
+        if (existing.isPresent()) {
+            Friendship friendship = existing.get();
+            if (friendship.getStatus() == FriendshipStatus.BLOCKED) {
+                throw new IllegalStateException("Cannot create friendship: Blocked");
+            }
+            if (friendship.getStatus() == FriendshipStatus.ACCEPTED) {
+                return; // Already friends
+            }
+            friendship.setStatus(FriendshipStatus.ACCEPTED);
+            friendshipRepository.save(friendship);
+        } else {
+            Friendship friendship = new Friendship(lockedUser1, lockedUser2, FriendshipStatus.ACCEPTED);
+            friendshipRepository.save(friendship);
+        }
     }
 }
