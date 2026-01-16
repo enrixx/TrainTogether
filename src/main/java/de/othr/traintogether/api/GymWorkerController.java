@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/gym/api/workers")
+@RequestMapping("/api/workers")
 @PreAuthorize("hasAnyAuthority('ADMIN', 'GYM_OWNER')")
 public class GymWorkerController {
 
