@@ -14,9 +14,6 @@ public class UpdateProfileDto {
     @Email(message = "{error.email.invalid}")
     private String email;
 
-    @Size(max = 30, message = "{error.username.max.length}")
-    private String username;
-
     @NotBlank(message = "{error.firstname.required}")
     @Size(max = 50, message = "{error.firstname.max.length}")
     private String firstName;
@@ -48,9 +45,8 @@ public class UpdateProfileDto {
     public UpdateProfileDto() {
     }
 
-    public UpdateProfileDto(String email, String username, String firstName, String lastName, String gender, LocalDate birthday, String bio) {
+    public UpdateProfileDto(String email, String firstName, String lastName, String gender, LocalDate birthday, String bio) {
         this.email = email;
-        this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
         this.gender = gender;
@@ -64,14 +60,6 @@ public class UpdateProfileDto {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
     }
 
     public String getFirstName() {

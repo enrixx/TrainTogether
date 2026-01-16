@@ -67,14 +67,6 @@
     </div>
 
     <div class="form-floating mb-3">
-        <input type="text" th:field="*{username}" id="registerUsername" class="form-control"
-               th:class="${#fields.hasErrors('username')} ? 'form-control is-invalid' : 'form-control'"
-               th:placeholder="#{auth.username.optional}">
-        <label for="registerUsername" th:text="#{auth.username.optional}">Username (optional)</label>
-        <div class="invalid-feedback" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
-    </div>
-
-    <div class="form-floating mb-3">
         <select th:field="*{gender}" id="registerGender" class="form-select" required>
             <option value="" disabled selected th:text="#{auth.gender.placeholder}">Select Gender</option>
             <option value="male" th:text="#{auth.gender.male}">Male</option>

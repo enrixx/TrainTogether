@@ -56,7 +56,7 @@ public class FriendshipService {
     }
 
     public Friendship sendRequest(User sender, String receiverIdentifier, boolean unblockIfBlocked) {
-        User receiver = userService.getUserByEmailOrUsername(receiverIdentifier);
+        User receiver = userService.getUserByEmail(receiverIdentifier);
 
         if (sender.getId().equals(receiver.getId())) {
             throw new IllegalArgumentException("Cannot send friend request to yourself");

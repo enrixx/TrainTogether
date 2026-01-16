@@ -61,16 +61,15 @@ public class DataInitializer implements CommandLineRunner {
         }
 
         // Regular users
-        userService.registerUser(new RegisterDto("user@u", "user", "Normal User", "Deez", "Nuts", "male", LocalDate.of(1990, 1, 1)), Role.USER);
-        userService.registerUser(new RegisterDto("admin@a", "admin", "Administrator", "Nick", "Gurs", "male", LocalDate.of(1990, 1, 1)), Role.ADMIN);
-        userService.registerUser(new RegisterDto("owner@o", "owner", "Gym Owner", "Ben", "Dover", "male", LocalDate.of(1990, 1, 1)), Role.GYM_OWNER);
-        userService.registerUser(new RegisterDto("worker@w", "worker", "Gym Worker", "Mike", "Coxlong", "male", LocalDate.of(1990, 1, 1)), Role.GYM_WORKER);
+        userService.registerUser(new RegisterDto("user@u", "user", "Deez", "Nuts", "male", LocalDate.of(1990, 1, 1)), Role.USER);
+        userService.registerUser(new RegisterDto("admin@a", "admin", "Nick", "Gurs", "male", LocalDate.of(1990, 1, 1)), Role.ADMIN);
+        userService.registerUser(new RegisterDto("owner@o", "owner", "Ben", "Dover", "male", LocalDate.of(1990, 1, 1)), Role.GYM_OWNER);
+        userService.registerUser(new RegisterDto("worker@w", "worker", "Mike", "Coxlong", "male", LocalDate.of(1990, 1, 1)), Role.GYM_WORKER);
 
         // Pending gym owner
         GymOwnerRegisterDto pendingOwnerDto = new GymOwnerRegisterDto();
         pendingOwnerDto.setEmail("traintogetherapplication@gmail.com");
         pendingOwnerDto.setPassword("Powner");
-        pendingOwnerDto.setUsername("Pending Gym Owner");
         pendingOwnerDto.setFirstName("Mike");
         pendingOwnerDto.setLastName("Literus");
         pendingOwnerDto.setGender("male");
@@ -83,7 +82,7 @@ public class DataInitializer implements CommandLineRunner {
         pendingOwnerDto.setGymDescription("A modern fitness center with state-of-the-art equipment.");
         userService.registerGymOwner(pendingOwnerDto);
 
-        userService.registerUser(new RegisterDto("Pworker@o", "Pworker", "Pending Gym Worker", "Hue G.", "Rection", "male", LocalDate.of(1990, 1, 1)), Role.PENDING_GYM_WORKER);
+        userService.registerUser(new RegisterDto("Pworker@o", "Pworker", "Hue G.", "Rection", "male", LocalDate.of(1990, 1, 1)), Role.PENDING_GYM_WORKER);
 
         // Seed random users for matching
         seedMatchingUsers();
@@ -92,17 +91,16 @@ public class DataInitializer implements CommandLineRunner {
     private void seedMatchingUsers() {
         for (int i = 1; i <= 10; i++) {
             String email = "match" + i + "@example.com";
-            String username = "matchuser" + i;
             String firstName = "Match";
             String lastName = "User" + i;
             String gender = (i % 2 == 0) ? "female" : "male";
             LocalDate birthday = LocalDate.of(1995, 1, 1).plusDays(i * 100);
             
-            RegisterDto dto = new RegisterDto(email, "password", username, firstName, lastName, gender, birthday);
+            RegisterDto dto = new RegisterDto(email, "password", firstName, lastName, gender, birthday);
             userService.registerUser(dto, Role.USER);
             
             // Add bio
-            UpdateProfileDto updateDto = new UpdateProfileDto(email, username, firstName, lastName, gender, birthday, "Hi, I am " + firstName + " " + lastName + ". I love training!");
+            UpdateProfileDto updateDto = new UpdateProfileDto(email, firstName, lastName, gender, birthday, "Hi, I am " + firstName + " " + lastName + ". I love training!");
             userService.updateProfile(email, updateDto);
 
             // Add training split and days

@@ -71,19 +71,6 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="username" class="form-label" th:text="#{profile.label.username}">Username</label>
-                                <input type="text"
-                                       class="form-control"
-                                       th:class="${#fields.hasErrors('username')} ? 'form-control is-invalid' : 'form-control'"
-                                       id="username"
-                                       th:field="*{username}"
-                                       th:placeholder="#{profile.label.username}">
-                                <div class="invalid-feedback" th:if="${#fields.hasErrors('username')}" th:errors="*{username}">
-                                    Username error
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
                                 <label for="firstName" class="form-label" th:text="#{auth.firstname}">First Name</label>
                                 <input type="text"
                                        class="form-control"
