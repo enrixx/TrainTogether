@@ -5,7 +5,7 @@
     <title th:text="#{matching.title}">Find Training Partners</title>
 </head>
 <body>
-<div th:fragment="content" class="container mt-4 pb-1 overflow-auto h-100">
+<div th:fragment="content" class="container pb-1 overflow-auto h-100">
     <style>
         body {
             background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 25%, #EC4899 50%, #F59E0B 75%, #EF4444 100%);
@@ -494,6 +494,22 @@
             box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
         }
 
+        .filter-section a.btn-outline-secondary {
+            font-weight: 700;
+            padding: 12px 30px; /* Match padding of primary button */
+            border: 2px solid #E5E7EB;
+            color: #6B7280;
+            background: rgba(255,255,255,0.5);
+            transition: all 0.3s ease;
+        }
+
+        .filter-section a.btn-outline-secondary:hover {
+            background: #F3F4F6;
+            border-color: #D1D5DB;
+            color: #374151;
+            transform: translateY(-2px);
+        }
+
         /* Match Modal/Overlay Styles */
         .match-overlay {
             position: fixed;
@@ -675,45 +691,57 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
-        /* Responsive adjustments */
-        @media (max-width: 576px) {
-            .card-stack {
-                height: 580px;
-            }
+        /* Dark mode overrides */
+        [data-bs-theme="dark"] .filter-section {
+            background: rgba(33, 37, 41, 0.95);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
 
-            .card-stack-container {
-                max-width: 100%;
-                padding: 15px;
-            }
+        [data-bs-theme="dark"] .filter-section .form-label {
+            color: #f8f9fa;
+        }
 
-            .card-info-overlay h3 {
-                font-size: 1.9rem;
-            }
+        [data-bs-theme="dark"] .filter-section a.btn-outline-secondary {
+            background: rgba(33, 37, 41, 0.5);
+            border-color: #495057;
+            color: #adb5bd;
+        }
 
-            .action-btn {
-                width: 64px;
-                height: 64px;
-                font-size: 28px;
-            }
+        [data-bs-theme="dark"] .filter-section a.btn-outline-secondary:hover {
+            background: #2b3035;
+            border-color: #6c757d;
+            color: #e9ecef;
+        }
 
-            .match-title {
-                font-size: 3rem;
-            }
+        [data-bs-theme="dark"] .matching-card {
+            background: #212529; /* Dark background for cards */
+            border-color: rgba(255, 255, 255, 0.1);
+        }
 
-            .swipe-indicator {
-                font-size: 2.2rem;
-                padding: 12px 24px;
-            }
+        [data-bs-theme="dark"] .match-content {
+            background: #212529;
+            border-color: rgba(255, 255, 255, 0.1);
+        }
 
-            .page-header h2 {
-                font-size: 2.2rem;
-            }
+        [data-bs-theme="dark"] .match-text {
+            color: #f8f9fa;
+        }
+
+        [data-bs-theme="dark"] .match-btn-secondary {
+            background: #212529;
+            color: #adb5bd;
+            border-color: #495057;
+        }
+
+        [data-bs-theme="dark"] .match-btn-secondary:hover {
+            background: #2b3035;
+            border-color: #6c757d;
         }
     </style>
 
     <div class="page-header">
-        <h2 th:text="#{matching.title}">💪 Find Your Gym Partner</h2>
-        <p class="page-subtitle">Swipe to find your perfect workout buddy</p>
+        <h2 th:text="#{matching.header.title}">💪 Find Your Gym Partner</h2>
+        <p class="page-subtitle" th:text="#{matching.header.subtitle}">Swipe to find your perfect workout buddy</p>
     </div>
 
     <div th:if="${missingBio}" class="alert alert-warning text-center">
@@ -744,9 +772,9 @@
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Training Days</label>
+                    <label class="form-label" th:text="#{matching.filter.trainingDays}">Training Days</label>
                     <div class="dropdown">
-                        <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                        <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false" th:text="#{matching.filter.selectDays}">
                             Select Days
                         </button>
                         <ul class="dropdown-menu p-2" aria-labelledby="dropdownMenuButton">
@@ -757,7 +785,7 @@
                                            th:id="${'day-' + day.name()}"
                                            th:checked="${trainingDays != null and trainingDays.contains(day.name())}">
                                     <label class="form-check-label" th:for="${'day-' + day.name()}"
-                                           th:text="${#strings.capitalize(day.name().toLowerCase())}">
+                                           th:text="#{${'weekday.' + day.name()}}">
                                         Monday
                                     </label>
                                 </div>
@@ -787,8 +815,8 @@
                      th:data-type="${card.type}">
 
                     <!-- Swipe indicators -->
-                    <div class="swipe-indicator swipe-like" th:text="${card.type == 'COURSE' ? 'JOIN' : 'LIKE'}">LIKE</div>
-                    <div class="swipe-indicator swipe-nope" th:text="${card.type == 'COURSE' ? 'SKIP' : 'NOPE'}">NOPE</div>
+                    <div class="swipe-indicator swipe-like" th:text="#{${card.type == 'COURSE' ? 'matching.swipe.join' : 'matching.swipe.like'}}">LIKE</div>
+                    <div class="swipe-indicator swipe-nope" th:text="#{${card.type == 'COURSE' ? 'matching.swipe.skip' : 'matching.swipe.nope'}}">NOPE</div>
 
                     <!-- USER CARD -->
                     <div class="card-image" th:if="${card.type == 'USER'}"
@@ -806,13 +834,13 @@
 
                             <div class="user-details">
                                 <div class="detail-item">
-                                    <span th:text="${card.user.gender}">Gender</span>
+                                    <span th:text="${#messages.msg('auth.gender.' + card.user.gender.toLowerCase())}">Gender</span>
                                 </div>
                             </div>
 
                             <div th:if="${card.user.trainingDays != null and !#lists.isEmpty(card.user.trainingDays)}" class="training-days-compact">
                                 <span th:each="day, iter : ${card.user.trainingDays}" class="day-badge"
-                                      th:text="${#strings.substring(day, 0, 3)}">Mon</span>
+                                      th:text="#{${'weekday.short.' + day}}">Mon</span>
                             </div>
 
                             <p class="bio-preview" th:text="${card.user.bio}">Bio description goes here...</p>
@@ -843,7 +871,7 @@
                             <div class="mb-2">
                                 <span class="badge bg-primary fs-6"
                                       th:text="${#temporals.format(card.course.dateTime, 'dd.MM.yyyy HH:mm')}">Date</span>
-                                <span th:if="${card.course.outdoors}" class="badge bg-success fs-6 ms-1">Outdoor</span>
+                                <span th:if="${card.course.outdoors}" class="badge bg-success fs-6 ms-1" th:text="#{matching.badge.outdoor}">Outdoor</span>
                             </div>
                             <p class="bio-preview" th:text="${card.course.description}">Description...</p>
                         </div>
@@ -862,7 +890,7 @@
                     </button>
                 </div>
             </div>
-            <div class="shortcut-hints">
+            <div class="shortcut-hints" th:utext="#{matching.shortcut.hint}">
                 💡 Use keyboard: <kbd>←</kbd> to pass, <kbd>→</kbd> to like
             </div>
         </div>
@@ -871,11 +899,13 @@
     <!-- Match Notification Overlay -->
     <div id="matchOverlay" class="match-overlay" style="display: none;">
         <div class="match-content">
-            <div class="match-title">It's a Match! <i class="bi bi-heart-fill"></i></div>
-            <p class="match-text">You and <span id="matchName" style="font-weight: bold;">User</span> want to train together!</p>
+            <div class="match-title">
+                <span th:text="#{matching.match.title}">It's a Match!</span> <i class="bi bi-heart-fill"></i>
+            </div>
+            <p class="match-text" th:utext="#{matching.match.text}">You and <span id="matchName" style="font-weight: bold;">User</span> want to train together!</p>
             <div class="d-flex justify-content-center flex-wrap">
-                <a th:href="@{/friends}" class="match-btn">Send Message</a>
-                <button onclick="closeMatchOverlay()" class="match-btn match-btn-secondary">Keep Swiping</button>
+                <a th:href="@{/friends}" class="match-btn" th:text="#{matching.match.action.chat}">Send Message</a>
+                <button onclick="closeMatchOverlay()" class="match-btn match-btn-secondary" th:text="#{matching.match.action.keep}">Keep Swiping</button>
             </div>
         </div>
     </div>
