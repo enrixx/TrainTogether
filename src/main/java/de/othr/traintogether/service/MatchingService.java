@@ -96,7 +96,7 @@ public class MatchingService {
 
         LocalDateTime dislikeCutoff = LocalDateTime.now().minusDays(30);
         List<Long> excludedUserIds = matchingActionRepository.findExcludedUserIds(currentUser, dislikeCutoff);
-        System.out.println(excludedUserIds.toString());
+        logger.debug("Excluded user IDs: {}", excludedUserIds);
         excludedUserIds.add(currentUser.getId());
 
         // Also exclude existing friends
