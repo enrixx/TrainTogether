@@ -185,7 +185,7 @@ public class MatchingService {
         }
 
         Pageable pageable = PageRequest.of(page, limit);
-        List<User> candidates = userRepository.findAll(spec, pageable).getContent();
+        List<User> candidates = userRepository.findAll(spec, pageable).getContent(); // JpaSpecificationExecutor has the method with pagination
         logger.info("Found {} candidates from DB (limit: {}) with db-filters", candidates.size(), limit);
 
         List<UserDto> result = candidates.stream()
