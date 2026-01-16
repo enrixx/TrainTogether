@@ -104,4 +104,9 @@ public class CourseService {
             }
         }
     }
+
+    @Transactional(readOnly = true)
+    public Optional<Course> getCourseById(Long id) {
+        return courseRepository.findById(id);
+    }
 }

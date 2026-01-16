@@ -778,18 +778,20 @@
         <div th:unless="${#lists.isEmpty(potentialMatches)}" class="card-stack-container">
             <div class="card-stack" id="cardStack">
                 <th:block th:fragment="cardList">
-                <div th:each="user, iterStat : ${potentialMatches}"
+                <div th:each="card, iterStat : ${potentialMatches}"
                      class="matching-card"
-                     th:id="'card-' + ${user.id}"
-                     th:data-userid="${user.id}">
+                     th:id="'card-' + ${card.id}"
+                     th:data-id="${card.id}"
+                     th:data-type="${card.type}">
 
                     <!-- Swipe indicators -->
-                    <div class="swipe-indicator swipe-like">LIKE</div>
-                    <div class="swipe-indicator swipe-nope">NOPE</div>
+                    <div class="swipe-indicator swipe-like" th:text="${card.type == 'COURSE' ? 'JOIN' : 'LIKE'}">LIKE</div>
+                    <div class="swipe-indicator swipe-nope" th:text="${card.type == 'COURSE' ? 'SKIP' : 'NOPE'}">NOPE</div>
 
-                    <div class="card-image"
-                         th:style="${user.profilePictureUrl != null} ? 'background-image: url(' + ${user.profilePictureUrl} + ')' : ''">
-                        <img th:unless="${user.profilePictureUrl != null}"
+                    <!-- USER CARD -->
+                    <div class="card-image" th:if="${card.type == 'USER'}"
+                         th:style="${card.user.profilePictureUrl != null} ? 'background-image: url(' + ${card.user.profilePictureUrl} + ')' : ''">
+                        <img th:unless="${card.user.profilePictureUrl != null}"
                              th:src="@{/images/default-profile.png}"
                              alt="Default Profile"
                              class="default-profile-icon">
@@ -797,23 +799,54 @@
                         <!-- Info overlay on image -->
                         <div class="card-info-overlay">
                             <h3>
-                                <span th:text="${user.firstName}">Name</span>, <span th:text="${user.age}">25</span>
+                                <span th:text="${card.user.firstName}">Name</span>, <span th:text="${card.user.age}">25</span>
                             </h3>
 
                             <div class="user-details">
                                 <div class="detail-item">
-                                    <span th:text="${user.gender}">Gender</span>
+                                    <span th:text="${card.user.gender}">Gender</span>
                                 </div>
                             </div>
 
-                            <div th:if="${user.trainingDays != null and !#lists.isEmpty(user.trainingDays)}" class="training-days-compact">
-                                <span th:each="day, iter : ${user.trainingDays}" class="day-badge"
+                            <div th:if="${card.user.trainingDays != null and !#lists.isEmpty(card.user.trainingDays)}" class="training-days-compact">
+                                <span th:each="day, iter : ${card.user.trainingDays}" class="day-badge"
                                       th:text="${#strings.substring(day, 0, 3)}">Mon</span>
                             </div>
 
-                            <p class="bio-preview" th:text="${user.bio}">Bio description goes here...</p>
+                            <p class="bio-preview" th:text="${card.user.bio}">Bio description goes here...</p>
                         </div>
                     </div>
+
+                    <!-- COURSE CARD -->
+                    <div class="card-image course-card-bg" th:if="${card.type == 'COURSE'}"
+                         style="background: linear-gradient(135deg, #FF6B6B 0%, #556270 100%);">
+                        <div class="d-flex flex-column align-items-center justify-content-center h-100 w-100 p-4 text-center">
+                            <i class="bi bi-calendar-check fs-1 text-white mb-3" style="font-size: 4rem;"></i>
+                            <h2 class="text-white fw-bold" th:text="${card.course.name}" style="text-shadow: 0 2px 4px rgba(0,0,0,0.5);">Course Name</h2>
+                            <h4 class="text-white-50" th:text="${'@' + card.course.gymName}">@GymName</h4>
+                        </div>
+
+                        <div class="card-info-overlay">
+                            <h3>
+                                <span th:text="${card.course.name}">Course</span>
+                            </h3>
+                            <div class="user-details mb-2">
+                                <div class="detail-item">
+                                    <i class="bi bi-geo-alt-fill"></i> <span th:text="${card.course.gymName}">Gym</span>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="bi bi-person-badge"></i> <span th:text="${card.course.trainerName}">Trainer</span>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <span class="badge bg-primary fs-6"
+                                      th:text="${#temporals.format(card.course.dateTime, 'dd.MM.yyyy HH:mm')}">Date</span>
+                                <span th:if="${card.course.outdoors}" class="badge bg-success fs-6 ms-1">Outdoor</span>
+                            </div>
+                            <p class="bio-preview" th:text="${card.course.description}">Description...</p>
+                        </div>
+                    </div>
+
                 </div>
                 </th:block>
 
@@ -955,7 +988,8 @@
             currentCard.classList.remove('swiping-right', 'swiping-left');
 
             const threshold = 120;
-            const userId = currentCard.dataset.userid;
+            const cardId = currentCard.dataset.id;
+            const type = currentCard.dataset.type;
 
             if (Math.abs(currentX) > threshold) {
                 // Swipe completed - add swiping-away class
@@ -967,7 +1001,7 @@
                 currentCard.style.transform = `translate(${direction * 800}px, ${currentY}px) rotate(${direction * 30}deg)`;
                 currentCard.style.opacity = '0';
 
-                sendAction(userId, action);
+                sendAction(cardId, type, action);
             } else {
                 // Snap back
                 currentCard.style.transition = 'transform 0.3s ease';
@@ -1023,7 +1057,10 @@
             if (stack) {
                 const currentCards = stack.querySelectorAll('.matching-card');
                 currentCards.forEach(card => {
-                    urlParams.append('excludedIds', card.dataset.userid);
+                    // Only send excludedIds for USER cards for now
+                    if (card.dataset.type === 'USER') {
+                        urlParams.append('excludedIds', card.dataset.id);
+                    }
                 });
             }
 
@@ -1084,12 +1121,13 @@
             const card = stack.querySelector('.matching-card');
             if (!card) return;
 
-            const userId = card.dataset.userid;
-            handleAction(userId, action);
+            const id = card.dataset.id;
+            const type = card.dataset.type;
+            handleAction(id, type, action);
         }
 
-        function handleAction(userId, action) {
-            const card = document.getElementById('card-' + userId);
+        function handleAction(id, type, action) {
+            const card = document.getElementById('card-' + id);
             if (!card) return;
 
             // Add swiping-away class to reveal next card
@@ -1101,10 +1139,10 @@
             card.style.transform = `translate(${direction * 800}px, 50px) rotate(${direction * 30}deg)`;
             card.style.opacity = '0';
 
-            sendAction(userId, action);
+            sendAction(id, type, action);
         }
 
-        function sendAction(userId, action) {
+        function sendAction(id, type, action) {
             // Send request
             fetch('/matching/action', {
                 method: 'POST',
@@ -1112,7 +1150,7 @@
                     'Content-Type': 'application/x-www-form-urlencoded',
                     [csrfHeader]: csrfToken
                 },
-                body: `targetUserId=${userId}&action=${action}`
+                body: `targetId=${id}&type=${type}&action=${action}`
             })
             .then(response => {
                 if (!response.ok) {
@@ -1122,25 +1160,33 @@
             })
             .then(data => {
                 if (data.status === 'success') {
+                    if (data.redirectUrl) {
+                        window.location.href = data.redirectUrl;
+                        return;
+                    }
+
                     // Check for match
                     if (data.isMatch) {
                         const overlay = document.getElementById('matchOverlay');
                         const nameSpan = document.getElementById('matchName');
+                        const textP = document.querySelector('.match-text');
+
                         if (overlay && nameSpan) {
-                            nameSpan.textContent = data.matchName || 'User';
+                            nameSpan.textContent = data.matchName || '';
+                            textP.innerHTML = 'You and <span style="font-weight: bold;">' + data.matchName + '</span> want to train together!';
                             overlay.style.display = 'flex';
                         }
                     }
 
                     setTimeout(() => {
-                        const card = document.getElementById('card-' + userId);
+                        const card = document.getElementById('card-' + id);
                         if (card) card.remove();
                         showNextCard();
                     }, 500);
                 } else {
                     showToast('Action failed: ' + (data.message || 'Unknown error'));
                     setTimeout(() => {
-                        const card = document.getElementById('card-' + userId);
+                        const card = document.getElementById('card-' + id);
                         if (card) card.remove();
                         showNextCard();
                     }, 500);
@@ -1149,7 +1195,7 @@
             .catch(err => {
                 showToast('Error sending action: ' + err.message);
                 setTimeout(() => {
-                    const card = document.getElementById('card-' + userId);
+                    const card = document.getElementById('card-' + id);
                     if (card) card.remove();
                     showNextCard();
                 }, 500);
@@ -1171,12 +1217,13 @@
             const card = stack.querySelector('.matching-card');
             if (!card) return;
 
-            const userId = card.dataset.userid;
+            const id = card.dataset.id;
+            const type = card.dataset.type;
 
             if (e.key === 'ArrowLeft') {
-                handleAction(userId, 'DISLIKE');
+                handleAction(id, type, 'DISLIKE');
             } else if (e.key === 'ArrowRight') {
-                handleAction(userId, 'LIKE');
+                handleAction(id, type, 'LIKE');
             }
         });
 

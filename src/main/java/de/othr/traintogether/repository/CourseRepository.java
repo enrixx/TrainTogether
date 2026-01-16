@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface CourseRepository extends JpaRepository<Course, Long> {
     List<Course> findByGymIdOrderByDateTimeAsc(Long gymId);
+
+    List<Course> findAllByDateTimeAfterOrderByDateTimeAsc(java.time.LocalDateTime dateTime, org.springframework.data.domain.Pageable pageable);
 }

@@ -1,11 +1,13 @@
 package de.othr.traintogether.service;
 
+import de.othr.traintogether.dto.MatchingCardDto;
 import de.othr.traintogether.dto.UserDto;
 import de.othr.traintogether.model.MatchingAction;
 import de.othr.traintogether.model.TrainingModel.ExerciseName;
 import de.othr.traintogether.model.TrainingModel.TrainingProfile;
 import de.othr.traintogether.model.TrainingModel.TrainingSplit;
 import de.othr.traintogether.model.User;
+import de.othr.traintogether.repository.CourseRepository;
 import de.othr.traintogether.repository.MatchingActionRepository;
 import de.othr.traintogether.repository.TrainingProfileRepository;
 import de.othr.traintogether.repository.UserRepository;
@@ -20,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -33,12 +37,14 @@ public class MatchingService {
     private final UserRepository userRepository;
     private final FriendshipService friendshipService;
     private final TrainingProfileRepository trainingProfileRepository;
+    private final CourseRepository courseRepository;
 
-    public MatchingService(MatchingActionRepository matchingActionRepository, UserRepository userRepository, FriendshipService friendshipService, TrainingProfileRepository trainingProfileRepository) {
+    public MatchingService(MatchingActionRepository matchingActionRepository, UserRepository userRepository, FriendshipService friendshipService, TrainingProfileRepository trainingProfileRepository, CourseRepository courseRepository) {
         this.matchingActionRepository = matchingActionRepository;
         this.userRepository = userRepository;
         this.friendshipService = friendshipService;
         this.trainingProfileRepository = trainingProfileRepository;
+        this.courseRepository = courseRepository;
     }
 
     @Transactional
@@ -91,7 +97,7 @@ public class MatchingService {
     }
 
     @Transactional(readOnly = true)
-    public List<UserDto> findPotentialMatches(User currentUser, Integer minAge, Integer maxAge, String gender, List<String> trainingDays, List<Long> currentShownIds, int page, int limit) {
+    public List<MatchingCardDto> findPotentialMatches(User currentUser, Integer minAge, Integer maxAge, String gender, List<String> trainingDays, List<Long> currentShownIds, int page, int limit) {
         // Logic to find users:
         // 1. Not the current user
         // 2. Not already friends
@@ -221,6 +227,33 @@ public class MatchingService {
             }
         }
 
-        return result;
+        // MIX IN COURSES
+        List<MatchingCardDto> finalCards = new ArrayList<>();
+
+        // Add users
+        for (UserDto u : result) {
+            finalCards.add(new MatchingCardDto(u));
+        }
+
+        if (!finalCards.isEmpty() || page == 0) {
+             Pageable coursePage = PageRequest.of(page, 2);
+             List<de.othr.traintogether.model.Course> courses = courseRepository.findAllByDateTimeAfterOrderByDateTimeAsc(LocalDateTime.now(), coursePage);
+
+             for (de.othr.traintogether.model.Course c : courses) {
+                 if (c.getTrainer() != null && c.getTrainer().getId().equals(currentUser.getId())) continue;
+
+                 boolean alreadyJoined = c.getParticipants().stream().anyMatch(p -> p.getId().equals(currentUser.getId()));
+                 if (alreadyJoined) continue;
+
+                 if (c.getParticipants().size() >= c.getMaxParticipants()) continue;
+
+                 finalCards.add(new MatchingCardDto(new de.othr.traintogether.dto.CourseDto(c)));
+             }
+        }
+
+        // Shuffle to mix users and courses
+        Collections.shuffle(finalCards);
+
+        return finalCards;
     }
 }
