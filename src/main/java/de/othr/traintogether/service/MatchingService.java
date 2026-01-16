@@ -90,7 +90,7 @@ public class MatchingService {
         // 1. Not the current user
         // 2. Not already friends
         // 3. Not liked by current user
-        // 4. Not disliked by current user recently (e.g. last 30 days)
+        // 4. Not disliked by current user recently (last 30 days)
         // 5. Must have a bio
         // 6. Apply filters
 
