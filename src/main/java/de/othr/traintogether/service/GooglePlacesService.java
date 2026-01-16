@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Locale;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 @Service
 public class GooglePlacesService {
@@ -46,7 +48,7 @@ public class GooglePlacesService {
         HttpUrl url = parsedUrl.newBuilder()
                 .addQueryParameter("input", gymName)
                 .addQueryParameter("inputtype", "textquery")
-                .addQueryParameter("fields", "place_id")
+                .addQueryParameter("fields", "place_id,name")
                 .addQueryParameter("locationbias", String.format(Locale.US, "circle:2000@%f,%f", lat, lon))
                 .addQueryParameter("key", apiKey)
                 .build();
@@ -63,8 +65,18 @@ public class GooglePlacesService {
             String status = root.path("status").asText();
             if (status.equals("OK")) {
                 JsonNode candidates = root.path("candidates");
+                // Because Google uses fuzzy search and will return a placeid even for somewhat different names,
+                // we need to verify that the returned name is similar enough to our gym name.
                 if (candidates.isArray() && !candidates.isEmpty()) {
-                    return Optional.ofNullable(candidates.get(0).path("place_id").asText());
+                    JsonNode candidate = candidates.get(0);
+                    String placeId = candidate.path("place_id").asText();
+                    String placeName = candidate.path("name").asText();
+
+                    if (isNameSimilar(gymName, placeName)) {
+                        return Optional.ofNullable(placeId);
+                    } else {
+                        log.debug("Found place '{}' but name mismatch with '{}'", placeName, gymName);
+                    }
                 }
             } else {
                  String errorMessage = root.path("error_message").asText();
@@ -86,15 +98,15 @@ public class GooglePlacesService {
         HttpUrl url = parsedUrl.newBuilder()
                 .addQueryParameter("input", gymName + " " + city)
                 .addQueryParameter("inputtype", "textquery")
-                .addQueryParameter("fields", "place_id")
+                .addQueryParameter("fields", "place_id,name")
                 .addQueryParameter("key", apiKey)
                 .build();
 
         Request request = new Request.Builder().url(url).build();
-        return executeFindPlaceRequest(request);
+        return executeFindPlaceRequest(request, gymName);
     }
 
-    private Optional<String> executeFindPlaceRequest(Request request) {
+    private Optional<String> executeFindPlaceRequest(Request request, String gymName) {
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful() || response.body() == null) {
                 log.error("Google Places FindPlace request failed: {}", response);
@@ -106,7 +118,15 @@ public class GooglePlacesService {
             if (status.equals("OK")) {
                 JsonNode candidates = root.path("candidates");
                 if (candidates.isArray() && !candidates.isEmpty()) {
-                    return Optional.ofNullable(candidates.get(0).path("place_id").asText());
+                    JsonNode candidate = candidates.get(0);
+                    String placeId = candidate.path("place_id").asText();
+                    String placeName = candidate.path("name").asText();
+
+                    if (isNameSimilar(gymName, placeName)) {
+                        return Optional.ofNullable(placeId);
+                    } else {
+                        log.debug("Found place '{}' but name mismatch with '{}'", placeName, gymName);
+                    }
                 }
             } else {
                  String errorMessage = root.path("error_message").asText();
@@ -117,6 +137,32 @@ public class GooglePlacesService {
         }
 
         return Optional.empty();
+    }
+
+    private boolean isNameSimilar(String localName, String googleName) {
+        List<String> tokens1 = tokenize(localName);
+        List<String> tokens2 = tokenize(googleName);
+
+        if (tokens1.isEmpty() || tokens2.isEmpty()) return false;
+
+        List<String> smaller = tokens1.size() < tokens2.size() ? tokens1 : tokens2;
+        List<String> larger = tokens1.size() < tokens2.size() ? tokens2 : tokens1;
+
+        long matches = smaller.stream().filter(larger::contains).count();
+
+        // If query was very short (1 token), strictly require it to be present
+        if (smaller.size() == 1) {
+            return matches == 1;
+        }
+
+        // Require at least 50% matching tokens
+        return (double) matches / smaller.size() >= 0.5;
+    }
+
+    private List<String> tokenize(String s) {
+        return Arrays.stream(s.toLowerCase().split("[^a-z0-9]+"))
+                .filter(t -> !t.isBlank())
+                .collect(Collectors.toList());
     }
 
     public List<ReviewDto> fetchReviews(String placeId) {
