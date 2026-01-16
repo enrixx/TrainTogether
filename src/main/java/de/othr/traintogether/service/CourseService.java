@@ -18,10 +18,12 @@ public class CourseService {
 
     private final CourseRepository courseRepository;
     private final ChatRoomService chatRoomService;
+    private final de.othr.traintogether.repository.CourseSkipRepository courseSkipRepository;
 
-    public CourseService(CourseRepository courseRepository, ChatRoomService chatRoomService) {
+    public CourseService(CourseRepository courseRepository, ChatRoomService chatRoomService, de.othr.traintogether.repository.CourseSkipRepository courseSkipRepository) {
         this.courseRepository = courseRepository;
         this.chatRoomService = chatRoomService;
+        this.courseSkipRepository = courseSkipRepository;
     }
 
     @Transactional
@@ -108,5 +110,14 @@ public class CourseService {
     @Transactional(readOnly = true)
     public Optional<Course> getCourseById(Long id) {
         return courseRepository.findById(id);
+    }
+
+    @Transactional
+    public void skipCourse(Long courseId, User user) {
+        Optional<Course> courseOpt = courseRepository.findById(courseId);
+        if (courseOpt.isPresent()) {
+            de.othr.traintogether.model.CourseSkip skip = new de.othr.traintogether.model.CourseSkip(user, courseOpt.get());
+            courseSkipRepository.save(skip);
+        }
     }
 }

@@ -90,11 +90,11 @@ public class MatchingController {
                     // Fetch course to get gym ID redirect
                     Optional<Course> courseOpt = courseService.getCourseById(targetId);
                     if (courseOpt.isPresent() && courseOpt.get().getGym() != null) {
-                        response.put("redirectUrl", "/gym/" + courseOpt.get().getGym().getId());
+                        response.put("redirectUrl", "/gym/" + courseOpt.get().getGym().getId() + "?highlightCourseId=" + targetId);
                     }
-                    response.put("isMatch", false); // Don't show match overlay
                     response.put("matchName", "Course Joined!");
                 } else {
+                    courseService.skipCourse(targetId, currentUser);
                     response.put("isMatch", false);
                 }
                 response.put("status", "success");

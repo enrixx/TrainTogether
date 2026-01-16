@@ -48,7 +48,7 @@
                     <ul class="nav nav-pills mb-3" id="courseTabs" role="tablist">
                         <li class="nav-item" role="presentation" th:each="course, iterStat : ${gym.courses}">
                             <button class="nav-link"
-                                    th:classappend="${iterStat.index == 0} ? 'active'"
+                                    th:classappend="${(highlightCourseId != null and highlightCourseId == course.id) or (highlightCourseId == null and iterStat.index == 0)} ? 'active'"
                                     th:id="'tab-' + ${course.id}"
                                     data-bs-toggle="pill"
                                     th:data-bs-target="'#content-' + ${course.id}"
@@ -65,12 +65,13 @@
                     <div class="tab-content" id="courseTabsContent">
                         <div class="tab-pane fade"
                              th:each="course, iterStat : ${gym.courses}"
-                             th:classappend="${iterStat.index == 0} ? 'show active'"
+                             th:classappend="${(highlightCourseId != null and highlightCourseId == course.id) or (highlightCourseId == null and iterStat.index == 0)} ? 'show active'"
                              th:id="'content-' + ${course.id}"
                              role="tabpanel"
                              th:aria-labelledby="'tab-' + ${course.id}">
 
-                            <div class="card shadow-sm border-0 bg-body-tertiary">
+                            <div class="card shadow-sm border-0 bg-body-tertiary"
+                                 th:classappend="${highlightCourseId != null and highlightCourseId == course.id} ? 'border border-primary border-3'">
                                 <div class="card-body p-4">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div class="w-auto">
@@ -271,6 +272,15 @@
                 </div>
             </div>
         </div>
+
+        <script th:if="${highlightCourseId != null}">
+            document.addEventListener("DOMContentLoaded", function() {
+                const courseTab = document.getElementById('tab-' + [[${highlightCourseId}]]);
+                if (courseTab) {
+                    courseTab.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+        </script>
     </div>
 </div>
 </html>

@@ -55,10 +55,12 @@ public class GymController {
     // --- Views ---
 
     @GetMapping("/{id}")
-    public String showGymPage(@PathVariable Long id, Model model, Authentication authentication) {
+    public String showGymPage(@PathVariable Long id, @RequestParam(required = false) Long highlightCourseId, Model model, Authentication authentication) {
         Optional<Gym> gymOpt = gymService.findById(id);
         if (gymOpt.isPresent()) {
             Gym gym = gymOpt.get();
+
+            model.addAttribute("highlightCourseId", highlightCourseId);
 
             if (authentication != null && authentication.getAuthorities().stream()
                     .anyMatch(a -> a.getAuthority().equals("GYM_OWNER") || a.getAuthority().equals("ROLE_GYM_OWNER"))) {
