@@ -6,9 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-@Repository
-public interface CourseRepository extends JpaRepository<Course, Long> {
-    List<Course> findByGymIdOrderByDateTimeAsc(Long gymId);
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-    List<Course> findAllByDateTimeAfterOrderByDateTimeAsc(java.time.LocalDateTime dateTime, org.springframework.data.domain.Pageable pageable);
+@Repository
+public interface CourseRepository extends JpaRepository<Course, Long>, JpaSpecificationExecutor<Course> {
+    List<Course> findByGymIdOrderByDateTimeAsc(Long gymId);
 }
