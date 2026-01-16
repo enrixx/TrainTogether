@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +34,7 @@ public class TrainingProfileService {
     @Transactional(readOnly = true)
     public TrainingProfile getTrainingProfile(String email) {
         UserDto user = userService.findUserDTOByEmail(email);
-        TrainingProfile profile = profileRepo.findByUserId(user.getId());
+        Optional<TrainingProfile> profileOpt = profileRepo.findFirstByUserId(user.getId());
 
         if (profile == null) {
             return null;
@@ -76,6 +77,23 @@ public class TrainingProfileService {
         }
 
         return options;
+        if (profileOpt.isPresent()) {
+            TrainingProfile profile = profileOpt.get();
+            Hibernate.initialize(profile.getSplits());
+            Hibernate.initialize(profile.getMeasurements());
+            if (profile.getSplits() != null) {
+                profile.getSplits().forEach(split -> {
+                    Hibernate.initialize(split.getDays());
+                    if (split.getDays() != null) {
+                        split.getDays().forEach(day -> {
+                            Hibernate.initialize(day.getPersonalExercises());
+                        });
+                    }
+                });
+            }
+            return profile;
+        }
+        return null;
     }
 
     @Transactional(readOnly = true)
@@ -87,17 +105,21 @@ public class TrainingProfileService {
     @Transactional
     public void updateDescription(String email, String description) {
         UserDto user = userService.findUserDTOByEmail(email);
-        TrainingProfile profile = profileRepo.findByUserId(user.getId());
-        profile.setDescription(description);
-        profileRepo.save(profile);
+        TrainingProfile profile = profileRepo.findFirstByUserId(user.getId()).orElse(null);
+        if (profile != null) {
+            profile.setDescription(description);
+            profileRepo.save(profile);
+        }
     }
 
     @Transactional
     public void createSplit(String email, String splitName) {
         UserDto user = userService.findUserDTOByEmail(email);
-        TrainingProfile profile = profileRepo.findByUserId(user.getId());
-        profile.addSplit(new TrainingSplit(splitName));
-        profileRepo.save(profile);
+        TrainingProfile profile = profileRepo.findFirstByUserId(user.getId()).orElse(null);
+        if (profile != null) {
+            profile.addSplit(new TrainingSplit(splitName));
+            profileRepo.save(profile);
+        }
     }
 
     @Transactional
@@ -153,7 +175,7 @@ public class TrainingProfileService {
         }
         trainingDayRepo.save(trainingDay);
     }
-    
+
     public void addExerciseToDayFromOption(Long trainingDayId, String exerciseValue, int sets, User user) {
         TrainingDay trainingDay = trainingDayRepo.findById(trainingDayId).orElse(null);
         if (trainingDay == null || exerciseValue == null) return;

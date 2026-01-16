@@ -41,7 +41,7 @@ public class ChatMemberDto {
         String displayName = member.getDisplayName();
         String name = (displayName != null && !displayName.isBlank())
                 ? displayName
-                : member.getUser().getUsername();
+                : member.getUser().getFirstName() + " " + member.getUser().getLastName();
 
         String role = member.getRole().name();
 

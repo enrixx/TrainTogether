@@ -3,7 +3,10 @@ package de.othr.traintogether.repository;
 import de.othr.traintogether.model.trainingModel.TrainingProfile;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface TrainingProfileRepository extends JpaRepository<TrainingProfile, Long> {
-    TrainingProfile findByUserId(Long userId);
+import java.util.Optional;
 
+public interface TrainingProfileRepository extends JpaRepository<TrainingProfile, Long> {
+    Optional<TrainingProfile> findFirstByUserId(Long userId);
+
+    TrainingProfile findByUserId(Long id);
 }

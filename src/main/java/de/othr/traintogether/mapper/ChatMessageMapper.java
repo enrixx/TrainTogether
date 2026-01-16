@@ -30,7 +30,7 @@ public class ChatMessageMapper {
         String displayName = sender.getDisplayName();
         String name = (displayName != null && !displayName.isBlank())
                 ? displayName
-                : sender.getUser().getUsername();
+                : sender.getUser().getFirstName() + " " + sender.getUser().getLastName();
 
 
         MessageSenderDto messageSenderDto = new MessageSenderDto(

@@ -55,6 +55,9 @@ public class Gym {
     private double lat;
     private double lon;
 
+    @Column
+    private String googlePlaceId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 

@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Locale;
 import java.util.UUID;
@@ -57,22 +58,23 @@ public class UserService {
     // FOR TESTING PURPOSES ONLY / DATA INITIALIZER
     @Transactional
     public void registerUser(RegisterDto registerDto, Role role) {
-        String email = registerDto.getEmail();
+        String email = registerDto.getEmail().toLowerCase();
         String rawPassword = registerDto.getPassword();
-        String userName = registerDto.getUsername();
         String firstName = registerDto.getFirstName();
         String lastName = registerDto.getLastName();
+        String gender = registerDto.getGender();
+        LocalDate birthday = registerDto.getBirthday();
 
         if(userRepository.findByEmail(email).isPresent()) {
             throw new EmailAlreadyRegisteredException("{error.email.exists}");
         }
         String hashedPassword = passwordEncoder.encode(rawPassword);
         User user = new User(email, hashedPassword);
-        if(userName != null && !userName.isBlank()){
-            user.setUsername(userName);
-        }
+
         user.setFirstName(firstName);
         user.setLastName(lastName);
+        user.setGender(gender);
+        user.setBirthday(birthday);
 
         userRepository.save(user);
 
@@ -84,11 +86,12 @@ public class UserService {
 
     @Transactional
     public void registerGymOwner(GymOwnerRegisterDto registerDto) {
-        String email = registerDto.getEmail();
+        String email = registerDto.getEmail().toLowerCase();
         String rawPassword = registerDto.getPassword();
-        String userName = registerDto.getUsername();
         String firstName = registerDto.getFirstName();
         String lastName = registerDto.getLastName();
+        String gender = registerDto.getGender();
+        LocalDate birthday = registerDto.getBirthday();
 
         if(userRepository.findByEmail(email).isPresent()) {
             throw new EmailAlreadyRegisteredException("{error.email.exists}");
@@ -96,11 +99,11 @@ public class UserService {
 
         String hashedPassword = passwordEncoder.encode(rawPassword);
         User user = new User(email, hashedPassword);
-        if(userName != null && !userName.isBlank()){
-            user.setUsername(userName);
-        }
+
         user.setFirstName(firstName);
         user.setLastName(lastName);
+        user.setGender(gender);
+        user.setBirthday(birthday);
 
 
         userRepository.save(user);
@@ -138,41 +141,42 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public boolean emailExists(String email) {
-        return userRepository.findByEmail(email).isPresent();
+        return userRepository.findByEmail(email.toLowerCase()).isPresent();
     }
 
     @Transactional(readOnly = true)
     public UserDto findUserDTOByEmail(String email) {
-        return userRepository.findByEmail(email)
+        return userRepository.findByEmail(email.toLowerCase())
                 .map(UserDto::new)
                 .orElse(null);
     }
 
     @Transactional
     public void updateProfile(String currentEmail, UpdateProfileDto updateDto) {
-        User user = userRepository.findByEmail(currentEmail)
+        User user = userRepository.findByEmail(currentEmail.toLowerCase())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (updateDto.getEmail() != null && !updateDto.getEmail().equals(currentEmail)) {
-            if (userRepository.findByEmail(updateDto.getEmail()).isPresent()) {
+        if (updateDto.getEmail() != null && !updateDto.getEmail().toLowerCase().equals(currentEmail.toLowerCase())) {
+            String newEmail = updateDto.getEmail().toLowerCase();
+            if (userRepository.findByEmail(newEmail).isPresent()) {
                 throw new EmailAlreadyRegisteredException("{error.email.exists}");
             }
-            user.setEmail(updateDto.getEmail());
+            user.setEmail(newEmail);
         }
 
-        if (updateDto.getUsername() != null) {
-            user.setUsername(updateDto.getUsername());
-        }
 
         user.setFirstName(updateDto.getFirstName());
         user.setLastName(updateDto.getLastName());
+        user.setGender(updateDto.getGender());
+        user.setBirthday(updateDto.getBirthday());
+        user.setBio(updateDto.getBio());
 
         userRepository.save(user);
     }
 
     @Transactional
     public boolean updatePassword(String email, String currentPassword, String newPassword) {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(email.toLowerCase())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
@@ -186,7 +190,7 @@ public class UserService {
 
     @Transactional
     public String uploadProfilePicture(String email, MultipartFile file) {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(email.toLowerCase())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         // Delete old profile picture if exists
@@ -204,7 +208,7 @@ public class UserService {
 
     @Transactional
     public void deleteProfilePicture(String email) {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(email.toLowerCase())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (user.getProfilePictureUrl() != null && !user.getProfilePictureUrl().isEmpty()) {
@@ -216,7 +220,7 @@ public class UserService {
 
     @Transactional
     public String createPasswordResetToken(String email) {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(email.toLowerCase())
                 .orElse(null);
 
         if (user == null) {
@@ -273,13 +277,7 @@ public class UserService {
     }
 
     public User getUserByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-    }
-
-    public User getUserByEmailOrUsername(String identifier) {
-        return userRepository.findByEmail(identifier)
-                .or(() -> userRepository.findByUsername(identifier))
+        return userRepository.findByEmail(email.toLowerCase())
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 

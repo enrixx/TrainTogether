@@ -32,15 +32,17 @@ public class GymController {
     private final MinioService minioService;
     private final CourseService courseService;
     private final OpenWeatherMapService openWeatherMapService;
+    private final GooglePlacesService googlePlacesService;
     private final GymWorkerService gymWorkerService;
 
-    public GymController(GymService gymService, UserService userService, MinioService minioService, CourseService courseService, OpenWeatherMapService openWeatherMapService, GymWorkerService gymWorkerService) {
+    public GymController(GymService gymService, UserService userService, MinioService minioService, CourseService courseService, OpenWeatherMapService openWeatherMapService, GooglePlacesService googlePlacesService, GymWorkerService gymWorkerService) {
         this.gymService = gymService;
         this.userService = userService;
         this.minioService = minioService;
         this.courseService = courseService;
         this.openWeatherMapService = openWeatherMapService;
         this.gymWorkerService = gymWorkerService;
+        this.googlePlacesService = googlePlacesService;
     }
 
     // --- API for internal gym data ---
@@ -68,6 +70,36 @@ public class GymController {
                 canEdit = hasAccessToGym(gym, currentUser, authentication);
             }
             model.addAttribute("canEdit", canEdit);
+
+            // Fetch Google Reviews
+            if (gym.getGooglePlaceId() == null) {
+                Runnable handleNotFound = () -> {
+                    gym.setGooglePlaceId("NOT_FOUND");
+                    gymService.update(gym.getId(), gym);
+                };
+
+                if (gym.getLat() != 0 && gym.getLon() != 0) {
+                    googlePlacesService.findPlaceId(gym.getName(), gym.getLat(), gym.getLon())
+                            .ifPresentOrElse(placeId -> {
+                                gym.setGooglePlaceId(placeId);
+                                gymService.update(gym.getId(), gym);
+                            }, handleNotFound);
+                } else {
+                    // Fallback to name + city search
+                    googlePlacesService.findPlaceId(gym.getName(), gym.getCity())
+                            .ifPresentOrElse(placeId -> {
+                                gym.setGooglePlaceId(placeId);
+                                gymService.update(gym.getId(), gym);
+                            }, handleNotFound);
+                }
+            }
+
+            if ("NOT_FOUND".equals(gym.getGooglePlaceId())) {
+                // Treat NOT_FOUND as null for the view, but don't save this change to DB
+                gym.setGooglePlaceId(null);
+            } else if (gym.getGooglePlaceId() != null) {
+                model.addAttribute("googleReviews", googlePlacesService.fetchReviews(gym.getGooglePlaceId()));
+            }
 
             Map<Long, WeatherDto> courseWeather = new HashMap<>();
             double lat = gym.getLat();
@@ -144,6 +176,11 @@ public class GymController {
             }
 
             // Update other gym details
+            boolean locationChanged = !existingGym.getName().equals(gym.getName())
+                    || !existingGym.getAddress().equals(gym.getAddress())
+                    || !existingGym.getCity().equals(gym.getCity())
+                    || !existingGym.getPostalCode().equals(gym.getPostalCode());
+
             existingGym.setName(gym.getName());
             existingGym.setAddress(gym.getAddress());
             existingGym.setCity(gym.getCity());
@@ -152,6 +189,10 @@ public class GymController {
             existingGym.setDescription(gym.getDescription());
             existingGym.setBannerText(gym.getBannerText());
             existingGym.setBannerTextColor(gym.getBannerTextColor());
+
+            if (locationChanged) {
+                existingGym.setGooglePlaceId(null);
+            }
 
             gymService.update(id, existingGym);
 

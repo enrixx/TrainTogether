@@ -45,7 +45,7 @@
                 <div class="list-group">
                     <div th:each="request : ${pendingRequests}" class="list-group-item d-flex justify-content-between align-items-center">
                         <div>
-                            <span th:text="${request.requester.username}">Username</span>
+                            <span th:text="${request.requester.firstName} + ' ' + ${request.requester.lastName}">Name</span>
                             <small class="text-muted" th:text="'(' + ${request.requester.email} + ')'">email</small>
                         </div>
                         <div>
@@ -76,8 +76,8 @@
                             <img th:unless="${friend.profilePictureUrl}" th:src="@{/images/default-profile.png}"
                                  class="rounded-circle me-3" width="40" height="40" alt="Profile">
                             <div>
-                                <h6 class="mb-0" th:text="${friend.username}">Username</h6>
-                                <small class="text-muted" th:text="${friend.firstName} + ' ' + ${friend.lastName}">Name</small>
+                                <h6 class="mb-0" th:text="${friend.firstName} + ' ' + ${friend.lastName}">Name</h6>
+                                <small class="text-muted" th:text="${friend.email}">Email</small>
                             </div>
                         </a>
                         <div class="dropdown">
@@ -111,7 +111,8 @@
                 <ul class="list-group list-group-flush">
                     <li th:each="blocked : ${blockedUsers}" class="list-group-item d-flex justify-content-between align-items-center">
                         <div>
-                            <span th:text="${blocked.username}">Username</span>
+                            <span th:text="${blocked.firstName} + ' ' + ${blocked.lastName}">Name</span>
+                            <small class="text-muted ms-2" th:text="'(' + ${blocked.email} + ')'">email</small>
                         </div>
                         <form th:action="@{/friends/unblock}" method="post">
                             <input type="hidden" name="userId" th:value="${blocked.id}">

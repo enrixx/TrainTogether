@@ -67,11 +67,21 @@
     </div>
 
     <div class="form-floating mb-3">
-        <input type="text" th:field="*{username}" id="registerUsername" class="form-control"
-               th:class="${#fields.hasErrors('username')} ? 'form-control is-invalid' : 'form-control'"
-               th:placeholder="#{auth.username.optional}">
-        <label for="registerUsername" th:text="#{auth.username.optional}">Username (optional)</label>
-        <div class="invalid-feedback" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
+        <select th:field="*{gender}" id="registerGender" class="form-select" required>
+            <option value="" disabled selected th:text="#{auth.gender.placeholder}">Select Gender</option>
+            <option value="male" th:text="#{auth.gender.male}">Male</option>
+            <option value="female" th:text="#{auth.gender.female}">Female</option>
+            <option value="divers" th:text="#{auth.gender.divers}">Divers</option>
+        </select>
+        <label for="registerGender" th:text="#{auth.gender}">Gender</label>
+        <div class="text-danger" th:if="${#fields.hasErrors('gender')}" th:errors="*{gender}"></div>
+    </div>
+
+    <div class="form-floating mb-3">
+        <input type="date" th:field="*{birthday}" id="registerBirthday" class="form-control"
+               th:placeholder="#{auth.birthday}" required>
+        <label for="registerBirthday" th:text="#{auth.birthday}">Birthday</label>
+        <div class="text-danger" th:if="${#fields.hasErrors('birthday')}" th:errors="*{birthday}"></div>
     </div>
 
     <!-- Gym Information Section -->
@@ -148,4 +158,3 @@
 </form>
 </body>
 </html>
-

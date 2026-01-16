@@ -39,8 +39,8 @@ public class WorkoutService {
             throw new IllegalStateException("No training profile found.");
         }
 
-        initializeProfileData(profile);
         TrainingSplit activeSplit = profile.getActiveTrainingSplit();
+        initializeProfileData(profile);
 
         List<WorkoutLogResponseDto> todaysWorkoutDto = getTodaysWorkoutDto(user.getId(), locale);
         
@@ -176,7 +176,7 @@ public class WorkoutService {
                 .orElseThrow(() -> new IllegalArgumentException("Training day not found"));
 
         LocalDate date = LocalDate.now();
-        
+
         List<TrainingExercise> existing = trainingExerciseRepo.findByDateAndPersonalExercise_User_Id(date, user.getId());
         if (!existing.isEmpty()) trainingExerciseRepo.deleteAll(existing);
 

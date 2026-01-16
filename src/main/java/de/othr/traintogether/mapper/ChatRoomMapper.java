@@ -55,7 +55,7 @@ public class ChatRoomMapper {
             } else {
                 dto.setPictureUrl(pic);
             }
-            dto.setName(otherMember.getUser().getUsername());
+            dto.setName(otherMember.getUser().getFirstName() + " " + otherMember.getUser().getLastName());
         }
         return dto;
     }

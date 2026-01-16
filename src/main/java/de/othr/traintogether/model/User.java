@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -27,14 +28,20 @@ public class User {
     @Column(nullable = false, length = 500)
     private String password;
 
-    @Column(length = 20)
-    private String username;
-
     @Column(length = 50)
     private String firstName;
 
     @Column(length = 50)
     private String lastName;
+
+    @Column(length = 10)
+    private String gender;
+
+    @Column
+    private LocalDate birthday;
+
+    @Column(length = 500)
+    private String bio;
 
     @Column(name = "profile_picture_url", length = 500)
     private String profilePictureUrl;

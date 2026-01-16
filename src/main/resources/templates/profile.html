@@ -71,19 +71,6 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="username" class="form-label" th:text="#{profile.label.username}">Username</label>
-                                <input type="text"
-                                       class="form-control"
-                                       th:class="${#fields.hasErrors('username')} ? 'form-control is-invalid' : 'form-control'"
-                                       id="username"
-                                       th:field="*{username}"
-                                       th:placeholder="#{profile.label.username}">
-                                <div class="invalid-feedback" th:if="${#fields.hasErrors('username')}" th:errors="*{username}">
-                                    Username error
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
                                 <label for="firstName" class="form-label" th:text="#{auth.firstname}">First Name</label>
                                 <input type="text"
                                        class="form-control"
@@ -108,6 +95,37 @@
                                        required>
                                 <div class="invalid-feedback" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}">
                                     Last name error
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="gender" class="form-label" th:text="#{auth.gender}">Gender</label>
+                                <select th:field="*{gender}" id="gender" class="form-select" required>
+                                    <option value="" disabled selected th:text="#{auth.gender.placeholder}">Select Gender</option>
+                                    <option value="male" th:text="#{auth.gender.male}">Male</option>
+                                    <option value="female" th:text="#{auth.gender.female}">Female</option>
+                                    <option value="divers" th:text="#{auth.gender.divers}">Divers</option>
+                                </select>
+                                <div class="text-danger" th:if="${#fields.hasErrors('gender')}" th:errors="*{gender}"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="birthday" class="form-label" th:text="#{auth.birthday}">Birthday</label>
+                                <input type="date" th:field="*{birthday}" id="birthday" class="form-control"
+                                       th:placeholder="#{auth.birthday}" required>
+                                <div class="text-danger" th:if="${#fields.hasErrors('birthday')}" th:errors="*{birthday}"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="bio" class="form-label" th:text="#{profile.bio.label}">Bio</label>
+                                <textarea class="form-control"
+                                          th:class="${#fields.hasErrors('bio')} ? 'form-control is-invalid' : 'form-control'"
+                                          id="bio"
+                                          th:field="*{bio}"
+                                          rows="3"
+                                          th:placeholder="#{profile.bio.placeholder}"></textarea>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('bio')}" th:errors="*{bio}">
+                                    Bio error
                                 </div>
                             </div>
 
@@ -195,4 +213,3 @@
 </div>
 </body>
 </html>
-
