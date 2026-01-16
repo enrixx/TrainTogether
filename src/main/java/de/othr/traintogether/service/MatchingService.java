@@ -2,9 +2,7 @@ package de.othr.traintogether.service;
 
 import de.othr.traintogether.dto.UserDto;
 import de.othr.traintogether.model.MatchingAction;
-import de.othr.traintogether.model.TrainingModel.ExerciseName;
-import de.othr.traintogether.model.TrainingModel.TrainingProfile;
-import de.othr.traintogether.model.TrainingModel.TrainingSplit;
+import de.othr.traintogether.model.trainingModel.*;
 import de.othr.traintogether.model.User;
 import de.othr.traintogether.repository.MatchingActionRepository;
 import de.othr.traintogether.repository.TrainingProfileRepository;
@@ -154,10 +152,10 @@ public class MatchingService {
                 Subquery<Long> subquery = query.subquery(Long.class);
                 Root<TrainingProfile> profileRoot = subquery.from(TrainingProfile.class);
                 Join<TrainingProfile, TrainingSplit> splitJoin = profileRoot.join("splits");
-                Join<TrainingSplit, de.othr.traintogether.model.TrainingModel.TrainingDay> dayJoin = splitJoin.join("days");
+                Join<TrainingSplit, TrainingDay> dayJoin = splitJoin.join("days");
 
                 // Check active split
-                Predicate activeSplit = cb.equal(profileRoot.get("activeTraininSplitId"), splitJoin.get("id"));
+                Predicate activeSplit = cb.equal(profileRoot.get("activeTrainingSplitId"), splitJoin.get("id"));
 
                 // Check user link
                 Predicate userLink = cb.equal(profileRoot.get("userId"), root.get("id"));
@@ -172,21 +170,21 @@ public class MatchingService {
                 // We want to ensure that the matching day has at least one real exercise (not just "RESTDAY" or empty)
 
                 // 1. TrainingExercise != RESTDAY
-                Join<de.othr.traintogether.model.TrainingModel.TrainingDay, de.othr.traintogether.model.TrainingModel.TrainingExercise> teJoin = dayJoin.join("exercises", JoinType.LEFT);
-                Predicate teNotRest = cb.notEqual(teJoin.get("exercise"), ExerciseName.RESTDAY);
-
-                // 2. PersonalExercise != RESTDAY
-                Join<de.othr.traintogether.model.TrainingModel.TrainingDay, de.othr.traintogether.model.TrainingModel.PersonalExercise> peJoin = dayJoin.join("personalExercises", JoinType.LEFT);
-                Predicate peNotRest = cb.notEqual(cb.upper(peJoin.get("name")), ExerciseName.RESTDAY.name());
-
-                // Combine: Active Split AND User Link AND Day Match AND (Valid TE OR Valid PE)
-                // We use Left Joins to check existence.
-
-                Predicate teValid = cb.and(cb.isNotNull(teJoin.get("id")), teNotRest);
-                Predicate peValid = cb.and(cb.isNotNull(peJoin.get("id")), peNotRest);
+                Join<TrainingDay, TrainingExercise> teJoin = dayJoin.join("exercises", JoinType.LEFT);
+                // Assuming TrainingExercise has an enum or similar, but here we check if it exists.
+                // If TrainingExercise is used, it's usually not a rest day unless explicitly marked.
+                // But wait, TrainingExercise is deprecated/old model? No, it's used for logging.
+                // The profile uses PersonalExercise.
+                
+                // Let's check PersonalExercise
+                Join<TrainingDay, PersonalExercise> peJoin = dayJoin.join("personalExercises", JoinType.LEFT);
+                
+                // We just check if there is ANY personal exercise assigned to that day.
+                // If the list is empty, it's a rest day.
+                Predicate peValid = cb.isNotNull(peJoin.get("id"));
 
                 return cb.exists(subquery.select(profileRoot.get("userId"))
-                        .where(activeSplit, userLink, dayMatch, cb.or(teValid, peValid)));
+                        .where(activeSplit, userLink, dayMatch, peValid));
             });
         }
 
@@ -203,17 +201,11 @@ public class MatchingService {
             Optional<TrainingProfile> profileOpt = trainingProfileRepository.findFirstByUserId(dto.getId());
             if (profileOpt.isPresent()) {
                 TrainingProfile profile = profileOpt.get();
-                TrainingSplit activeSplit = profile.getActiveTraininSplit();
+                TrainingSplit activeSplit = profile.getActiveTrainingSplit();
                 if (activeSplit != null && activeSplit.getDays() != null) {
                     List<String> days = activeSplit.getDays().stream()
                             .filter(day -> day != null && day.getWeekday() != null)
-                            .filter(day -> {
-                                boolean hasTrainingExercise = day.getExercises() != null && day.getExercises().stream()
-                                        .anyMatch(e -> e != null && e.getExercise() != ExerciseName.RESTDAY);
-                                boolean hasPersonalExercise = day.getPersonalExercises() != null && day.getPersonalExercises().stream()
-                                        .anyMatch(e -> e != null && e.getName() != null && !e.getName().isBlank() && !ExerciseName.RESTDAY.name().equalsIgnoreCase(e.getName()));
-                                return hasTrainingExercise || hasPersonalExercise;
-                            })
+                            .filter(day -> day.getPersonalExercises() != null && !day.getPersonalExercises().isEmpty())
                             .map(day -> day.getWeekday().name())
                             .collect(Collectors.toList());
                     dto.setTrainingDays(days);

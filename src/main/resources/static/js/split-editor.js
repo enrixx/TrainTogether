@@ -40,12 +40,12 @@ $(document).ready(function() {
             $(this).find('.exercise-select').each(function() {
                 const select = $(this).find('select');
                 const input = $(this).find('input');
-                const exerciseId = select.val();
+                const exerciseValue = select.val(); // This is now a string like "S-1" or "C-5"
                 let sets = input.val();
                 if (!sets || isNaN(sets) || sets < 1) sets = 3;
 
-                if (exerciseId) {
-                    exercisesToAdd.push({ exerciseId: parseInt(exerciseId), sets: parseInt(sets) });
+                if (exerciseValue) {
+                    exercisesToAdd.push({ exerciseValue: exerciseValue, sets: parseInt(sets) });
                 }
             });
 
@@ -86,7 +86,6 @@ $(document).ready(function() {
         }
     });
 
-    // --- Logic for Split Actions (Set Active / Delete) ---
     $(document).on('click', '.set-active-split-btn', function(e) {
         e.preventDefault();
         e.stopPropagation();

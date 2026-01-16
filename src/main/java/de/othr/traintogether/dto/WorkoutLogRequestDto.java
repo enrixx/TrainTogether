@@ -13,6 +13,7 @@ public class WorkoutLogRequestDto {
     @Data
     public static class ExerciseLog {
         private Long personalExerciseId;
+        private String exerciseValue;
         private int sets;
         private String reps;
         private String weight;

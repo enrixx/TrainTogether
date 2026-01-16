@@ -42,4 +42,6 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
             @Param("after") Instant after,
             @Param("afterId") Long afterId,
             Pageable pageable);
+
+    void deleteByChatRoomId(Long chatRoomId);
 }

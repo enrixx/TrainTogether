@@ -1,6 +1,6 @@
 package de.othr.traintogether.repository;
 
-import de.othr.traintogether.model.TrainingModel.TrainingDay;
+import de.othr.traintogether.model.trainingModel.TrainingDay;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.DayOfWeek;

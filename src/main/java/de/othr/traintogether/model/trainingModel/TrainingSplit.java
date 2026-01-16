@@ -1,4 +1,4 @@
-package de.othr.traintogether.model.TrainingModel;
+package de.othr.traintogether.model.trainingModel;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -44,11 +44,6 @@ public class TrainingSplit {
     public void addDay(TrainingDay day) {
         days.add(day);
         day.setSplit(this);
-    }
-
-    public void removeDay(TrainingDay day) {
-        days.remove(day);
-        day.setSplit(null);
     }
 
 

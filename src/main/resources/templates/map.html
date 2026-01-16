@@ -6,13 +6,13 @@
     <title th:text="#{map.title}">Karte</title>
 </head>
 <body>
-<div th:fragment="content">
+<div th:fragment="content" class="h-100 d-flex flex-column">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
-    <div class="container mt-4">
+    <div class="container mt-4 flex-grow-1 d-flex flex-column" style="min-height: 0;">
         <h2 th:text="#{map.title}">Sport-Karte</h2>
 
-        <div class="card p-3 mb-3">
+        <div class="card p-3 mb-3 flex-shrink-0">
             <div class="row g-3 align-items-end">
                 <div class="col-md-4">
                     <label for="search-city" class="form-label" th:text="#{map.search.city}">Stadt</label>
@@ -42,7 +42,7 @@
             </div>
         </div>
 
-        <div id="map" style="height: 80vh; width: 100%; border-radius: 10px; margin-bottom: 20px;"></div>
+        <div id="map" class="flex-grow-1 w-100" style="border-radius: 10px; margin-bottom: 20px;"></div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

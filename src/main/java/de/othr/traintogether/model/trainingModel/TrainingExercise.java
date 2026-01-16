@@ -1,4 +1,4 @@
-package de.othr.traintogether.model.TrainingModel;
+package de.othr.traintogether.model.trainingModel;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -17,9 +17,6 @@ public class TrainingExercise {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Enumerated(EnumType.STRING)
-    private ExerciseName exercise;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "personal_exercise_id")

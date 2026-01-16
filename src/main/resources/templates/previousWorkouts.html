@@ -3,22 +3,48 @@
       th:replace="~{layout :: layout(~{::content})}">
 <head>
     <meta charset="UTF-8">
-    <title>Previous Workouts</title>
+    <title th:text="#{workouts.previous.title}">Previous Workouts</title>
 </head>
 <body>
-<div th:fragment="content">
+<div th:fragment="content" class="h-100 overflow-auto">
     <main class="container-fluid p-5">
         <div class="p-4 mb-4 bg-body-tertiary rounded-3">
-            <h3>Previous Workouts</h3>
-            <p>Select a date to see the workout you logged.</p>
-
-            <div class="mb-3" style="max-width: 300px;">
-                <label for="workoutDateSelect" class="form-label">Date</label>
-                <input type="date" class="form-control" id="workoutDateSelect">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 th:text="#{workouts.previous.title}">Previous Workouts</h3>
             </div>
 
-            <div id="workout-details" class="mt-4">
-                <p class="text-muted">No date selected.</p>
+            <!-- Bootstrap Tabs -->
+            <ul class="nav nav-tabs mb-3" id="viewTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="calendar-tab" data-bs-toggle="tab" data-bs-target="#calendar-view" type="button" role="tab" aria-controls="calendar-view" aria-selected="true" th:text="#{workouts.previous.calendar}">Calendar</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="list-tab" data-bs-toggle="tab" data-bs-target="#list-view" type="button" role="tab" aria-controls="list-view" aria-selected="false" th:text="#{workouts.previous.list}">List</button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="viewTabsContent">
+                <!-- Calendar View -->
+                <div class="tab-pane fade show active" id="calendar-view" role="tabpanel" aria-labelledby="calendar-tab">
+                    <p th:text="#{workouts.previous.selectdate}">Select a date to see the workout you logged.</p>
+                    <div class="mb-3" style="max-width: 300px;">
+                        <label for="workoutDateSelect" class="form-label">Date</label>
+                        <input type="date" class="form-control" id="workoutDateSelect">
+                    </div>
+                    <div id="workout-details" class="mt-4">
+                        <p class="text-muted" th:text="#{workouts.previous.nodate}">No date selected.</p>
+                    </div>
+                </div>
+
+                <!-- List View -->
+                <div class="tab-pane fade" id="list-view" role="tabpanel" aria-labelledby="list-tab">
+                    <div id="workout-list-container" class="d-flex flex-column gap-3">
+                        <!-- Items will be loaded here via JS -->
+                    </div>
+                    <div class="text-center mt-4">
+                        <button id="load-more-btn" class="btn btn-secondary" th:text="#{workouts.previous.loadmore}">Load More</button>
+                    </div>
+                </div>
             </div>
         </div>
     </main>

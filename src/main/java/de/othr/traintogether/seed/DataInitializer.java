@@ -6,11 +6,9 @@ import de.othr.traintogether.dto.UpdateProfileDto;
 import de.othr.traintogether.dto.chat.SendChatMessageDto;
 import de.othr.traintogether.model.Gym;
 import de.othr.traintogether.model.Role;
-import de.othr.traintogether.model.TrainingModel.*;
+import de.othr.traintogether.model.trainingModel.*;
 import de.othr.traintogether.model.User;
-import de.othr.traintogether.repository.PersonalExerciseRepository;
-import de.othr.traintogether.repository.TrainingProfileRepository;
-import de.othr.traintogether.repository.UserRepository;
+import de.othr.traintogether.repository.*;
 import de.othr.traintogether.repository.chat.ChatRoomRepository;
 import de.othr.traintogether.service.GymService;
 import de.othr.traintogether.service.UserService;
@@ -22,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -33,16 +32,18 @@ public class DataInitializer implements CommandLineRunner {
     private final ChatRoomService chatRoomService;
     private final ChatMessageService chatMessageService;
     private final GymService gymService;
+    private final StandardExerciseRepository standardExerciseRepository;
     private final TrainingProfileRepository trainingProfileRepository;
     private final PersonalExerciseRepository personalExerciseRepository;
 
-    public DataInitializer(UserRepository repo, UserService userService, ChatRoomRepository chatRoomRepository, ChatRoomService chatRoomService, ChatMessageService chatMessageService, GymService gymService, TrainingProfileRepository trainingProfileRepository, PersonalExerciseRepository personalExerciseRepository) {
+    public DataInitializer(UserRepository repo, UserService userService, ChatRoomRepository chatRoomRepository, ChatRoomService chatRoomService, ChatMessageService chatMessageService, GymService gymService, StandardExerciseRepository standardExerciseRepository, TrainingProfileRepository trainingProfileRepository, PersonalExerciseRepository personalExerciseRepository) {
         this.userRepository = repo;
         this.userService = userService;
         this.chatRoomRepository = chatRoomRepository;
         this.chatRoomService = chatRoomService;
         this.chatMessageService = chatMessageService;
         this.gymService = gymService;
+        this.standardExerciseRepository = standardExerciseRepository;
         this.trainingProfileRepository = trainingProfileRepository;
         this.personalExerciseRepository = personalExerciseRepository;
     }
@@ -50,9 +51,67 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
+        seedStandardExercises(); // Exercises first!
         seedUsers();
         seedGyms();
         seedExampleChats();
+    }
+
+    private void seedStandardExercises() {
+        if (standardExerciseRepository.count() > 0) {
+            return;
+        }
+
+        List<StandardExercise> exercises = List.of(
+                // Brust
+                new StandardExercise("Bankdrücken", "Bench Press"),
+                new StandardExercise("Schrägbankdrücken", "Incline Bench Press"),
+                new StandardExercise("Liegestütze", "Push-ups"),
+                new StandardExercise("Dips", "Dips"),
+                new StandardExercise("Kabelzug über Kreuz", "Cable Crossover"),
+
+                // Rücken
+                new StandardExercise("Kreuzheben", "Deadlift"),
+                new StandardExercise("Klimmzüge", "Pull-ups"),
+                new StandardExercise("Latziehen", "Lat Pulldown"),
+                new StandardExercise("Langhantelrudern", "Barbell Row"),
+                new StandardExercise("Einarmiges Rudern", "One-Arm Dumbbell Row"),
+                new StandardExercise("Hyperextensions", "Hyperextensions"),
+
+                // Beine
+                new StandardExercise("Kniebeugen", "Squat"),
+                new StandardExercise("Beinpresse", "Leg Press"),
+                new StandardExercise("Ausfallschritte", "Lunges"),
+                new StandardExercise("Beinstrecker", "Leg Extension"),
+                new StandardExercise("Beinbeuger", "Leg Curl"),
+                new StandardExercise("Wadenheben", "Calf Raise"),
+
+                // Schultern
+                new StandardExercise("Schulterdrücken", "Overhead Press"),
+                new StandardExercise("Seitheben", "Lateral Raise"),
+                new StandardExercise("Frontheben", "Front Raise"),
+                new StandardExercise("Face Pulls", "Face Pulls"),
+                new StandardExercise("Shrugs", "Shrugs"),
+
+                // Bizeps
+                new StandardExercise("Bizepscurls", "Bicep Curls"),
+                new StandardExercise("Hammercurls", "Hammer Curls"),
+                new StandardExercise("Preacher Curls", "Preacher Curls"),
+
+                // Trizeps
+                new StandardExercise("Trizepsdrücken", "Tricep Pushdown"),
+                new StandardExercise("Schädelbrecher", "Skullcrushers"),
+                new StandardExercise("Enges Bankdrücken", "Close-Grip Bench Press"),
+                new StandardExercise("Kickbacks", "Tricep Kickbacks"),
+
+                // Bauch
+                new StandardExercise("Crunches", "Crunches"),
+                new StandardExercise("Beinheben", "Leg Raise"),
+                new StandardExercise("Plank", "Plank"),
+                new StandardExercise("Russian Twist", "Russian Twist")
+        );
+
+        standardExerciseRepository.saveAll(exercises);
     }
 
     private void seedUsers() {
@@ -95,10 +154,10 @@ public class DataInitializer implements CommandLineRunner {
             String lastName = "User" + i;
             String gender = (i % 2 == 0) ? "female" : "male";
             LocalDate birthday = LocalDate.of(1995, 1, 1).plusDays(i * 100);
-            
+
             RegisterDto dto = new RegisterDto(email, "password", firstName, lastName, gender, birthday);
             userService.registerUser(dto, Role.USER);
-            
+
             // Add bio
             UpdateProfileDto updateDto = new UpdateProfileDto(email, firstName, lastName, gender, birthday, "Hi, I am " + firstName + " " + lastName + ". I love training!");
             userService.updateProfile(email, updateDto);
@@ -130,29 +189,33 @@ public class DataInitializer implements CommandLineRunner {
             }
 
             // Assign exercises to active days
+            List<StandardExercise> allExercises = standardExerciseRepository.findAll();
+            if (allExercises.isEmpty()) return;
+
             int exIndex = 0;
-            ExerciseName[] possibleExercises = ExerciseName.values();
 
             for (DayOfWeek day : activeDays) {
-                // Pick an exercise (excluding RESTDAY)
-                ExerciseName chosenEnum = possibleExercises[exIndex % (possibleExercises.length - 1)];
+                // Pick an exercise
+                StandardExercise chosenExercise = allExercises.get(exIndex % allExercises.size());
                 exIndex++;
 
-                personalExerciseRepository.findByNameAndUser_Id(chosenEnum.name(), user.getId())
-                        .ifPresent(exercise -> {
-                            // Find the corresponding TrainingDay and add the exercise
-                            split.getDays().stream()
-                                    .filter(d -> d.getWeekday() == day)
-                                    .findFirst()
-                                    .ifPresent(trainingDay -> trainingDay.addPersonalExercise(exercise));
-                        });
+                // Create PersonalExercise from StandardExercise
+                PersonalExercise pe = new PersonalExercise(chosenExercise, user);
+                pe.setSets(3); // Default sets
+                personalExerciseRepository.save(pe);
+
+                // Find the corresponding TrainingDay and add the exercise
+                split.getDays().stream()
+                        .filter(d -> d.getWeekday() == day)
+                        .findFirst()
+                        .ifPresent(trainingDay -> trainingDay.addPersonalExercise(pe));
             }
-            
+
             trainingProfileRepository.save(profile);
-            
+
             // Set active split ID after saving (to get the ID)
-            if (profile.getActiveTraininSplitId() == null) {
-                profile.setActiveTraininSplitId(split.getId());
+            if (profile.getActiveTrainingSplitId() == null) {
+                profile.setActiveTrainingSplitId(split.getId());
                 trainingProfileRepository.save(profile);
             }
         }

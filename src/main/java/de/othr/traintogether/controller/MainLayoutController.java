@@ -6,6 +6,7 @@ import de.othr.traintogether.model.RequestStatus;
 import de.othr.traintogether.repository.GymOwnerRequestRepository;
 import de.othr.traintogether.service.GymOwnerRequestService;
 import de.othr.traintogether.service.GymService;
+import de.othr.traintogether.service.GymWorkerService;
 import de.othr.traintogether.service.UserService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -23,15 +24,18 @@ public class MainLayoutController {
     private final GymOwnerRequestRepository gymOwnerRequestRepository;
     private final GymOwnerRequestService gymOwnerRequestService;
     private final GymService gymService;
+    private final GymWorkerService gymWorkerService;
 
     public MainLayoutController(UserService userService,
                                GymOwnerRequestRepository gymOwnerRequestRepository,
                                GymOwnerRequestService gymOwnerRequestService,
-                               GymService gymService) {
+                               GymService gymService,
+                               GymWorkerService gymWorkerService) {
         this.userService = userService;
         this.gymOwnerRequestRepository = gymOwnerRequestRepository;
         this.gymOwnerRequestService = gymOwnerRequestService;
         this.gymService = gymService;
+        this.gymWorkerService = gymWorkerService;
     }
 
     @GetMapping({"/", "/home"})
@@ -65,11 +69,27 @@ public class MainLayoutController {
     @PreAuthorize("hasAnyAuthority('ADMIN', 'GYM_OWNER', 'GYM_WORKER', 'PENDING_GYM_WORKER')")
     @GetMapping("/dashboard")
     public String dashboard(Model model, Authentication authentication) {
-        // Redirect Gym Owners to their edit page if they have a gym
         if (authentication != null) {
-            Optional<Gym> myGym = gymService.findByOwnerEmail(authentication.getName());
+            String email = authentication.getName();
+
+            // Redirect Gym Owners to their public gym page if they have a gym
+            Optional<Gym> myGym = gymService.findByOwnerEmail(email);
             if (myGym.isPresent()) {
-                return "redirect:/gym/edit/" + myGym.get().getId();
+                return "redirect:/gym/" + myGym.get().getId();
+            }
+
+            // Redirect Gym Workers to their gym page
+            UserDto user = userService.findUserDTOByEmail(email);
+            if (user != null) {
+                var worker = gymWorkerService.findByUserId(user.getId());
+                if (worker.isPresent()) {
+                    return "redirect:/gym/" + worker.get().getGym().getId();
+                }
+            }
+            
+            // Redirect Admins to admin dashboard
+            if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ADMIN"))) {
+                return "redirect:/admin/dashboard";
             }
         }
 

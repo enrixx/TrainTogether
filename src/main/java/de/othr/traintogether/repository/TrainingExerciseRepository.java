@@ -1,6 +1,6 @@
 package de.othr.traintogether.repository;
 
-import de.othr.traintogether.model.TrainingModel.TrainingExercise;
+import de.othr.traintogether.model.trainingModel.TrainingExercise;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.time.LocalDate;
 import java.util.List;
