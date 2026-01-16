@@ -717,7 +717,7 @@
     <div th:if="${missingBio}" class="alert alert-warning text-center">
         <h4 th:text="#{matching.bio.missing.title}">Bio Missing</h4>
         <p th:text="#{matching.bio.missing.desc}">Please add a bio to your profile before finding training partners.</p>
-        <a th:href="@{/profile}" class="btn btn-primary" th:text="#{matching.bio.add}">Add Bio</a>
+        <a th:href="@{/profile#bio}" class="btn btn-primary" th:text="#{matching.bio.add}">Add Bio</a>
     </div>
 
     <div th:unless="${missingBio}">
