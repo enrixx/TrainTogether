@@ -5,6 +5,8 @@ import de.othr.traintogether.model.MatchingAction;
 import de.othr.traintogether.model.User;
 import de.othr.traintogether.service.MatchingService;
 import de.othr.traintogether.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -19,6 +21,8 @@ import java.util.HashMap;
 @RequestMapping("/matching")
 @PreAuthorize("isAuthenticated()")
 public class MatchingController {
+
+    private static final Logger logger = LoggerFactory.getLogger(MatchingController.class);
 
     private final MatchingService matchingService;
     private final UserService userService;
@@ -68,13 +72,13 @@ public class MatchingController {
                                 Authentication authentication) {
         User currentUser = userService.getUserByEmail(authentication.getName());
         MatchingAction.ActionType actionType = MatchingAction.ActionType.valueOf(action.toUpperCase());
-        
-        System.out.println("Processing action: " + action + " from user " + currentUser.getEmail() + " on target " + targetUserId);
+
+        logger.debug("Processing action: {} from user {} on target {}", action, currentUser.getEmail(), targetUserId);
 
         java.util.Map<String, Object> response = new java.util.HashMap<>();
         try {
             boolean isMatch = matchingService.performAction(currentUser, targetUserId, actionType);
-            System.out.println("Action result: isMatch=" + isMatch);
+            logger.debug("Action result: isMatch={}", isMatch);
 
             response.put("status", "success");
             response.put("isMatch", isMatch);
