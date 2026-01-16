@@ -23,7 +23,7 @@ public class OpenWeatherMapService {
     private final OkHttpClient client = new OkHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value("${OPENWEATHERMAP_API_KEY:}")
+    @Value("${openweathermap.api-key:}")
     private String apiKey;
 
     // time windows
