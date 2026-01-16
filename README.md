@@ -1,20 +1,33 @@
 # TrainTogether
-TrainTogether is a software project for the OTH Regensburg. 
+
+TrainTogether is a software project for the OTH Regensburg.
 
 ## Local Development Setup
 
-1. Copy `example.env` to `.env` in the project root:
-
+1. Clone the repository:
    ```bash
+   git clone https://github.com/enrixx/TrainTogether.git
+   cd TrainTogether
+   ```
+2. Copy `example.env` to `.env` in the project root:
+    ```bash
    cp example.env .env
-   ```
+    ```
 
-2. Fill in the required variables/secrets in `.env`.
-
-3. Start the database container:
-
+3. Build with Maven:
    ```bash
-  docker-compose -f docker-compose.dev.yaml up -d
-   ```
+    # Ohne Tests (wie in README)
+    mvn clean package -DskipTests
+    # Mit Tests
+    mvn clean package
+    ```
 
-4. Run the Spring Boot application locally. It will read the `.env` file automatically.
+4. Start the needed Docker container:
+   ```bash
+   # for development (recommended for this methode)
+    docker compose -f docker-compose.dev.yaml up -d
+   # for production
+    docker compose -f docker-compose.yaml up -d
+    ```
+
+## Direct Container pull and run (TODO)
