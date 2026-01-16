@@ -1002,13 +1002,11 @@
 
             // Fetch more if we are running low (e.g., 2 or fewer left) AND we haven't already determined there are no more matches
             if (cards.length <= 2 && !isFetching && !noMoreMatches) {
-                // console.log('Running low on cards, fetching more...');
                 fetchMoreCards();
             }
 
             // If no cards left and no more matches available, show the message dynamically
             if (cards.length === 0 && noMoreMatches && !stack.querySelector('.no-matches')) {
-                // console.log('Showing no-matches message');
                 // Clear the stack and show no matches message (client-side rendering needed since Thymeleaf is server-side)
                 stack.innerHTML = '<div class="no-matches"><h3>No more profiles</h3><p>Check back later for more potential training partners.</p></div>';
             }
