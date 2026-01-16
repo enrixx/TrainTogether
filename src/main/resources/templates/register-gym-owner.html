@@ -79,7 +79,7 @@
 
     <div class="form-floating mb-3">
         <input type="date" th:field="*{birthday}" id="registerBirthday" class="form-control"
-               th:placeholder="#{auth.birthday}" required>
+               th:placeholder="#{auth.birthday}" th:max="${#temporals.format(#temporals.createNow().minusYears(16), 'yyyy-MM-dd')}" required>
         <label for="registerBirthday" th:text="#{auth.birthday}">Birthday</label>
         <div class="text-danger" th:if="${#fields.hasErrors('birthday')}" th:errors="*{birthday}"></div>
     </div>

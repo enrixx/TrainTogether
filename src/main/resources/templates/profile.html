@@ -112,7 +112,7 @@
                             <div class="mb-3">
                                 <label for="birthday" class="form-label" th:text="#{auth.birthday}">Birthday</label>
                                 <input type="date" th:field="*{birthday}" id="birthday" class="form-control"
-                                       th:placeholder="#{auth.birthday}" required>
+                                       th:placeholder="#{auth.birthday}" th:max="${#temporals.format(#temporals.createNow().minusYears(16), 'yyyy-MM-dd')}" required>
                                 <div class="text-danger" th:if="${#fields.hasErrors('birthday')}" th:errors="*{birthday}"></div>
                             </div>
 
