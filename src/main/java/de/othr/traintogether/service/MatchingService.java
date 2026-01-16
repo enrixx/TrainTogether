@@ -74,10 +74,16 @@ public class MatchingService {
                 // Check if they are already friends
                 if (!friendshipService.areFriends(user1, user2)) {
                     friendshipService.createFriendship(user1, user2);
+                    logger.info("Created friendship match between user {} and user {}", user1.getId(), user2.getId());
                     return true;
                 }
-            } catch (Exception e) {
-                // matching with self or blocked user should not happen
+            } catch (IllegalArgumentException e) {
+                logger.error("Failed to create friendship match between user {} and user {}: {}",
+                    user1.getId(), user2.getId(), e.getMessage(), e);
+                return false;
+            } catch (IllegalStateException e) {
+                logger.warn("Cannot create friendship match between user {} and user {} - blocked or invalid state: {}",
+                    user1.getId(), user2.getId(), e.getMessage());
                 return false;
             }
         }
