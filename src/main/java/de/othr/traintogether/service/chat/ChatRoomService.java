@@ -192,8 +192,8 @@ public class ChatRoomService {
     @Transactional(readOnly = true)
     public boolean isUserAdmin(String email, Long chatRoomId) {
         try {
-            ChatRoomMember member = chatAuthService.getAdminMember(email, chatRoomId);
-            return true;
+            ChatRoomMember member = chatAuthService.getActiveMember(email, chatRoomId);
+            return member.getRole() == ChatRole.ADMIN;
         } catch (IllegalArgumentException e) {
             return false;
         }
