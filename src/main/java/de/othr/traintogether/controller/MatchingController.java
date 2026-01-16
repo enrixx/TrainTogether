@@ -67,7 +67,7 @@ public class MatchingController {
 
     @PostMapping("/action")
     @ResponseBody
-    public java.util.Map<String, Object> performAction(@RequestParam("targetUserId") Long targetUserId,
+    public Map<String, Object> performAction(@RequestParam("targetUserId") Long targetUserId,
                                 @RequestParam("action") String action,
                                 Authentication authentication) {
         User currentUser = userService.getUserByEmail(authentication.getName());
@@ -75,7 +75,7 @@ public class MatchingController {
 
         logger.debug("Processing action: {} from user {} on target {}", action, currentUser.getEmail(), targetUserId);
 
-        java.util.Map<String, Object> response = new java.util.HashMap<>();
+        Map<String, Object> response = new HashMap<>();
         try {
             boolean isMatch = matchingService.performAction(currentUser, targetUserId, actionType);
             logger.debug("Action result: isMatch={}", isMatch);
