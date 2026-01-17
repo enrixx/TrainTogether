@@ -21,6 +21,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -170,8 +171,8 @@ public class MatchingService {
                 Predicate userLink = cb.equal(profileRoot.get("userId"), root.get("id"));
 
                 // Check weekdays
-                List<java.time.DayOfWeek> requestedDays = trainingDays.stream()
-                        .map(d -> java.time.DayOfWeek.valueOf(d.toUpperCase()))
+                List<DayOfWeek> requestedDays = trainingDays.stream()
+                        .map(d -> DayOfWeek.valueOf(d.toUpperCase()))
                         .collect(Collectors.toList());
                 Predicate dayMatch = dayJoin.get("weekday").in(requestedDays);
 
