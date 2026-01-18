@@ -13,6 +13,18 @@
 
     <main class="container-fluid py-4">
 
+        <!-- View for Rest Day (Transient Success Message) -->
+        <div id="view-rest-day" th:if="${param.success != null and param.success[0] == 'restday'}">
+            <div class="p-4 mb-4 bg-body-tertiary rounded-3 text-center">
+                <h3 class="text-success">Rest Day</h3>
+                <p class="text-muted">Enjoy your recovery!</p>
+                <div class="d-flex justify-content-center gap-2">
+                    <a th:href="@{/workouts/previous}" class="btn btn-secondary" th:text="#{workouts.previous}">See Previous Workouts</a>
+                    <button id="undo-rest-day-btn" class="btn btn-outline-primary">Log Workout Instead</button>
+                </div>
+            </div>
+        </div>
+
         <!-- View for Existing Workout -->
         <div id="view-todays-workout" th:if="${todaysWorkout != null and not todaysWorkout.isEmpty()}">
             <div class="p-4 mb-4 bg-body-tertiary rounded-3">
@@ -41,8 +53,41 @@
             </div>
         </div>
 
-        <!-- View for Logging a New Workout -->
-        <div id="log-new-workout" th:style="${todaysWorkout != null and not todaysWorkout.isEmpty() ? 'display: none;' : ''}">
+        <!-- View for No Workout Logged (Initial State) -->
+        <div id="view-no-workout" th:if="${(todaysWorkout == null or todaysWorkout.isEmpty()) and (param.success == null or param.success[0] != 'restday')}">
+            <div class="p-5 mb-4 bg-body-tertiary rounded-3 text-center">
+                <h2 class="mb-3">Ready to train?</h2>
+                <p class="text-muted mb-4">You haven't logged a workout for today yet.</p>
+
+                <div class="d-flex justify-content-center gap-3">
+                    <button id="start-logging-btn" class="btn btn-lg btn-primary">
+                        <i class="bi bi-plus-circle"></i> Log Workout
+                    </button>
+
+                    <!-- Mark as Rest Day Button (Only if split exists) -->
+                    <div th:if="${split != null}">
+                        <!-- Iterate to find today's day -->
+                        <th:block th:each="day : ${split.days}">
+                            <div th:if="${day.weekday.name() == currentDayOfWeek}" th:remove="tag">
+                                <form th:action="@{/workouts/log-restday}" method="post">
+                                    <input type="hidden" name="trainingDayId" th:value="${day.id}" />
+                                    <button type="submit" class="btn btn-lg btn-outline-secondary" formnovalidate>
+                                        <i class="bi bi-cup-hot"></i> Mark as Rest Day
+                                    </button>
+                                </form>
+                            </div>
+                        </th:block>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                     <a th:href="@{/workouts/previous}" class="text-decoration-none text-secondary" th:text="#{workouts.previous}">See Previous Workouts</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- View for Logging a New Workout (Hidden by default) -->
+        <div id="log-new-workout" style="display: none;">
             <!-- Header with Split Name and Edit Button -->
             <div class="p-4 mb-4 bg-body-tertiary rounded-3" >
                 <div class="container-fluid m-0">
@@ -52,12 +97,10 @@
                             <h3 th:if="${split == null}" th:text="#{profile.split.notfound}">Kein aktiver Trainingssplit gefunden.</h3>
                         </div>
                         <div class="col d-flex justify-content-end gap-2">
-                            <a th:href="@{/workouts/previous}" class="btn btn-secondary" th:if="${todaysWorkout == null or todaysWorkout.isEmpty()}" th:text="#{workouts.previous}">See Previous Workouts</a>
                             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editSplitModal" th:text="#{workouts.split.edit}">
                                 Trainingssplit bearbeiten
                             </button>
-                            <button id="cancel-edit-btn" class="btn btn-outline-secondary"
-                                    th:if="${todaysWorkout != null and not todaysWorkout.isEmpty()}" th:text="#{workouts.cancel}">
+                            <button id="cancel-edit-btn" class="btn btn-outline-secondary" th:text="#{workouts.cancel}">
                                 Cancel
                             </button>
                         </div>
@@ -120,9 +163,6 @@
 
                             <button type="button" class="btn btn-outline-primary mt-3 add-adhoc-exercise-btn" th:text="#{workouts.add.exercise}">+ Add Extra Exercise</button>
                             <button type="submit" class="btn btn-success mt-3" th:text="#{workouts.log.button}">Log Workout</button>
-
-                            <!-- Rest Day Button -->
-                            <button type="submit" formaction="/workouts/log-restday" class="btn btn-info mt-3" th:text="#{workouts.restday.button}">Mark as Rest Day</button>
                         </form>
                     </div>
                 </div>
@@ -187,6 +227,51 @@
     </script>
     <script src="/js/workout-logger.js"></script>
     <script src="/js/workout-progress-chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const startLoggingBtn = document.getElementById('start-logging-btn');
+            const logNewWorkoutDiv = document.getElementById('log-new-workout');
+            const viewNoWorkoutDiv = document.getElementById('view-no-workout');
+            const undoRestDayBtn = document.getElementById('undo-rest-day-btn');
+            const viewRestDayDiv = document.getElementById('view-rest-day');
+            const cancelEditBtn = document.getElementById('cancel-edit-btn');
+
+            if (startLoggingBtn) {
+                startLoggingBtn.addEventListener('click', function() {
+                    if (viewNoWorkoutDiv) viewNoWorkoutDiv.style.display = 'none';
+                    if (logNewWorkoutDiv) logNewWorkoutDiv.style.display = 'block';
+                });
+            }
+
+            if (undoRestDayBtn) {
+                undoRestDayBtn.addEventListener('click', function() {
+                    if (viewRestDayDiv) viewRestDayDiv.style.display = 'none';
+                    if (logNewWorkoutDiv) logNewWorkoutDiv.style.display = 'block';
+                });
+            }
+
+            // Handle cancel button behavior based on context
+            if (cancelEditBtn) {
+                // Remove existing click listeners to avoid conflicts if any
+                const newCancelBtn = cancelEditBtn.cloneNode(true);
+                cancelEditBtn.parentNode.replaceChild(newCancelBtn, cancelEditBtn);
+
+                newCancelBtn.addEventListener('click', function() {
+                    const viewTodaysWorkout = document.getElementById('view-todays-workout');
+
+                    if (logNewWorkoutDiv) logNewWorkoutDiv.style.display = 'none';
+
+                    if (viewTodaysWorkout) {
+                        // If we were editing an existing workout
+                        viewTodaysWorkout.style.display = 'block';
+                    } else {
+                        // If we were logging a new workout
+                        if (viewNoWorkoutDiv) viewNoWorkoutDiv.style.display = 'block';
+                    }
+                });
+            }
+        });
+    </script>
 
     <style>
         .deleted-exercise { text-decoration: line-through; background-color: #ffe6e6; opacity: 0.7; }

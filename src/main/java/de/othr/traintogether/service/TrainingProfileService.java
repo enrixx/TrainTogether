@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -74,6 +75,8 @@ public class TrainingProfileService {
         for (CustomExercise ex : customExercises) {
             options.add(new ExerciseOptionDto("C-" + ex.getId(), ex.getName(), "CUSTOM"));
         }
+
+        options.sort(Comparator.comparing(ExerciseOptionDto::getName, String.CASE_INSENSITIVE_ORDER));
 
         return options;
     }
@@ -199,5 +202,55 @@ public class TrainingProfileService {
 
         profile.addMeasurements(measurements);
         profileRepo.save(profile);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CustomExercise> getCustomExercises(String email) {
+        UserDto user = userService.findUserDTOByEmail(email);
+        return customExerciseRepository.findAllByCreatedBy_Id(user.getId());
+    }
+
+    @Transactional
+    public void createCustomExercises(String email, List<String> names) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        
+        for (String name : names) {
+            if (name != null && !name.trim().isEmpty()) {
+                CustomExercise customExercise = new CustomExercise(name.trim(), user);
+                customExerciseRepository.save(customExercise);
+            }
+        }
+    }
+
+    @Transactional
+    public void deleteCustomExercises(String email, List<Long> customExerciseIds) {
+        UserDto user = userService.findUserDTOByEmail(email);
+        TrainingProfile profile = profileRepo.findByUserId(user.getId());
+        
+        for (Long customExerciseId : customExerciseIds) {
+            CustomExercise exercise = customExerciseRepository.findById(customExerciseId).orElse(null);
+
+            if (exercise != null && exercise.getCreatedBy().getId().equals(user.getId())) {
+                if (profile != null) {
+                    for (TrainingSplit split : profile.getSplits()) {
+                        if (split.getDays() != null) {
+                            for (TrainingDay day : split.getDays()) {
+                                day.getPersonalExercises().removeIf(pe -> 
+                                    pe.getCustomExercise() != null && pe.getCustomExercise().getId().equals(customExerciseId)
+                                );
+                            }
+                        }
+                    }
+                }
+
+                List<PersonalExercise> usages = exerciseRepo.findByCustomExercise_IdAndUser_Id(customExerciseId, user.getId());
+                exerciseRepo.deleteAll(usages);
+
+                customExerciseRepository.delete(exercise);
+            }
+        }
+        if (profile != null) {
+            profileRepo.save(profile);
+        }
     }
 }

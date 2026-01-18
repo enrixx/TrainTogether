@@ -2,7 +2,7 @@
     <div class="col-sm-3">
         <select class="form-select adhoc-exercise-select">
             <option value="" selected disabled>Choose exercise...</option>
-            <option th:each="ex : ${allExercises}" th:value="${ex.id}" th:text="${ex.name}"></option>
+            <option th:each="ex : ${allExercises}" th:value="${ex.value}" th:text="${ex.name}"></option>
         </select>
     </div>
     <div class="col-sm-2">

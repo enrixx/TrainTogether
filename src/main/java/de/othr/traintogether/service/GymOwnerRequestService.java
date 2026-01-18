@@ -29,17 +29,20 @@ public class GymOwnerRequestService {
     private final AuthorityRepository authorityRepository;
     private final EmailService emailService;
     private final GymRepository gymRepository;
+    private final GymService gymService;
 
     public GymOwnerRequestService(GymOwnerRequestRepository requestRepository,
                                   UserRepository userRepository,
                                   AuthorityRepository authorityRepository,
                                   EmailService emailService,
-                                  GymRepository gymRepository) {
+                                  GymRepository gymRepository,
+                                  GymService gymService) {
         this.requestRepository = requestRepository;
         this.userRepository = userRepository;
         this.authorityRepository = authorityRepository;
         this.emailService = emailService;
         this.gymRepository = gymRepository;
+        this.gymService = gymService;
     }
 
     @Transactional(readOnly = true)
@@ -58,7 +61,6 @@ public class GymOwnerRequestService {
                 .orElseThrow(() -> new RuntimeException("Request not found"));
     }
 
-    // ToDo: Approve and decline refactor
     @Transactional
     public boolean approveRequest(Long requestId, String adminEmail) {
         GymOwnerRequest request = requestRepository.findById(requestId)
@@ -199,13 +201,22 @@ public class GymOwnerRequestService {
             logger.info("User resubmitting after rejection - updating existing gym for user: {}", userEmail);
 
             gym = request.getGym();
-            gym.setName(gymName);
-            gym.setAddress(gymAddress);
-            gym.setCity(city);
-            gym.setPostalCode(postalCode);
-            gym.setPhoneNumber(phoneNumber);
-            gym.setDescription(gymDescription);
-            gymRepository.save(gym);
+            
+            // Create a temporary object to hold new values for update
+            Gym gymUpdate = new Gym();
+            gymUpdate.setName(gymName);
+            gymUpdate.setAddress(gymAddress);
+            gymUpdate.setCity(city);
+            gymUpdate.setPostalCode(postalCode);
+            gymUpdate.setPhoneNumber(phoneNumber);
+            gymUpdate.setDescription(gymDescription);
+            // Preserve existing banner info as it's not in the form
+            gymUpdate.setBannerText(gym.getBannerText());
+            gymUpdate.setBannerTextColor(gym.getBannerTextColor());
+            gymUpdate.setBannerImageUrl(gym.getBannerImageUrl());
+            
+            // Use GymService to update (and geocode if address changed)
+            gym = gymService.update(gym.getId(), gymUpdate);
 
             // Update the request back to PENDING status
             request.setRequestMessage(gymDescription);
@@ -215,8 +226,6 @@ public class GymOwnerRequestService {
             request.setReviewedAt(null);
             request.setReviewedBy(null);
         } else {
-            // User is submitting for the FIRST TIME
-            // Create both a new gym and a new request
             logger.info("First-time submission - creating new gym and request for user: {}", userEmail);
 
             gym = new Gym();
@@ -226,8 +235,9 @@ public class GymOwnerRequestService {
             gym.setPostalCode(postalCode);
             gym.setPhoneNumber(phoneNumber);
             gym.setDescription(gymDescription);
-            gym.setOwner(user);
-            gymRepository.save(gym);
+            
+            // Use GymService to create (and geocode)
+            gym = gymService.create(gym, user);
 
             request = new GymOwnerRequest();
             request.setUser(user);
