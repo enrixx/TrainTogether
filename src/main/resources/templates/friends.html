@@ -40,13 +40,21 @@
             </div>
 
             <!-- Pending Requests -->
-            <div th:if="${not #lists.isEmpty(pendingRequests)}" class="mb-4">
-                <h4 th:text="#{friends.requests.title}">Pending Requests</h4>
-                <div class="list-group">
-                    <div th:each="request : ${pendingRequests}" class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <span th:text="${request.requester.firstName} + ' ' + ${request.requester.lastName}">Name</span>
-                            <small class="text-muted" th:text="'(' + ${request.requester.email} + ')'">email</small>
+            <div th:if="${not #lists.isEmpty(pendingRequests)}" class="card mb-4">
+                <div class="card-header" th:text="#{friends.requests.title}">
+                    Pending Requests
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li th:each="request : ${pendingRequests}" class="list-group-item d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <img th:if="${request.requester.profilePictureUrl}" th:src="${request.requester.profilePictureUrl}"
+                                 class="rounded-circle me-3" width="40" height="40" alt="Profile">
+                            <img th:unless="${request.requester.profilePictureUrl}" th:src="@{/images/default-profile.png}"
+                                 class="rounded-circle me-3" width="40" height="40" alt="Profile">
+                            <div>
+                                <h6 class="mb-0" th:text="${request.requester.firstName} + ' ' + ${request.requester.lastName}">Name</h6>
+                                <small class="text-muted" th:text="${request.requester.email}">Email</small>
+                            </div>
                         </div>
                         <div>
                             <form th:action="@{/friends/{id}/accept(id=${request.id})}" method="post" class="d-inline">
@@ -56,8 +64,34 @@
                                 <button type="submit" class="btn btn-outline-danger btn-sm" th:text="#{friends.request.decline}">Decline</button>
                             </form>
                         </div>
-                    </div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Sent Requests -->
+            <div th:if="${not #lists.isEmpty(sentRequests)}" class="card mb-4">
+                <div class="card-header" th:text="#{friends.sent.requests.title}">
+                    Sent Requests
                 </div>
+                <ul class="list-group list-group-flush">
+                    <li th:each="request : ${sentRequests}" class="list-group-item d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <img th:if="${request.addressee.profilePictureUrl}" th:src="${request.addressee.profilePictureUrl}"
+                                 class="rounded-circle me-3" width="40" height="40" alt="Profile">
+                            <img th:unless="${request.addressee.profilePictureUrl}" th:src="@{/images/default-profile.png}"
+                                 class="rounded-circle me-3" width="40" height="40" alt="Profile">
+                            <div>
+                                <h6 class="mb-0" th:text="${request.addressee.firstName} + ' ' + ${request.addressee.lastName}">Name</h6>
+                                <small class="text-muted" th:text="${request.addressee.email}">Email</small>
+                            </div>
+                        </div>
+                        <div>
+                            <form th:action="@{/friends/{id}/cancel(id=${request.id})}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-outline-secondary btn-sm" th:text="#{friends.action.cancel}">Cancel Request</button>
+                            </form>
+                        </div>
+                    </li>
+                </ul>
             </div>
 
             <!-- Friends List -->
@@ -110,9 +144,15 @@
                 </div>
                 <ul class="list-group list-group-flush">
                     <li th:each="blocked : ${blockedUsers}" class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <span th:text="${blocked.firstName} + ' ' + ${blocked.lastName}">Name</span>
-                            <small class="text-muted ms-2" th:text="'(' + ${blocked.email} + ')'">email</small>
+                        <div class="d-flex align-items-center">
+                            <img th:if="${blocked.profilePictureUrl}" th:src="${blocked.profilePictureUrl}"
+                                 class="rounded-circle me-3" width="40" height="40" alt="Profile">
+                            <img th:unless="${blocked.profilePictureUrl}" th:src="@{/images/default-profile.png}"
+                                 class="rounded-circle me-3" width="40" height="40" alt="Profile">
+                            <div>
+                                <h6 class="mb-0" th:text="${blocked.firstName} + ' ' + ${blocked.lastName}">Name</h6>
+                                <small class="text-muted" th:text="${blocked.email}">Email</small>
+                            </div>
                         </div>
                         <form th:action="@{/friends/unblock}" method="post">
                             <input type="hidden" name="userId" th:value="${blocked.id}">

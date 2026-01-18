@@ -136,12 +136,15 @@ public class FriendshipService {
         Friendship friendship = friendshipRepository.findById(friendshipId)
                 .orElseThrow(() -> new IllegalArgumentException("Friendship not found"));
 
-        if (!friendship.getAddressee().getId().equals(user.getId())) {
-            throw new IllegalStateException("Not authorized to accept this request");
+        lockUsersInOrder(friendship.getRequester().getId(), friendship.getAddressee().getId());
+
+        // Re-check status under lock
+        if (friendship.getStatus() != FriendshipStatus.PENDING) {
+            throw new IllegalStateException("Request is no longer pending");
         }
 
-        if (friendship.getStatus() != FriendshipStatus.PENDING) {
-            throw new IllegalStateException("Request is not pending");
+        if (!friendship.getAddressee().getId().equals(user.getId())) {
+            throw new IllegalStateException("Not authorized to accept this request");
         }
 
         friendship.setStatus(FriendshipStatus.ACCEPTED);
@@ -152,12 +155,15 @@ public class FriendshipService {
         Friendship friendship = friendshipRepository.findById(friendshipId)
                 .orElseThrow(() -> new IllegalArgumentException("Friendship not found"));
 
-        if (!friendship.getAddressee().getId().equals(user.getId())) {
-            throw new IllegalStateException("Not authorized to decline this request");
+        lockUsersInOrder(friendship.getRequester().getId(), friendship.getAddressee().getId());
+
+        // Re-check status under lock
+        if (friendship.getStatus() != FriendshipStatus.PENDING) {
+            throw new IllegalStateException("Request is no longer pending");
         }
 
-        if (friendship.getStatus() != FriendshipStatus.PENDING) {
-            throw new IllegalStateException("Request is not pending");
+        if (!friendship.getAddressee().getId().equals(user.getId())) {
+            throw new IllegalStateException("Not authorized to decline this request");
         }
 
         friendship.setStatus(FriendshipStatus.DECLINED);
@@ -196,7 +202,31 @@ public class FriendshipService {
         return friendshipRepository.findByAddresseeAndStatus(user, FriendshipStatus.PENDING);
     }
 
+    public List<Friendship> getSentPendingRequests(User user) {
+        return friendshipRepository.findByRequesterAndStatus(user, FriendshipStatus.PENDING);
+    }
+
+    public void cancelRequest(Long friendshipId, User user) {
+        Friendship friendship = friendshipRepository.findById(friendshipId)
+                .orElseThrow(() -> new IllegalArgumentException("Friendship not found"));
+
+        lockUsersInOrder(friendship.getRequester().getId(), friendship.getAddressee().getId());
+
+        // Re-check status under lock
+        if (friendship.getStatus() != FriendshipStatus.PENDING) {
+            throw new IllegalStateException("Request is no longer pending");
+        }
+
+        if (!friendship.getRequester().getId().equals(user.getId())) {
+            throw new IllegalStateException("Not authorized to cancel this request");
+        }
+
+        friendshipRepository.delete(friendship);
+    }
+
     public void removeFriend(User user, Long friendId) {
+        lockUsersInOrder(user.getId(), friendId);
+
         User friend = userRepository.findById(friendId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 

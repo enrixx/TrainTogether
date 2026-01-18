@@ -36,10 +36,12 @@ public class FriendController {
         User user = userService.getUserByEmail(authentication.getName());
         List<User> friends = friendshipService.getFriends(user);
         List<Friendship> pendingRequests = friendshipService.getPendingRequests(user);
+        List<Friendship> sentRequests = friendshipService.getSentPendingRequests(user);
         List<User> blockedUsers = friendshipService.getBlockedUsers(user);
 
         model.addAttribute("friends", friends);
         model.addAttribute("pendingRequests", pendingRequests);
+        model.addAttribute("sentRequests", sentRequests);
         model.addAttribute("blockedUsers", blockedUsers);
         return "friends";
     }
@@ -141,5 +143,17 @@ public class FriendController {
         Long chatRoomId = chatRoomService.createDm(user.getEmail(), friend.getEmail());
 
         return "redirect:/chat/" + chatRoomId;
+    }
+
+    @PostMapping("/{id}/cancel")
+    public String cancelRequest(@PathVariable Long id, Authentication authentication, RedirectAttributes redirectAttributes) {
+        User user = userService.getUserByEmail(authentication.getName());
+        try {
+            friendshipService.cancelRequest(id, user);
+            redirectAttributes.addFlashAttribute("success", messageSource.getMessage("friends.action.cancel.success", null, LocaleContextHolder.getLocale()));
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/friends";
     }
 }
