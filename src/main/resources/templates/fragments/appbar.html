@@ -8,10 +8,25 @@
         </div>
 
         <div class="dropdown d-flex align-items-center">
-            <a href="#" data-bs-toggle="dropdown" aria-expanded="false" class="d-inline-block">
+            <a href="#" data-bs-toggle="dropdown" aria-expanded="false" class="d-inline-block text-decoration-none">
                 <img sec:authorize="isAnonymous()" th:src="@{/images/svg/person-circle.svg}" alt="Profile" width="40" height="40" />
-                <!-- TODO: add user image-->
-                <img sec:authorize="isAuthenticated()" th:src="@{/images/svg/person-check-fill.svg}" alt="Profile" width="40" height="40" />
+
+                <div sec:authorize="isAuthenticated()" th:if="${currentUser != null}">
+                    <img th:if="${currentUser.profilePictureUrl != null and !#strings.isEmpty(currentUser.profilePictureUrl)}"
+                         th:src="${currentUser.profilePictureUrl}"
+                         alt="Profile"
+                         class="rounded-circle"
+                         width="40" height="40"
+                         style="object-fit: cover; border: 2px solid white;">
+
+                    <div th:unless="${currentUser.profilePictureUrl != null and !#strings.isEmpty(currentUser.profilePictureUrl)}"
+                         class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center text-white fw-bold"
+                         style="width: 40px; height: 40px; border: 2px solid white; font-size: 1.2rem;">
+                        <span th:text="${currentUser.firstName != null ? #strings.substring(currentUser.firstName, 0, 1) + #strings.substring(currentUser.lastName, 0, 1) : '?'}"></span>
+                    </div>
+                </div>
+                <!-- Fallback if currentUser is not in model but authenticated (should rarely happen if controller adds it) -->
+                <img sec:authorize="isAuthenticated()" th:if="${currentUser == null}" th:src="@{/images/svg/person-check-fill.svg}" alt="Profile" width="40" height="40" />
             </a>
             <ul class="dropdown-menu dropdown-menu-end text-small">
                 <li sec:authorize="isAuthenticated()"><a class="dropdown-item" href="/profile">Profile</a></li>
