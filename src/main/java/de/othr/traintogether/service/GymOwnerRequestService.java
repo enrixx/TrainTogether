@@ -58,7 +58,6 @@ public class GymOwnerRequestService {
                 .orElseThrow(() -> new RuntimeException("Request not found"));
     }
 
-    // ToDo: Approve and decline refactor
     @Transactional
     public boolean approveRequest(Long requestId, String adminEmail) {
         GymOwnerRequest request = requestRepository.findById(requestId)
