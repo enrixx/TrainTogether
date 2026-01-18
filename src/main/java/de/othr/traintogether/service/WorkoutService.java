@@ -203,11 +203,16 @@ public class WorkoutService {
 
     @Transactional
     public void logRestDay(String email, Long trainingDayId) {
-        UserDto user = userService.findUserDTOByEmail(email);
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("User not found"));
+        
+        // We still check if the day exists to ensure valid request, but we don't use it for deletion
         if (!dayRepo.existsById(trainingDayId)) {
             throw new IllegalArgumentException("Training day not found");
         }
+        
         List<TrainingExercise> existing = trainingExerciseRepo.findByDateAndPersonalExercise_User_Id(LocalDate.now(), user.getId());
-        if (!existing.isEmpty()) trainingExerciseRepo.deleteAll(existing);
+        if (!existing.isEmpty()) {
+            trainingExerciseRepo.deleteAll(existing);
+        }
     }
 }

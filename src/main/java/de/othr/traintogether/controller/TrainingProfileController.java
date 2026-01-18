@@ -3,6 +3,7 @@ package de.othr.traintogether.controller;
 import de.othr.traintogether.dto.BatchExerciseUpdateRequestDto;
 import de.othr.traintogether.dto.BodyMeasurementsDto;
 import de.othr.traintogether.dto.ExerciseOptionDto;
+import de.othr.traintogether.model.TrainingModel.CustomExercise;
 import de.othr.traintogether.model.TrainingModel.TrainingProfile;
 import de.othr.traintogether.service.TrainingProfileService;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class TrainingProfileController {
         TrainingProfile profile = trainingProfileService.getTrainingProfile(email);
         
         List<ExerciseOptionDto> allExercises = trainingProfileService.getAvailableExercises(email, locale);
+        List<CustomExercise> customExercises = trainingProfileService.getCustomExercises(email);
 
         if (profile == null) {
             model.addAttribute("error", "Kein Trainingsprofil gefunden.");
@@ -43,6 +45,7 @@ public class TrainingProfileController {
             model.addAttribute("latestBodyMeasurements", profile.getMeasurements().getLast());
         }
         model.addAttribute("allExercises", allExercises);
+        model.addAttribute("customExercises", customExercises);
         model.addAttribute("activeSplit", profile.getActiveTrainingSplitId());
 
         return "TrainingPages/TrainingProfile";
@@ -79,8 +82,6 @@ public class TrainingProfileController {
             @RequestParam Long trainingDayId,
             @RequestParam List<Long> personalExerciseIds
     ) {
-        // This method was empty in the original controller, keeping it as is or should it be implemented?
-        // Assuming it's a placeholder or handled elsewhere for now, but keeping the endpoint.
         return "redirect:/training/profile/me";
     }
 
@@ -112,5 +113,17 @@ public class TrainingProfileController {
     ) {
         trainingProfileService.updateMeasurements(authentication.getName(), bodyMeasurementsDto);
         return "redirect:/training/profile/me?success=measurements-updated";
+    }
+
+    @PostMapping("/training/profile/me/create-custom-exercises")
+    public String createCustomExercises(@RequestParam("exerciseNames") List<String> exerciseNames, Authentication authentication) {
+        trainingProfileService.createCustomExercises(authentication.getName(), exerciseNames);
+        return "redirect:/training/profile/me?success=custom-exercises-created";
+    }
+
+    @PostMapping("/training/profile/me/delete-custom-exercises")
+    public String deleteCustomExercises(@RequestParam("exerciseIds") List<Long> exerciseIds, Authentication authentication) {
+        trainingProfileService.deleteCustomExercises(authentication.getName(), exerciseIds);
+        return "redirect:/training/profile/me?success=custom-exercises-deleted";
     }
 }

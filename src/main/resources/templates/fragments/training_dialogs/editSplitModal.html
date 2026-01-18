@@ -58,6 +58,17 @@
                                 + Neuer Split
                             </button>
                         </li>
+
+                        <!-- New Custom Exercises Tab -->
+                        <li class="nav-item ms-auto">
+                            <button class="nav-link"
+                                    id="custom-exercises-tab"
+                                    data-bs-toggle="tab"
+                                    data-bs-target="#custom-exercises-content"
+                                    type="button" role="tab">
+                                Custom Exercises
+                            </button>
+                        </li>
                     </ul>
 
                     <div class="tab-content mt-3">
@@ -148,6 +159,61 @@
                             </form>
                         </div>
 
+                        <!-- CUSTOM EXERCISES CONTENT -->
+                        <div class="tab-pane fade p-3"
+                             id="custom-exercises-content" role="tabpanel">
+                            <div class="container-fluid">
+                                <div class="row">
+                                    <!-- Left Column: Add Exercises -->
+                                    <div class="col-md-6">
+                                        <h5>Add Custom Exercises</h5>
+                                        <p class="text-muted small">Add your own exercises here.</p>
+
+                                        <!-- Add Custom Exercise Form -->
+                                        <form th:action="@{/training/profile/me/create-custom-exercises}" method="post" class="mb-4">
+                                            <div id="custom-exercises-inputs">
+                                                <div class="input-group mb-2" style="max-width: 400px;">
+                                                    <input type="text" name="exerciseNames" class="form-control" placeholder="Exercise Name" required>
+                                                    <button class="btn btn-outline-secondary remove-exercise-input" type="button" style="display:none;">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+                                                          <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex gap-2">
+                                                <button type="button" class="btn btn-secondary btn-sm" id="add-more-exercises-btn">+ Add another</button>
+                                                <button class="btn btn-success btn-sm" type="submit">Save Exercises</button>
+                                            </div>
+                                        </form>
+                                    </div>
+
+                                    <!-- Right Column: List of Custom Exercises -->
+                                    <div class="col-md-6">
+                                        <h5>Existing Exercises</h5>
+                                        <p class="text-muted small">Select to delete.</p>
+
+                                        <form th:action="@{/training/profile/me/delete-custom-exercises}" method="post" id="delete-custom-exercises-form">
+                                            <div class="mb-2" th:if="${!#lists.isEmpty(customExercises)}">
+                                                <button type="submit" class="btn btn-danger btn-sm" id="delete-selected-btn" disabled>Delete Selected</button>
+                                            </div>
+                                            <div style="max-height: 300px; overflow-y: auto;">
+                                                <ul class="list-group">
+                                                    <li class="list-group-item d-flex align-items-center" th:each="customEx : ${customExercises}">
+                                                        <input class="form-check-input me-2 custom-exercise-checkbox" type="checkbox" name="exerciseIds" th:value="${customEx.id}" aria-label="...">
+                                                        <span th:text="${customEx.name}"></span>
+                                                    </li>
+                                                    <li class="list-group-item text-center text-muted" th:if="${#lists.isEmpty(customExercises)}">
+                                                        No custom exercises yet.
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
                 </div>
@@ -160,4 +226,50 @@
             </div>
         </div>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const addMoreBtn = document.getElementById('add-more-exercises-btn');
+            const inputsContainer = document.getElementById('custom-exercises-inputs');
+
+            if(addMoreBtn && inputsContainer) {
+                addMoreBtn.addEventListener('click', function() {
+                    const div = document.createElement('div');
+                    div.className = 'input-group mb-2';
+                    div.style.maxWidth = '400px';
+                    div.innerHTML = `
+                        <input type="text" name="exerciseNames" class="form-control" placeholder="Exercise Name" required>
+                        <button class="btn btn-outline-secondary remove-exercise-input" type="button">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+                              <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/>
+                            </svg>
+                        </button>
+                    `;
+                    inputsContainer.appendChild(div);
+
+                    // Add event listener to the new remove button
+                    div.querySelector('.remove-exercise-input').addEventListener('click', function() {
+                        div.remove();
+                    });
+                });
+            }
+
+            // Checkbox logic for delete button
+            const checkboxes = document.querySelectorAll('.custom-exercise-checkbox');
+            const deleteBtn = document.getElementById('delete-selected-btn');
+
+            if(checkboxes && deleteBtn) {
+                function updateDeleteButton() {
+                    let anyChecked = false;
+                    checkboxes.forEach(cb => {
+                        if(cb.checked) anyChecked = true;
+                    });
+                    deleteBtn.disabled = !anyChecked;
+                }
+
+                checkboxes.forEach(cb => {
+                    cb.addEventListener('change', updateDeleteButton);
+                });
+            }
+        });
+    </script>
 </div>

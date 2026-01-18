@@ -30,6 +30,7 @@ public class UserService {
     private final GymRepository gymRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final GymService gymService;
 
     public UserService(UserRepository userRepository,
                        AuthorityRepository authorityRepository,
@@ -38,7 +39,8 @@ public class UserService {
                        GymOwnerRequestRepository gymOwnerRequestRepository,
                        GymRepository gymRepository,
                        PasswordResetTokenRepository passwordResetTokenRepository,
-                       ApplicationEventPublisher eventPublisher) {
+                       ApplicationEventPublisher eventPublisher,
+                       GymService gymService) {
         this.userRepository = userRepository;
         this.authorityRepository = authorityRepository;
         this.passwordEncoder = passwordEncoder;
@@ -47,6 +49,7 @@ public class UserService {
         this.gymRepository = gymRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.eventPublisher = eventPublisher;
+        this.gymService = gymService;
     }
 
     // FRONTEND CALLS
@@ -120,8 +123,9 @@ public class UserService {
         gym.setPostalCode(registerDto.getPostalCode());
         gym.setPhoneNumber(registerDto.getPhoneNumber());
         gym.setDescription(registerDto.getGymDescription());
-        gym.setOwner(user);
-        gym = gymRepository.save(gym);
+        
+        // Use GymService to create (and geocode) the gym
+        gym = gymService.create(gym, user);
 
         // Get the language the user is currently using for registration
         Locale currentLocale = LocaleContextHolder.getLocale();

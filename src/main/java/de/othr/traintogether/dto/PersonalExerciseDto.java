@@ -5,10 +5,8 @@ import lombok.Data;
 @Data
 public class PersonalExerciseDto {
     private Long id;
+    private Long standardExerciseId;
+    private Long customExerciseId;
     private String name;
-
-    public PersonalExerciseDto(Long id, String name) {
-        this.id = id;
-        this.name = name;
-    }
+    private int sets;
 }
