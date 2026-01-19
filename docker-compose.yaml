@@ -1,7 +1,7 @@
 services:
   app:
     build: .
-    # image: traintogether-app:latest  <-- Removed to force local build in Portainer
+    # image: traintogether-app:latest
     container_name: traintogether-app
     restart: unless-stopped
     ports:
@@ -24,6 +24,7 @@ services:
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
       OPENWEATHERMAP_API_KEY: ${OPENWEATHERMAP_API_KEY}
       GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY}
+      # FORCE_REBUILD_TRIGGER: 1
     depends_on:
       database:
         condition: service_healthy
