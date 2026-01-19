@@ -1,7 +1,7 @@
 services:
   app:
     build: .
-    image: traintogether-app:latest
+    # image: traintogether-app:latest  <-- Removed to force local build in Portainer
     container_name: traintogether-app
     restart: unless-stopped
     ports:
