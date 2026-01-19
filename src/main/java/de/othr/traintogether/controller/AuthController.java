@@ -211,6 +211,7 @@ public class AuthController {
         String token = userService.createPasswordResetToken(email);
 
         // Always show success message (don't reveal if email exists)
+        boolean emailSent = true;
         if (token != null) {
             var userDto = userService.findUserDTOByEmail(email);
             if (userDto != null) {
@@ -218,11 +219,15 @@ public class AuthController {
                 String language = currentLocale.getLanguage();
                 String firstName = userDto.getFirstName() != null ? userDto.getFirstName() : "User";
 
-                emailService.sendPasswordResetEmail(email, firstName, token, language);
+                emailSent = emailService.sendPasswordResetEmail(email, firstName, token, language);
             }
         }
 
-        redirectAttributes.addFlashAttribute("successMessage", "If an account with that email exists, a password reset link has been sent.");
+        if (emailSent) {
+            redirectAttributes.addFlashAttribute("successMessage", "If an account with that email exists, a password reset link has been sent.");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to send password reset email. Please try again later.");
+        }
         return "redirect:/forgot-password";
     }
 
