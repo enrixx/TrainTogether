@@ -55,7 +55,7 @@
                                     <!-- Gym Information -->
                                     <div th:if="${request.gym != null}" class="mb-3">
                                         <h6 class="text-primary mb-2" th:text="#{admin.requests.gym.info}">Gym Information:</h6>
-                                        <div class="bg-light p-3 rounded">
+                                        <div class="bg-body-tertiary p-3 rounded">
                                             <p class="mb-1"><strong th:text="#{admin.requests.gym.name}">Gym Name:</strong> <span th:text="${request.gym.name}">Gym Name</span></p>
                                             <p class="mb-1"><strong th:text="#{admin.requests.gym.address}">Address:</strong> <span th:text="${request.gym.address}">Address</span></p>
                                             <p class="mb-1"><strong th:text="#{admin.requests.gym.city}">City:</strong> <span th:text="${request.gym.city}">City</span>, <span th:text="${request.gym.postalCode}">Postal Code</span></p>
