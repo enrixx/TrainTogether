@@ -50,6 +50,7 @@ class WorkoutServiceTest {
         userDto.setId(1L);
         TrainingProfile profile = new TrainingProfile(1L);
         TrainingSplit split = new TrainingSplit("Split");
+        split.setId(100L); // Set ID so it can be found
         profile.addSplit(split);
         profile.setActiveTrainingSplitId(split.getId());
 
@@ -147,7 +148,7 @@ class WorkoutServiceTest {
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
         when(dayRepo.existsById(dayId)).thenReturn(true);
-        when(dayRepo.findById(dayId)).thenReturn(Optional.of(new TrainingDay())); // Mock findById as it is called
+        // Removed unnecessary findById stubbing
         when(trainingExerciseRepo.findByDateAndPersonalExercise_User_Id(any(LocalDate.class), eq(1L)))
                 .thenReturn(List.of(existingEx));
 
