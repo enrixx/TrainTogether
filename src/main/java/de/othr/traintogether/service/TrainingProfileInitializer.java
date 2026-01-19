@@ -6,9 +6,12 @@ import de.othr.traintogether.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -28,8 +31,9 @@ public class TrainingProfileInitializer {
     private final StandardExerciseRepository standardExerciseRepository;
     private final TrainingDayRepository trainingDayRepo;
 
-    @Transactional
-    @EventListener
+    @Async
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onUserCreated(UserCreatedEvent event) {
         User user = event.getUser();
         logger.info("Initializing training profile for user: {}", user.getEmail());

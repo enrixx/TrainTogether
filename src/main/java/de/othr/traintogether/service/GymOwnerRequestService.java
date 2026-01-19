@@ -62,7 +62,7 @@ public class GymOwnerRequestService {
     }
 
     @Transactional
-    public boolean approveRequest(Long requestId, String adminEmail) {
+    public void approveRequest(Long requestId, String adminEmail) {
         GymOwnerRequest request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new RuntimeException("Request not found"));
 
@@ -93,24 +93,16 @@ public class GymOwnerRequestService {
 
         // Send email in the language the user used when submitting the request; default is english
         String language = request.getRequestLanguage() != null ? request.getRequestLanguage() : "en";
-        boolean emailSent = emailService.sendGymOwnerApprovalEmail(
+        emailService.sendGymOwnerApprovalEmail(
                 user.getEmail(),
                 user.getFirstName(),
                 request.getGym().getName(),
                 language
         );
-
-        if (emailSent) {
-            logger.info("Approval email sent to user: {} in {} language", user.getEmail(), language);
-        } else {
-            logger.warn("Failed to send approval email to user: {}", user.getEmail());
-        }
-
-        return emailSent;
     }
 
     @Transactional
-    public boolean rejectRequest(Long requestId, String adminEmail) {
+    public void rejectRequest(Long requestId, String adminEmail) {
         GymOwnerRequest request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new RuntimeException("Request not found"));
 
@@ -129,20 +121,12 @@ public class GymOwnerRequestService {
 
         // Send email in the language the user used when submitting the request; default is english
         String language = request.getRequestLanguage() != null ? request.getRequestLanguage() : "en";
-        boolean emailSent = emailService.sendGymOwnerRejectionEmail(
+        emailService.sendGymOwnerRejectionEmail(
                 request.getUser().getEmail(),
                 request.getUser().getFirstName(),
                 request.getGym().getName(),
                 language
         );
-
-        if (emailSent) {
-            logger.info("Rejection email sent to user: {} in {} language", request.getUser().getEmail(), language);
-        } else {
-            logger.warn("Failed to send rejection email to user: {}", request.getUser().getEmail());
-        }
-
-        return emailSent;
     }
 
     @Transactional(readOnly = true)

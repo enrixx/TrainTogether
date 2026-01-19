@@ -31,6 +31,7 @@ public class UserService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final GymService gymService;
+    private final EmailService emailService;
 
     public UserService(UserRepository userRepository,
                        AuthorityRepository authorityRepository,
@@ -40,7 +41,8 @@ public class UserService {
                        GymRepository gymRepository,
                        PasswordResetTokenRepository passwordResetTokenRepository,
                        ApplicationEventPublisher eventPublisher,
-                       GymService gymService) {
+                       GymService gymService,
+                       EmailService emailService) {
         this.userRepository = userRepository;
         this.authorityRepository = authorityRepository;
         this.passwordEncoder = passwordEncoder;
@@ -50,17 +52,23 @@ public class UserService {
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.eventPublisher = eventPublisher;
         this.gymService = gymService;
+        this.emailService = emailService;
     }
 
     // FRONTEND CALLS
     @Transactional
     public void registerUser(RegisterDto registerDto) {
-        registerUser(registerDto, Role.USER);
+        registerUser(registerDto, Role.USER, true);
     }
 
     // FOR TESTING PURPOSES ONLY / DATA INITIALIZER
     @Transactional
     public void registerUser(RegisterDto registerDto, Role role) {
+        registerUser(registerDto, role, true);
+    }
+
+    @Transactional
+    public void registerUser(RegisterDto registerDto, Role role, boolean sendEmail) {
         String email = registerDto.getEmail().toLowerCase();
         String rawPassword = registerDto.getPassword();
         String firstName = registerDto.getFirstName();
@@ -85,10 +93,22 @@ public class UserService {
         authorityRepository.save(authorityRole);
 
         eventPublisher.publishEvent(new UserCreatedEvent(user));
+
+        if (sendEmail) {
+            // Send welcome email
+            Locale currentLocale = LocaleContextHolder.getLocale();
+            String language = currentLocale.getLanguage();
+            emailService.sendWelcomeEmail(email, firstName, language);
+        }
     }
 
     @Transactional
     public void registerGymOwner(GymOwnerRegisterDto registerDto) {
+        registerGymOwner(registerDto, true);
+    }
+
+    @Transactional
+    public void registerGymOwner(GymOwnerRegisterDto registerDto, boolean sendEmail) {
         String email = registerDto.getEmail().toLowerCase();
         String rawPassword = registerDto.getPassword();
         String firstName = registerDto.getFirstName();
@@ -127,11 +147,9 @@ public class UserService {
         // Use GymService to create (and geocode) the gym
         gym = gymService.create(gym, user);
 
-        // Get the language the user is currently using for registration
         Locale currentLocale = LocaleContextHolder.getLocale();
         String language = currentLocale.getLanguage();
 
-        // Create a gym owner request linked to the gym
         GymOwnerRequest request = new GymOwnerRequest();
         request.setUser(user);
         request.setGym(gym);
@@ -141,6 +159,10 @@ public class UserService {
         request.setRequestedAt(LocalDateTime.now());
 
         gymOwnerRequestRepository.save(request);
+
+        if (sendEmail) {
+            emailService.sendWelcomeEmail(email, firstName, language);
+        }
     }
 
     @Transactional(readOnly = true)

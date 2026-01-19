@@ -119,11 +119,11 @@ public class DataInitializer implements CommandLineRunner {
             return;
         }
 
-        // Regular users
-        userService.registerUser(new RegisterDto("user@u", "user", "Max", "Mustermann", "male", LocalDate.of(1990, 1, 1)), Role.USER);
-        userService.registerUser(new RegisterDto("admin@a", "admin", "Anton", "Admin", "male", LocalDate.of(1990, 1, 1)), Role.ADMIN);
-        userService.registerUser(new RegisterDto("owner@o", "owner", "Bernhard", "Owner", "male", LocalDate.of(1990, 1, 1)), Role.GYM_OWNER);
-        userService.registerUser(new RegisterDto("worker@w", "worker", "Markus", "Worker", "male", LocalDate.of(1990, 1, 1)), Role.GYM_WORKER);
+        // Regular users - disable email sending for seed data
+        userService.registerUser(new RegisterDto("user@u", "user", "Max", "Mustermann", "male", LocalDate.of(1990, 1, 1)), Role.USER, false);
+        userService.registerUser(new RegisterDto("admin@a", "admin", "Anton", "Admin", "male", LocalDate.of(1990, 1, 1)), Role.ADMIN, false);
+        userService.registerUser(new RegisterDto("owner@o", "owner", "Bernhard", "Owner", "male", LocalDate.of(1990, 1, 1)), Role.GYM_OWNER, false);
+        userService.registerUser(new RegisterDto("worker@w", "worker", "Markus", "Worker", "male", LocalDate.of(1990, 1, 1)), Role.GYM_WORKER, false);
 
         // Pending gym owner
         GymOwnerRegisterDto pendingOwnerDto = new GymOwnerRegisterDto();
@@ -139,9 +139,9 @@ public class DataInitializer implements CommandLineRunner {
         pendingOwnerDto.setPostalCode("80331");
         pendingOwnerDto.setPhoneNumber("+49 89 123456");
         pendingOwnerDto.setGymDescription("A modern fitness center with state-of-the-art equipment.");
-        userService.registerGymOwner(pendingOwnerDto);
+        userService.registerGymOwner(pendingOwnerDto, false); // Disable email for seed gym owner
 
-        userService.registerUser(new RegisterDto("Pworker@o", "Pworker", "Hans", "Peter", "male", LocalDate.of(1990, 1, 1)), Role.PENDING_GYM_WORKER);
+        userService.registerUser(new RegisterDto("Pworker@o", "Pworker", "Hans", "Peter", "male", LocalDate.of(1990, 1, 1)), Role.PENDING_GYM_WORKER, false);
 
         // Seed random users for matching
         seedMatchingUsers();
@@ -156,7 +156,7 @@ public class DataInitializer implements CommandLineRunner {
             LocalDate birthday = LocalDate.of(1995, 1, 1).plusDays(i * 100);
 
             RegisterDto dto = new RegisterDto(email, "password", firstName, lastName, gender, birthday);
-            userService.registerUser(dto, Role.USER);
+            userService.registerUser(dto, Role.USER, false); // Disable email for matching users
 
             // Add bio
             UpdateProfileDto updateDto = new UpdateProfileDto(email, firstName, lastName, gender, birthday, "Hi, I am " + firstName + " " + lastName + ". I love training!");
