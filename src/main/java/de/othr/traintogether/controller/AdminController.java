@@ -64,15 +64,10 @@ public class AdminController {
                                  RedirectAttributes redirectAttributes) {
         try {
             String adminEmail = authentication.getName();
-            boolean emailSent = gymOwnerRequestService.approveRequest(id, adminEmail);
+            gymOwnerRequestService.approveRequest(id, adminEmail);
 
-            if (emailSent) {
-                redirectAttributes.addFlashAttribute("success",
-                    messageSource.getMessage("admin.requests.approve.success", null, LocaleContextHolder.getLocale()));
-            } else {
-                redirectAttributes.addFlashAttribute("warning",
-                    messageSource.getMessage("admin.requests.approve.warning", null, LocaleContextHolder.getLocale()));
-            }
+            redirectAttributes.addFlashAttribute("success",
+                messageSource.getMessage("admin.requests.approve.success", null, LocaleContextHolder.getLocale()));
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error",
                 messageSource.getMessage("admin.requests.approve.error", new Object[]{e.getMessage()}, LocaleContextHolder.getLocale()));
@@ -87,15 +82,10 @@ public class AdminController {
                                RedirectAttributes redirectAttributes) {
         try {
             String adminEmail = authentication.getName();
-            boolean emailSent = gymOwnerRequestService.rejectRequest(id, adminEmail);
+            gymOwnerRequestService.rejectRequest(id, adminEmail);
 
-            if (emailSent) {
-                redirectAttributes.addFlashAttribute("success",
-                    messageSource.getMessage("admin.requests.reject.success", null, LocaleContextHolder.getLocale()));
-            } else {
-                redirectAttributes.addFlashAttribute("warning",
-                    messageSource.getMessage("admin.requests.reject.warning", null, LocaleContextHolder.getLocale()));
-            }
+            redirectAttributes.addFlashAttribute("success",
+                messageSource.getMessage("admin.requests.reject.success", null, LocaleContextHolder.getLocale()));
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error",
                 messageSource.getMessage("admin.requests.reject.error", new Object[]{e.getMessage()}, LocaleContextHolder.getLocale()));
@@ -104,4 +94,3 @@ public class AdminController {
         return "redirect:/admin/gym-owner-requests?filter=pending";
     }
 }
-

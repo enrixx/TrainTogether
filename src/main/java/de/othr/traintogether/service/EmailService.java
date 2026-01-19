@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -33,52 +34,82 @@ public class EmailService {
         logger.info("Application URL for email links: {}", appUrl);
     }
 
-    public boolean sendGymOwnerApprovalEmail(String toEmail, String firstName, String gymName, String language) {
+    @Async
+    public void sendWelcomeEmail(String toEmail, String firstName, String language) {
+        try {
+            String subject = getWelcomeSubject(language);
+            String htmlContent = renderWelcomeTemplate(firstName, language);
+
+            sendEmail(toEmail, subject, htmlContent);
+            logger.info("Welcome email sent successfully to {} in {} language", toEmail, language);
+        } catch (Exception e) {
+            logger.error("Failed to send welcome email to {}: {}", toEmail, e.getMessage(), e);
+        }
+    }
+
+    @Async
+    public void sendGymOwnerApprovalEmail(String toEmail, String firstName, String gymName, String language) {
         try {
             String subject = getApprovalSubject(language);
             String htmlContent = renderApprovalTemplate(firstName, gymName, language);
 
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setTo(toEmail);
-            helper.setSubject(subject);
-            helper.setText(htmlContent, true);
-
-            mailSender.send(message);
+            sendEmail(toEmail, subject, htmlContent);
             logger.info("Approval email sent successfully to {} in {} language", toEmail, language);
-            return true;
-        } catch (MessagingException e) {
-            logger.error("Failed to send approval email to {}: {}", toEmail, e.getMessage(), e);
-            return false;
         } catch (Exception e) {
-            logger.error("Unexpected error sending approval email to {}: {}", toEmail, e.getMessage(), e);
-            return false;
+            logger.error("Failed to send approval email to {}: {}", toEmail, e.getMessage(), e);
         }
     }
 
-    public boolean sendGymOwnerRejectionEmail(String toEmail, String firstName, String gymName, String language) {
+    @Async
+    public void sendGymOwnerRejectionEmail(String toEmail, String firstName, String gymName, String language) {
         try {
             String subject = getRejectionSubject(language);
             String htmlContent = renderRejectionTemplate(firstName, gymName, language);
 
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setTo(toEmail);
-            helper.setSubject(subject);
-            helper.setText(htmlContent, true);
-
-            mailSender.send(message);
+            sendEmail(toEmail, subject, htmlContent);
             logger.info("Rejection email sent successfully to {} in {} language", toEmail, language);
-            return true;
-        } catch (MessagingException e) {
-            logger.error("Failed to send rejection email to {}: {}", toEmail, e.getMessage(), e);
-            return false;
         } catch (Exception e) {
-            logger.error("Unexpected error sending rejection email to {}: {}", toEmail, e.getMessage(), e);
-            return false;
+            logger.error("Failed to send rejection email to {}: {}", toEmail, e.getMessage(), e);
         }
+    }
+
+    @Async
+    public void sendPasswordResetEmail(String toEmail, String firstName, String resetToken, String language) {
+        try {
+            String subject = getPasswordResetSubject(language);
+            String htmlContent = renderPasswordResetTemplate(firstName, resetToken, language);
+
+            sendEmail(toEmail, subject, htmlContent);
+            logger.info("Password reset email sent successfully to {} in {} language", toEmail, language);
+        } catch (Exception e) {
+            logger.error("Failed to send password reset email to {}: {}", toEmail, e.getMessage(), e);
+        }
+    }
+
+    private void sendEmail(String to, String subject, String htmlContent) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setTo(to);
+        helper.setSubject(subject);
+        helper.setText(htmlContent, true);
+
+        mailSender.send(message);
+    }
+
+    private String renderWelcomeTemplate(String firstName, String language) {
+        Context context = new Context();
+        context.setVariable("firstName", firstName);
+        context.setVariable("loginUrl", appUrl + "/login");
+
+        String templateName = "emails/welcome-email-" + language;
+        return templateEngine.process(templateName, context);
+    }
+
+    private String getWelcomeSubject(String language) {
+        return "de".equals(language)
+                ? "Willkommen bei TrainTogether!"
+                : "Welcome to TrainTogether!";
     }
 
     private String renderApprovalTemplate(String firstName, String gymName, String language) {
@@ -112,30 +143,6 @@ public class EmailService {
         return "de".equals(language)
                 ? "Update zu deiner Fitnessstudio-Besitzer-Anfrage"
                 : "Update on Your Gym Owner Request";
-    }
-
-    public boolean sendPasswordResetEmail(String toEmail, String firstName, String resetToken, String language) {
-        try {
-            String subject = getPasswordResetSubject(language);
-            String htmlContent = renderPasswordResetTemplate(firstName, resetToken, language);
-
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setTo(toEmail);
-            helper.setSubject(subject);
-            helper.setText(htmlContent, true);
-
-            mailSender.send(message);
-            logger.info("Password reset email sent successfully to {} in {} language", toEmail, language);
-            return true;
-        } catch (MessagingException e) {
-            logger.error("Failed to send password reset email to {}: {}", toEmail, e.getMessage(), e);
-            return false;
-        } catch (Exception e) {
-            logger.error("Unexpected error sending password reset email to {}: {}", toEmail, e.getMessage(), e);
-            return false;
-        }
     }
 
     private String renderPasswordResetTemplate(String firstName, String resetToken, String language) {
