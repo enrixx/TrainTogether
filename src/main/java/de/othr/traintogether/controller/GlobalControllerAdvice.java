@@ -2,6 +2,7 @@ package de.othr.traintogether.controller;
 
 import de.othr.traintogether.dto.UserDto;
 import de.othr.traintogether.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -24,5 +25,10 @@ public class GlobalControllerAdvice {
             }
         }
         return null;
+    }
+
+    @ModelAttribute("currentUri")
+    public String getCurrentUri(HttpServletRequest request) {
+        return request.getRequestURI();
     }
 }
