@@ -265,7 +265,7 @@ public class MatchingService {
             }
         }
 
-        Collections.shuffle(finalCards, new Random(187));
+        Collections.shuffle(finalCards, new Random(currentUser.getId() + LocalDate.now().toEpochDay()));
 
         return finalCards;
     }
