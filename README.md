@@ -34,12 +34,12 @@ TrainTogether is a software project for the OTH Regensburg.
 
 To pull the latest Docker image from Docker Hub:
 
-```bash
-docker pull eschreider/traintogether:latest
-```
-
-To run the application using this image:
-
-```bash
-docker run -p 8080:8080 eschreider/traintogether:latest
-```
+   ```bash
+   docker pull eschreider/traintogether:latest
+   ```
+   
+   To run the application using this image:
+   
+   ```bash
+   docker run -p 8080:8080 eschreider/traintogether:latest
+   ```
