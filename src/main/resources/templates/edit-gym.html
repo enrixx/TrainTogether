@@ -76,7 +76,11 @@
                                         <div class="col-md-4">
                                             <label class="form-label" th:text="#{gym.edit.banner.color.label}">Text Color</label>
                                             <div class="d-flex align-items-center">
-                                                <div id="color-picker" th:data-initial-color="${gym.bannerTextColor != null ? gym.bannerTextColor : '#ffffff'}"></div>
+                                                <div class="card">
+                                                    <div class="card-body">
+                                                        <div id="color-picker" class="border border-secondary rounded" th:data-initial-color="${gym.bannerTextColor != null ? gym.bannerTextColor : '#ffffff'}"></div>
+                                                    </div>
+                                                </div>
                                                 <input type="hidden" id="bannerTextColor" th:field="*{bannerTextColor}">
                                             </div>
                                         </div>
