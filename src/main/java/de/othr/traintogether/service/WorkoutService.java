@@ -127,9 +127,17 @@ public class WorkoutService {
     }
 
     private WorkoutLogResponseDto mapToLogResponse(TrainingExercise ex, Locale locale) {
+        String exerciseValue = null;
+        if (ex.getPersonalExercise().getStandardExercise() != null) {
+            exerciseValue = "S-" + ex.getPersonalExercise().getStandardExercise().getId();
+        } else if (ex.getPersonalExercise().getCustomExercise() != null) {
+            exerciseValue = "C-" + ex.getPersonalExercise().getCustomExercise().getId();
+        }
+
         return new WorkoutLogResponseDto(
                 ex.getPersonalExercise().getId(),
                 ex.getPersonalExercise().getName(locale),
+                exerciseValue,
                 ex.getSets(),
                 ex.getReps(),
                 ex.getWeight()

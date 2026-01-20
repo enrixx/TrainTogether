@@ -16,11 +16,11 @@
         <!-- View for Rest Day (Transient Success Message) -->
         <div id="view-rest-day" th:if="${param.success != null and param.success[0] == 'restday'}">
             <div class="p-4 mb-4 bg-body-tertiary rounded-3 text-center">
-                <h3 class="text-success">Rest Day</h3>
-                <p class="text-muted">Enjoy your recovery!</p>
+                <h3 class="text-success" th:text="#{workouts.restday.title}">Rest Day</h3>
+                <p class="text-muted" th:text="#{workouts.restday.text}">Enjoy your recovery!</p>
                 <div class="d-flex justify-content-center gap-2">
-                    <a th:href="@{/workouts/previous}" class="btn btn-secondary" th:text="#{workouts.previous}">See Previous Workouts</a>
-                    <button id="undo-rest-day-btn" class="btn btn-outline-primary">Log Workout Instead</button>
+                    <a th:href="@{/workouts/previous}" class="btn btn-lg btn-secondary" th:text="#{workouts.previous}">See Previous Workouts</a>
+                    <button id="undo-rest-day-btn" class="btn btn-lg btn-outline-primary" th:text="#{workouts.log.instead}">Log Workout Instead</button>
                 </div>
             </div>
         </div>
@@ -56,12 +56,12 @@
         <!-- View for No Workout Logged (Initial State) -->
         <div id="view-no-workout" th:if="${(todaysWorkout == null or todaysWorkout.isEmpty()) and (param.success == null or param.success[0] != 'restday')}">
             <div class="p-5 mb-4 bg-body-tertiary rounded-3 text-center">
-                <h2 class="mb-3">Ready to train?</h2>
-                <p class="text-muted mb-4">You haven't logged a workout for today yet.</p>
+                <h2 class="mb-3" th:text="#{workouts.ready.title}">Ready to train?</h2>
+                <p class="text-muted mb-4" th:text="#{workouts.ready.text}">You haven't logged a workout for today yet.</p>
 
                 <div class="d-flex justify-content-center gap-3">
                     <button id="start-logging-btn" class="btn btn-lg btn-primary">
-                        <i class="bi bi-plus-circle"></i> Log Workout
+                        <i class="bi bi-plus-circle"></i> <span th:text="#{workouts.log.new}">Log Workout</span>
                     </button>
 
                     <!-- Mark as Rest Day Button (Only if split exists) -->
@@ -72,7 +72,7 @@
                                 <form th:action="@{/workouts/log-restday}" method="post">
                                     <input type="hidden" name="trainingDayId" th:value="${day.id}" />
                                     <button type="submit" class="btn btn-lg btn-outline-secondary" formnovalidate>
-                                        <i class="bi bi-cup-hot"></i> Mark as Rest Day
+                                        <i class="bi bi-cup-hot"></i> <span th:text="#{workouts.restday.button}">Mark as Rest Day</span>
                                     </button>
                                 </form>
                             </div>
@@ -81,7 +81,7 @@
                 </div>
 
                 <div class="mt-4">
-                     <a th:href="@{/workouts/previous}" class="text-decoration-none text-secondary" th:text="#{workouts.previous}">See Previous Workouts</a>
+                     <a th:href="@{/workouts/previous}" class="btn btn-lg btn-outline-info" th:text="#{workouts.previous}">See Previous Workouts</a>
                 </div>
             </div>
         </div>
@@ -119,7 +119,7 @@
 
                             <strong th:text="#{'weekday.' + ${day.weekday}}">Montag</strong>
                             <ul class="list-unstyled mt-2 flex-grow-1">
-                                <li th:each="ex : ${day.personalExercises}" th:text="${ex.name} + ' - '   + 'X'  + ${ex.sets} "></li>
+                                <li th:each="ex : ${day.personalExercises}" th:text="${ex.getName(#locale)} + ' - '   + 'X'  + ${ex.sets} "></li>
                                 <li th:if="${#lists.isEmpty(day.personalExercises)}" class="text-muted">RESTDAY</li>
                             </ul>
                         </div>
@@ -142,7 +142,7 @@
 
                             <div class="planned-exercises">
                                 <div th:each="exercise : ${day.personalExercises}" class="mb-3 row align-items-start exercise-log-row planned-row">
-                                    <label class="col-sm-3 col-form-label fw-bold" th:text="${exercise.name}"></label>
+                                    <label class="col-sm-3 col-form-label fw-bold" th:text="${exercise.getName(#locale)}"></label>
                                     <input type="hidden" class="personal-exercise-id" th:value="${exercise.id}"/>
                                     <div class="col-sm-2">
                                         <div class="input-group">

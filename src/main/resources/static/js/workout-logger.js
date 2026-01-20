@@ -120,7 +120,8 @@ $(document).ready(function() {
                 if (!loggedExercise.processed) {
                     const repsArray = loggedExercise.reps ? loggedExercise.reps.split(',') : [];
                     const weightArray = loggedExercise.weight ? loggedExercise.weight.split(',') : [];
-                    createAdHocExerciseRow(loggedExercise.personalExerciseId, loggedExercise.sets, repsArray, weightArray).then(function(newRow) {
+                    // Use exerciseValue (e.g. "S-1") for ad-hoc selection
+                    createAdHocExerciseRow(loggedExercise.exerciseValue, loggedExercise.sets, repsArray, weightArray).then(function(newRow) {
                         adhocContainer.append(newRow);
                     });
                 }
@@ -154,9 +155,11 @@ $(document).ready(function() {
             if (row.is(':hidden')) return;
 
             let exerciseId;
+            let isAdHoc = false;
 
             if (row.hasClass('adhoc-row')) {
                 exerciseId = row.find('.adhoc-exercise-select').val();
+                isAdHoc = true;
             } else {
                 exerciseId = row.find('.personal-exercise-id').val();
             }
@@ -177,7 +180,14 @@ $(document).ready(function() {
             const repsString = reps.join(',');
             const weightString = weights.join(',');
 
-            row.append(`<input type="hidden" name="exercises[${index}].personalExerciseId" value="${exerciseId}">`);
+            if (isAdHoc) {
+                // For ad-hoc, use exerciseValue (String)
+                row.append(`<input type="hidden" name="exercises[${index}].exerciseValue" value="${exerciseId}">`);
+            } else {
+                // For planned, use personalExerciseId (Long)
+                row.append(`<input type="hidden" name="exercises[${index}].personalExerciseId" value="${exerciseId}">`);
+            }
+
             row.append(`<input type="hidden" name="exercises[${index}].sets" value="${sets}">`);
             row.append(`<input type="hidden" name="exercises[${index}].reps" value="${repsString}">`);
             row.append(`<input type="hidden" name="exercises[${index}].weight" value="${weightString}">`);

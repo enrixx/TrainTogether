@@ -210,7 +210,7 @@ function addMarker(lat, lon, name, isInternal, id) {
         popupContent += `<br><a href="/gym/${id}" class="btn btn-sm btn-primary mt-2 text-white">View Details</a>`;
     } else {
         marker = L.marker([lat, lon], { icon: blueIcon() });
-        popupContent += `<br><span class="text-muted">External Gym</span>`;
+        popupContent += `<br><span>External Gym</span>`;
     }
 
     marker.bindPopup(popupContent).addTo(gymsLayer);

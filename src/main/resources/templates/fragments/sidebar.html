@@ -53,7 +53,7 @@
                 </a>
             </li>
             <li sec:authorize="hasAnyAuthority('USER')">
-                <a th:href="@{/training/profile/me}" class="nav-link"
+                <a th:href="@{/training/profile/me}" class="nav-link" th:text="#{trainingprofile.sidebar}"
                    th:classappend="${currentUri == '/training/profile/me' ? 'active' : ''}">
                     My Profile
                 </a>
