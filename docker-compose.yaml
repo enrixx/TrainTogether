@@ -1,7 +1,7 @@
 services:
   app:
-    build: .
-    # image: traintogether-app:latest
+    # build: .
+    image: eschreider/traintogether:latest
     container_name: traintogether-app
     restart: unless-stopped
     ports:
