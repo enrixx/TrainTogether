@@ -120,6 +120,9 @@
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
+                                    <a th:href="@{/friends/chat/{id}(id=${friend.id})}" class="dropdown-item" th:text="#{friends.action.chat}">Open Chat</a>
+                                </li>
+                                <li>
                                     <form th:action="@{/friends/remove}" method="post">
                                         <input type="hidden" name="friendId" th:value="${friend.id}">
                                         <button type="submit" class="dropdown-item text-danger" th:text="#{friends.action.remove}">Remove Friend</button>
