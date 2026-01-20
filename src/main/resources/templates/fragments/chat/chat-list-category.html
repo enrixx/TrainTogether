@@ -60,7 +60,7 @@
                             <li>
                                 <button class="dropdown-item"
                                         th:attr="data-delete-url=@{/chat/{id}/members/me(id=${chat.id})}, data-confirm=#{chat.leave_confirm}, data-target=|message-${chat.id}|"
-                                        th:onclick="|fetchDelete(this.dataset.deleteUrl, this.dataset.confirm, this.dataset.target)|">
+                                        th:onclick="|fetchDelete(this.dataset.deleteUrl, this.dataset.confirm, this.dataset.target).then(success => { if(success && window.location.pathname.endsWith('/chat/' + ${chat.id})) window.location.href = '/chat'; })|">
                                     <span th:if="${chat.roomType == 'DM'}" th:text="#{chat.remove}">Remove</span>
                                     <span th:if="${chat.roomType == 'GROUP' || chat.roomType == 'READ_ONLY'}" th:text="#{chat.leave_group}">Leave</span>
                                 </button>

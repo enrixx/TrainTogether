@@ -14,6 +14,18 @@
     </div>
 
     <div class="container mt-5">
+        <!-- Alerts -->
+        <div th:if="${param.error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${param.error}">Error message</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${param.success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:if="${param.success[0] == 'joined'}">Successfully joined the course!</span>
+            <span th:if="${param.success[0] == 'left'}">Successfully left the course.</span>
+            <span th:unless="${param.success[0] == 'joined' or param.success[0] == 'left'}">Action successful!</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
         <!-- Edit Button for Owner/Worker -->
         <div class="d-flex justify-content-end mb-3" th:if="${canEdit}">
             <a th:href="@{/gym/edit/{id}(id=${gym.id})}" class="btn btn-outline-primary">
@@ -101,11 +113,13 @@
                                                             <button type="submit" class="btn btn-outline-secondary" th:text="#{gym.courses.leave}">Leave</button>
                                                         </form>
 
-                                                        <a th:if="${course.chatRoomId != null}"
-                                                           th:href="@{/chat/{chatId}(chatId=${course.chatRoomId})}"
-                                                           class="btn btn-info text-white">
-                                                            <i class="bi bi-chat-dots"></i> Go to Chat
-                                                        </a>
+                                                        <form th:if="${course.chatRoomId != null}"
+                                                              th:action="@{/gym/{id}/course/{courseId}/chat(id=${gym.id}, courseId=${course.id})}"
+                                                              method="post" style="display: inline;">
+                                                            <button type="submit" class="btn btn-info text-white">
+                                                                <i class="bi bi-chat-dots"></i> Go to Chat
+                                                            </button>
+                                                        </form>
                                                     </div>
 
                                                     <button th:if="${!course.participants.contains(currentUser) && course.participants.size() >= course.maxParticipants}"
