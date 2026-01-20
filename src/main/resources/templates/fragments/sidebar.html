@@ -1,4 +1,5 @@
-<div th:fragment="nav-sidebar" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<div th:fragment="nav-sidebar" xmlns:th="http://www.thymeleaf.org"
+     xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
     <style>
         .nav-pills .nav-link {
             transition: background-color 0.2s ease, color 0.2s ease;
@@ -16,9 +17,15 @@
     </style>
     <div class="d-flex flex-column flex-shrink-0 p-3 bg-body-tertiary h-100" style="width: 280px;">
         <ul class="nav nav-pills flex-column mb-auto">
-            <li sec:authorize="hasAnyAuthority('ADMIN', 'GYM_OWNER', 'GYM_WORKER', 'PENDING_GYM_WORKER')">
+            <li sec:authorize="hasAuthority('ADMIN')">
+                <a th:href="@{/admin/dashboard}" class="nav-link"
+                   th:classappend="${currentUri == '/dashboard' or #strings.startsWith(currentUri, '/admin') ? 'active' : ''}">
+                    <span th:text="#{nav.dashboard}">Dashboard</span>
+                </a>
+            </li>
+            <li sec:authorize="hasAnyAuthority('GYM_OWNER', 'GYM_WORKER', 'PENDING_GYM_WORKER') and !hasAuthority('ADMIN')">
                 <a th:href="@{/dashboard}" class="nav-link"
-                   th:classappend="${currentUri == '/dashboard' or #strings.startsWith(currentUri, '/admin') or #strings.startsWith(currentUri, '/gym') ? 'active' : ''}">
+                   th:classappend="${currentUri == '/dashboard' or #strings.startsWith(currentUri, '/gym') ? 'active' : ''}">
                     <span th:text="#{nav.dashboard}">Dashboard</span>
                 </a>
             </li>
@@ -28,13 +35,13 @@
                     <span th:text="#{nav.map}">Map</span>
                 </a>
             </li>
-            <li sec:authorize="hasAnyAuthority('ADMIN','USER', 'GYM_OWNER', 'GYM_WORKER')">
+            <li sec:authorize="hasAnyAuthority('USER', 'GYM_OWNER', 'GYM_WORKER')">
                 <a th:href="@{/chat}" class="nav-link"
                    th:classappend="${#strings.startsWith(currentUri, '/chat') ? 'active' : ''}">
                     <span th:text="#{nav.chat}">Chat</span>
                 </a>
             </li>
-            <li sec:authorize="hasAnyAuthority('USER')">
+            <li sec:authorize="hasAnyAuthority('ADMIN', 'USER')">
                 <a th:href="@{/friends}" class="nav-link"
                    th:classappend="${currentUri == '/friends' ? 'active' : ''}">
                     <span th:text="#{nav.friends}">Friends</span>
@@ -46,13 +53,13 @@
                     <span th:text="#{nav.matching}">Find Training Partners</span>
                 </a>
             </li>
-            <li sec:authorize="hasAnyAuthority('USER')">
+            <li sec:authorize="hasAnyAuthority('USER','ADMIN')">
                 <a th:href="@{/workouts}" class="nav-link"
                    th:classappend="${#strings.startsWith(currentUri, '/workouts') ? 'active' : ''}">
                     <span th:text="#{nav.workouts}">Workouts</span>
                 </a>
             </li>
-            <li sec:authorize="hasAnyAuthority('USER')">
+            <li sec:authorize="hasAnyAuthority('USER','ADMIN')">
                 <a th:href="@{/training/profile/me}" class="nav-link" th:text="#{trainingprofile.sidebar}"
                    th:classappend="${currentUri == '/training/profile/me' ? 'active' : ''}">
                     My Profile

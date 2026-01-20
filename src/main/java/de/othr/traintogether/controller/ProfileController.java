@@ -46,6 +46,8 @@ public class ProfileController {
         // Check if user has rejected gym owner request (for reapplication button)
         // Only show if user has NO pending request
         boolean hasPendingRequest = gymOwnerRequestService.hasPendingRequest(email);
+        model.addAttribute("hasPendingGymOwnerRequest", hasPendingRequest);
+
         boolean hasRejectedRequest = !hasPendingRequest && gymOwnerRequestService.hasRejectedRequest(email);
         model.addAttribute("hasRejectedGymOwnerRequest", hasRejectedRequest);
 

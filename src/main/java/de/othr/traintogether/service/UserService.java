@@ -27,7 +27,6 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final MinioService minioService;
     private final GymOwnerRequestRepository gymOwnerRequestRepository;
-    private final GymRepository gymRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final GymService gymService;
@@ -38,7 +37,6 @@ public class UserService {
                        PasswordEncoder passwordEncoder,
                        MinioService minioService,
                        GymOwnerRequestRepository gymOwnerRequestRepository,
-                       GymRepository gymRepository,
                        PasswordResetTokenRepository passwordResetTokenRepository,
                        ApplicationEventPublisher eventPublisher,
                        GymService gymService,
@@ -48,7 +46,6 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
         this.minioService = minioService;
         this.gymOwnerRequestRepository = gymOwnerRequestRepository;
-        this.gymRepository = gymRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.eventPublisher = eventPublisher;
         this.gymService = gymService;
