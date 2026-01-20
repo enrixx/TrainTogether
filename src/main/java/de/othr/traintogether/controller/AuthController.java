@@ -138,6 +138,11 @@ public class AuthController {
             return "redirect:/home?error=pending-request";
         }
 
+        // Check if user is already a gym owner
+        if (gymOwnerRequestService.isGymOwner(email)) {
+            return "redirect:/home?error=already-owner";
+        }
+
         // Check if user has rejected request (allow resubmission)
         boolean hasRejectedRequest = gymOwnerRequestService.hasRejectedRequest(email);
         model.addAttribute("hasRejectedRequest", hasRejectedRequest);

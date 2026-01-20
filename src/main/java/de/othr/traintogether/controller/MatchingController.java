@@ -23,7 +23,7 @@ import java.util.Optional;
 
 @Controller
 @RequestMapping("/matching")
-@PreAuthorize("isAuthenticated()")
+@PreAuthorize("hasAuthority('USER')")
 public class MatchingController {
 
     private static final Logger logger = LoggerFactory.getLogger(MatchingController.class);

@@ -130,6 +130,14 @@ public class GymOwnerRequestService {
     }
 
     @Transactional(readOnly = true)
+    public boolean isGymOwner(String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return authorityRepository.findByUserAndAuthority(user, "GYM_OWNER") != null;
+    }
+
+    @Transactional(readOnly = true)
     public boolean hasPendingRequest(String userEmail) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));

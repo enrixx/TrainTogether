@@ -3,6 +3,7 @@ package de.othr.traintogether.service;
 import de.othr.traintogether.dto.CourseDto;
 import de.othr.traintogether.dto.MatchingCardDto;
 import de.othr.traintogether.dto.UserDto;
+import de.othr.traintogether.model.Authority;
 import de.othr.traintogether.model.Course;
 import de.othr.traintogether.model.MatchingAction;
 import de.othr.traintogether.model.TrainingModel.*;
@@ -152,6 +153,15 @@ public class MatchingService {
         if (minDateForMaxAge != null) {
             spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("birthday"), minDateForMaxAge));
         }
+
+        // Exclude Admins
+        spec = spec.and((root, query, cb) -> {
+            Subquery<Long> adminSubquery = query.subquery(Long.class);
+            Root<Authority> authRoot = adminSubquery.from(Authority.class);
+            adminSubquery.select(authRoot.get("user").get("id"));
+            adminSubquery.where(cb.equal(authRoot.get("authority"), "ADMIN"));
+            return cb.not(root.get("id").in(adminSubquery));
+        });
 
         if (!excludedUserIds.isEmpty()) {
             spec = spec.and((root, query, cb) -> cb.not(root.get("id").in(excludedUserIds)));

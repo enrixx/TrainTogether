@@ -1,4 +1,5 @@
-<div th:fragment="nav-sidebar" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<div th:fragment="nav-sidebar" xmlns:th="http://www.thymeleaf.org"
+     xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
     <style>
         .nav-pills .nav-link {
             transition: background-color 0.2s ease, color 0.2s ease;
@@ -28,13 +29,13 @@
                     <span th:text="#{nav.map}">Map</span>
                 </a>
             </li>
-            <li sec:authorize="hasAnyAuthority('ADMIN','USER', 'GYM_OWNER', 'GYM_WORKER')">
+            <li sec:authorize="hasAnyAuthority('USER', 'GYM_OWNER', 'GYM_WORKER')">
                 <a th:href="@{/chat}" class="nav-link"
                    th:classappend="${#strings.startsWith(currentUri, '/chat') ? 'active' : ''}">
                     <span th:text="#{nav.chat}">Chat</span>
                 </a>
             </li>
-            <li sec:authorize="hasAnyAuthority('USER')">
+            <li sec:authorize="hasAnyAuthority('ADMIN', 'USER')">
                 <a th:href="@{/friends}" class="nav-link"
                    th:classappend="${currentUri == '/friends' ? 'active' : ''}">
                     <span th:text="#{nav.friends}">Friends</span>
@@ -46,13 +47,13 @@
                     <span th:text="#{nav.matching}">Find Training Partners</span>
                 </a>
             </li>
-            <li sec:authorize="hasAnyAuthority('USER')">
+            <li sec:authorize="hasAnyAuthority('USER','ADMIN')">
                 <a th:href="@{/workouts}" class="nav-link"
                    th:classappend="${#strings.startsWith(currentUri, '/workouts') ? 'active' : ''}">
                     <span th:text="#{nav.workouts}">Workouts</span>
                 </a>
             </li>
-            <li sec:authorize="hasAnyAuthority('USER')">
+            <li sec:authorize="hasAnyAuthority('USER','ADMIN')">
                 <a th:href="@{/training/profile/me}" class="nav-link"
                    th:classappend="${currentUri == '/training/profile/me' ? 'active' : ''}">
                     My Profile
