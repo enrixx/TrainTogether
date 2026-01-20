@@ -12,8 +12,6 @@ public interface GymWorkerRepository extends JpaRepository<GymWorker, Long> {
 
     List<GymWorker> findByGymId(Long gymId);
 
-    List<GymWorker> findByGymIdAndActiveTrue(Long gymId);
-
     Optional<GymWorker> findByUserId(Long userId);
 
     boolean existsByUserId(Long userId);

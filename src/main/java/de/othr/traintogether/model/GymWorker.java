@@ -35,9 +35,6 @@ public class GymWorker {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
-    @Column(name = "is_active", nullable = false)
-    private boolean active = true;
-
     public GymWorker(User user, Gym gym, User createdBy) {
         this.user = user;
         this.gym = gym;

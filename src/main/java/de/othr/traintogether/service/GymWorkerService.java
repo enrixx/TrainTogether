@@ -61,21 +61,17 @@ public class GymWorkerService {
     }
 
     @Transactional(readOnly = true)
-    public List<GymWorker> findActiveByGymId(Long gymId) {
-        return gymWorkerRepository.findByGymIdAndActiveTrue(gymId);
-    }
-
-    @Transactional(readOnly = true)
     public Optional<GymWorker> findByUserId(Long userId) {
         return gymWorkerRepository.findByUserId(userId);
     }
 
     @Transactional
     public GymWorker createGymWorker(String email, String password, String firstName, String lastName,
-                               Long gymId, User gymOwner) {
-        // Verify gym owner has permission
-        if (!gymService.isOwner(gymId, gymOwner.getId())) {
-            throw new RuntimeException("Only gym owner can create gym workers");
+                               Long gymId, User actingUser) {
+        // Verify permission (Gym Owner or Admin)
+        boolean isAdmin = actingUser.getAuthorities().contains("ADMIN");
+        if (!isAdmin && !gymService.isOwner(gymId, actingUser.getId())) {
+            throw new RuntimeException("Only gym owner or admin can create gym workers");
         }
 
         Gym gym = gymService.getById(gymId);
@@ -96,10 +92,40 @@ public class GymWorkerService {
         authorityRepository.save(workerAuthority);
 
         // Create gym worker
-        GymWorker gymWorker = new GymWorker(user, gym, gymOwner);
+        GymWorker gymWorker = new GymWorker(user, gym, actingUser);
         gymWorker = gymWorkerRepository.save(gymWorker);
 
         logger.info("Created gym worker account for user: {} at gym: {}", email, gym.getName());
+        return gymWorker;
+    }
+
+    @Transactional
+    public GymWorker updateGymWorker(Long id, String email, String firstName, String lastName, String password, User actingUser) {
+        GymWorker gymWorker = getById(id);
+
+        // Verify permission (Gym Owner or Admin)
+        boolean isAdmin = actingUser.getAuthorities().contains("ADMIN");
+        if (!isAdmin && !gymService.isOwner(gymWorker.getGym().getId(), actingUser.getId())) {
+            throw new RuntimeException("Only gym owner or admin can update gym workers");
+        }
+
+        User user = gymWorker.getUser();
+
+        if (!user.getEmail().equals(email) && userRepository.findByEmail(email).isPresent()) {
+            throw new RuntimeException("User with this email already exists");
+        }
+
+        user.setEmail(email);
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+
+        if (password != null && !password.isEmpty()) {
+            user.setPassword(passwordEncoder.encode(password));
+        }
+
+        userRepository.save(user);
+
+        logger.info("Updated gym worker with id: {}", id);
         return gymWorker;
     }
 
@@ -109,39 +135,13 @@ public class GymWorkerService {
     }
 
     @Transactional
-    public void deactivateGymWorker(Long gymWorkerId, User gymOwner) {
-        GymWorker gymWorker = getById(gymWorkerId);
-
-        // Verify gym owner has permission
-        if (!gymService.isOwner(gymWorker.getGym().getId(), gymOwner.getId())) {
-            throw new RuntimeException("Only gym owner can deactivate gym workers");
-        }
-
-        gymWorker.setActive(false);
-        gymWorkerRepository.save(gymWorker);
-
-        logger.info("Deactivated gym worker with id: {}", gymWorkerId);
-    }
-
-    @Transactional
-    public void activateGymWorker(Long gymWorkerId, User gymOwner) {
-        GymWorker gymWorker = getById(gymWorkerId);
-
-        // Verify gym owner has permission
-        if (!gymService.isOwner(gymWorker.getGym().getId(), gymOwner.getId())) {
-            throw new RuntimeException("Only gym owner can activate gym workers");
-        }
-
-        gymWorker.setActive(true);
-        gymWorkerRepository.save(gymWorker);
-
-        logger.info("Activated gym worker with id: {}", gymWorkerId);
-    }
-
-    @Transactional
     public void deleteById(Long id) {
         logger.info("Deleting gym worker with id: {}", id);
-        gymWorkerRepository.deleteById(id);
+        GymWorker gymWorker = getById(id);
+        User user = gymWorker.getUser();
+
+        gymWorkerRepository.delete(gymWorker);
+        userRepository.delete(user);
     }
 
     @Transactional(readOnly = true)
@@ -149,4 +149,3 @@ public class GymWorkerService {
         return gymWorkerRepository.existsByUserId(userId);
     }
 }
-
