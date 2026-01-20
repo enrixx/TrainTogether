@@ -190,6 +190,9 @@ public class WorkoutService {
 
         if (workoutRequest.getExercises() != null) {
             for (WorkoutLogRequestDto.ExerciseLog log : workoutRequest.getExercises()) {
+                if (log.getSets() <= 0) {
+                    continue; // Skip exercises with 0 or negative sets
+                }
                 PersonalExercise personalExercise = resolvePersonalExercise(log, user);
                 if (personalExercise != null) {
                     TrainingExercise te = new TrainingExercise(personalExercise, log.getSets(), log.getReps(), log.getWeight(), trainingDay, date);

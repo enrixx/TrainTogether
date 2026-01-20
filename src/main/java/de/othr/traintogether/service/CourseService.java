@@ -7,6 +7,7 @@ import de.othr.traintogether.service.chat.ChatRoomService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +27,10 @@ public class CourseService {
 
     @Transactional
     public Course createCourse(Course course, Gym gym) {
+        if (course.getDateTime().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Course cannot be in the past");
+        }
+
         course.setGym(gym);
         
         // Create a read-only group chat for the course
